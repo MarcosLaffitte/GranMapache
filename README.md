@@ -10,6 +10,18 @@ Alignments and other Maps between Graphs
 </p>
 
 
+## ToDo / Working
+
+- cython-python deployment with linux and windows.
+
+- modules: common subgraphs, alignment, isomorphism, rebalancing, verbosity.
+
+- versions: pip for linux, pip for windows, stand-alone.
+
+
+
+
+
 ## Institutions
 
 > Center for Scalable Data Analytics and Artificial Intelligence, Leipzig / Dresden, Germany. See <a href="https://scads.ai/">ScaDS.AI</a>.<br/>
