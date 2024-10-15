@@ -11,9 +11,6 @@
 
 > Bioinformatics Group, Department of Computer Science, Leipzig University, Germany. See <a href="https://www.bioinf.uni-leipzig.de/">Bioinf</a>.<br/>
 
-> Interdisciplinary Center for Bioinformatics, Leipzig University, Germany. See <a href="https://www.izbi.uni-leipzig.de/">IZBI</a>.<br/>
-
-
 ## Developed by
 
 - Marcos E. González Laffitte<br/>
