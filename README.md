@@ -14,7 +14,7 @@ Alignments and other Maps between Graphs
 
 - cython-python deployment with linux and windows.
 
-- modules: integerization, common_subgraphs, alignment, isomorphism, rebalancing, verbosity, exceptions, visualization, (maybe) classes.
+- modules: integerization, common_subgraphs, alignment, isomorphism, rebalancing, verbosity, visualization, (maybe) classes, (maybe) tests.
 
 - versions: pip for linux, pip for windows, stand-alone.
 
