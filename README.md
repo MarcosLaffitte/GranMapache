@@ -2,7 +2,8 @@
 
 <p align="center">
 <strong>GranMapache:</strong> <strong>GRA</strong>phs-and-<strong>N</strong>etworks <strong>MAP</strong>ping <strong>A</strong>pplications with <strong>C</strong>ython and <strong>HE</strong>uristics.
-</p><br/>
+</p>
+
 <p align="center">
 Suite for the Analysis of Bijections, Morphisms,<br/>
 Alignments and other Maps between Graphs
