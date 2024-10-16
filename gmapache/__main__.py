@@ -6,6 +6,8 @@
 # - Description: suite for the analysis of bijections,     #
 #   morphisms, alignments and other maps between graphs.   #
 #                                                          #
+# - Example of usage                                       #
+#                                                          #
 ############################################################
 
 
