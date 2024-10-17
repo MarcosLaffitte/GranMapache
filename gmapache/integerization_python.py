@@ -41,8 +41,34 @@ def encoding(input_graphs = []):
     into the original node_labels, edge_labels, and node_names.
     """
     # local variables
+    new_node_name = 1
+    new_node_label = 1
+    new_edge_label = 1
+    temp_nodes = []
+    encoded_graphs = []
+    node_name_encoding = dict()       # from ints to names
+    node_label_encoding = dict()
+    edge_label_encoding = dict()
+    node_name_encoding_inv = [None]   # from names to ints (indices)
+    node_label_encoding_inv = [None]
+    edge_label_encoding_inv = [None]
+    # homogenize node names
+    for eachGraph in input_graphs:
+        # get node names
+        temp_nodes = list(eachGraph.nodes())
+        # check if repeated
+        for eachName in temp_nodes:
+            # save if unrepeated
+            if(eachName not in node_name_encoding_inv):
+                # first encode and then save inverse
+                node_name_encoding[new_node_name] = deepcopy(eachName)
+                # note: nx nodes should be hashable objects
+                node_name_encoding_inv.append(deepcopy(eachName))
+                # increase name
+                new_node_name = new_node_name + 1                
     # end of function
     return(0)
+
 
 
 
