@@ -1,5 +1,7 @@
 # to buil cython code in place use:
 # python setup.py build_ext --inplace
+# to run the main inside the module do
+# python -m mymodule
 # to buil cython inside a package just run:
 # pip install .
 # add the following if running as a module
