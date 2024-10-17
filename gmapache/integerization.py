@@ -1,17 +1,17 @@
-############################################################
-#                                                          #
-# - GranMapache: GRAphs-and-Networks MAPping Applications  #
-#   with Cython and HEuristics                             #
-#                                                          #
-# - Module: integerization                                 #
-#                                                          #
-############################################################
+################################################################################
+#                                                                              #
+# - GranMapache: GRAphs-and-Networks MAPping Applications                      #
+#   with Cython and HEuristics                                                 #
+#                                                                              #
+# - Module: integerization                                                     #
+#                                                                              #
+################################################################################
 
 
-# dependencies #############################################
+# dependencies #################################################################
 
 
-# already in python ----------------------------------------
+# already in python ------------------------------------------------------------
 import time
 import random
 from copy import deepcopy
@@ -21,16 +21,31 @@ from itertools import product, combinations
 from sys import argv, exit, getrecursionlimit, setrecursionlimit
 
 
-# not in python --------------------------------------------
+# not in python ----------------------------------------------------------------
 import cython
 
 
-# functions ################################################
+# functions ####################################################################
 
 
-# function: transform labeled graphs to integers -----------
+# function: homogenizes dicts of labels of list of graphs into integers --------
 def encoding(input_graphs = []):
+    # description
+    """
+    - Receives a list of inputs graphs and turns each dictionary of
+    node_labels and edge_labels into integers, considering their
+    repetitions across the list.
+    - Nodes are also renamed into integers starting from 1.
+    - The function returns a list with the copies of the input_graph
+    preserving their order, together with dictionaries from integers
+    into the original node_labels, edge_labels, and node_names.
+    """
     # local variables
+    # end of function
+    return(0)
+
+
+
 
 
 
@@ -122,5 +137,5 @@ def condensedLabelToStr(someG):
     return(uniformG)
 
 
-############################################################
-############################################################
+################################################################################
+################################################################################
