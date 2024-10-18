@@ -21,6 +21,7 @@ import time
 # not in python ----------------------------------------------------------------
 import cython
 import networkx as nx
+import matplotlib.pyplot as plt
 
 
 # custom dependencies ----------------------------------------------------------
@@ -34,6 +35,7 @@ from .integerization import encode_graphs
 
 if __name__ == "__main__":
 
+
     # buid first test graph
     G = nx.Graph()
     G.add_node("hola1", color = "blue", charge = -1, radius = 0.5)
@@ -46,21 +48,53 @@ if __name__ == "__main__":
     G.add_edge("hola3", "hola4", weight = 1, bond = "triple", strength = "strong")
     G.add_edge("hola4", "hola5", weight = 10, bond = "single", strength = "weak")
 
+
     # buid second test graph
     H = nx.Graph()
     H.add_node("hola1", color = "red", charge = 1, radius = 0.5)
     H.add_node("hola6", color = "red", charge = 1, radius = 0.75)
     H.add_node("hola7", color = "red", charge = 1, radius = 0.9)
     H.add_node("hola8", color = "blue", charge = -1, radius = 0.5)
-    H.add_node("hola9", color = "green", charge = -1, radius = 0.25)    
+    H.add_node("hola9", color = "green", charge = -1, radius = 0.25)
     H.add_edge("hola1", "hola6", weight = 10, bond = "single", strength = "weak")
     H.add_edge("hola1", "hola7", weight = 7, bond = "triple", strength = "strong")
     H.add_edge("hola1", "hola8", weight = 10, bond = "triple", strength = "strong")
     H.add_edge("hola1", "hola9", weight = 3, bond = "single", strength = "strong")
 
-    # testing encoding
-    encoded_graphs = encode_graphs([G, H])
 
+    # testing encoding
+    input_list = [G, H]
+    graph_encoding = encode_graphs(input_list)
+    encoded_graph_list = graph_encoding[0]
+    encoded_node_name = graph_encoding[1]
+    encoded_node_label = graph_encoding[2]
+    encoded_edge_label = graph_encoding[3]
+    # print(encoded_graph_list)
+    # print(encoded_node_name)
+    # print(encoded_node_label)
+    # print(encoded_edge_label)
+
+
+    # compare original and encoding
+    for i in range(len(input_list)):
+        # print original
+        print("##########################################################")
+        print("Original")
+        # compare vertices
+        for (v, nodeInfo) in list(input_list[i].nodes(data = True)):
+            print(v, nodeInfo)
+        # compare edges
+        for (u, v, edgeInfo) in list(input_list[i].edges(data = True)):
+            print(u, v, edgeInfo)
+        # print encoded
+        print("----------------------------------------------------------")
+        print("Encoded")
+        # compare vertices
+        for (v, nodeInfo) in list(encoded_graph_list[i].nodes(data = True)):
+            print(encoded_node_name[v], encoded_node_label[nodeInfo["GMNL"]])
+        # compare edges
+        for (u, v, edgeInfo) in list(encoded_graph_list[i].edges(data = True)):
+            print(encoded_node_name[u], encoded_node_name[v], encoded_edge_label[edgeInfo["GMEL"]])
 
 
 ################################################################################
