@@ -43,7 +43,6 @@ def encode_graphs(input_graphs = []):
     # cython variables
     cdef int i = 0
     # local variables
-    new_node_name = 1
     new_node_label = 1
     new_edge_label = 1
     all_nodes = []
@@ -63,11 +62,23 @@ def encode_graphs(input_graphs = []):
         node_name_encoding[int(i+1)] = deepcopy(all_nodes[i])
         node_name_encoding_inv[deepcopy(all_nodes[i])] = int(i+1)
     # homogenize node labels across input graphs
-    # for eachGraph in input_graphs:
-    #     for (v, nodeInfo) in list(someG.nodes(data = True)):
-    #         uniformG.add_node(v, nodeLabel = nodeInfo)
+    for eachGraph in input_graphs:
+        for (v, nodeInfo) in list(eachGraph.nodes(data = True)):
+            if(nodeInfo not in node_label_encoding_inv):
+                node_label_encoding[new_node_label] = deepcopy(nodeInfo)
+                node_label_encoding_inv.append(deepcopy(nodeInfo))
+                new_node_label = new_node_label + 1                
+    # homogenize edge labels across input graphs
+    for eachGraph in input_graphs:
+        for (u, v, edgeInfo) in list(eachGraph.edges(data = True)):
+            if(edgeInfo not in edge_label_encoding_inv):
+                edge_label_encoding[new_edge_label] = deepcopy(edgeInfo)
+                edge_label_encoding_inv.append(deepcopy(edgeInfo))
+                new_edge_label = new_edge_label + 1
+
+    
     # end of function
-    return(0)
+    return([])
 
 
 
