@@ -30,13 +30,21 @@ import networkx as nx
 def encode_graphs(input_graphs = []):
     # description
     """
-    - Receives a list of inputs graphs and turns each dictionary of
-    node_labels and edge_labels into integers, considering their
-    repetitions across the list.
-    - Nodes are also renamed into integers starting from 1.
-    - The function returns a list with the copies of the input_graph
-    preserving their order, together with dictionaries from integers
-    into the original node_labels, edge_labels, and node_names.
+    > description: receives a list of inputs graphs and turns each dictionary
+    of node_labels and edge_labels into integers, considering their repetitions
+    across the list. Nodes are also renamed into integers starting from 1. The
+    function returns a list with the copies of the input_graph preserving their
+    order, together with dictionaries from integers into the original node_labels,
+    edge_labels, and node_names.
+
+    > input:
+    * input_graphs - list of networkx graph or digraph objects (default to empty list).
+
+    > output:
+    * encoded_graphs - list of transformed graphs.
+    * node_name_encoding - dict from integers into original nodes (hashable objects).
+    * node_label_encoding - dict from integers into original dicts of node labels.
+    * edge_label_encoding - dict from integers into original dicts of edge labels.
     """
     # output holders
     encoded_graphs = []
@@ -103,6 +111,60 @@ def encode_graphs(input_graphs = []):
         encoded_graphs.append(deepcopy(int_graph))
     # end of function
     return(encoded_graphs, node_name_encoding, node_label_encoding, edge_label_encoding)
+
+
+# function: decode graphs in list recovering original input graphs -------------
+def decode_graphs(encoded_graphs = [],
+                  node_name_encoding = dict(),
+                  node_label_encoding = dict(),
+                  edge_label_encoding = dict()):
+    # description
+    """
+    > description: recieves encoded list of graphs and the dicts necessary for
+    decodeding them. Returns the original graphs according to the decoding.
+    This is basically the inverse operation of the function encode_graphs.
+
+    > input:
+    * encoded_graphs - list of transformed graphs.
+    * node_name_encoding - dict from integers into original nodes (hashable objects).
+    * node_label_encoding - dict from integers into original dicts of node labels.
+    * edge_label_encoding - dict from integers into original dicts of edge labels.
+
+    > output:
+    * decoded_graphs - list of networkx graph or digraph objects.
+    """
+    # output holders
+    decoded_graphs = []
+    # cython variables
+    cdef int i = 0
+    # local variables
+    decoded_node = 0
+    decoded_node_a = 0
+    decoded_node_b = 0
+    decoded_label = 0
+    dec_graph = None
+    # iterate decoding graphs
+    for i in range(len(encoded_graphs)):
+        # initialize graph with original type
+        if(encoded_graphs[i].is_directed()):
+            dec_graph = nx.DiGraph()
+        else:
+            dec_graph = nx.Graph()
+        # compare vertices
+        for (v, nodeInfo) in list(encoded_graphs[i].nodes(data = True)):
+            decoded_node = deepcopy(node_name_encoding[v])
+            decoded_label = deepcopy(node_label_encoding[nodeInfo["GMNL"]])   # gran_mapache_node_label
+            dec_graph.add_nodes_from([(decoded_node, decoded_label)])
+        # compare edges
+        for (u, v, edgeInfo) in list(encoded_graphs[i].edges(data = True)):
+            decoded_node_a = deepcopy(node_name_encoding[u])
+            decoded_node_b = deepcopy(node_name_encoding[v])
+            decoded_label = deepcopy(edge_label_encoding[edgeInfo["GMEL"]])   # gran_mapache_edge_label
+            dec_graph.add_edges_from([(decoded_node_a, decoded_node_b, decoded_label)])
+        # save graph in list
+        decoded_graphs.append(deepcopy(dec_graph))
+    # end of function
+    return(decoded_graphs)
 
 
 ################################################################################
