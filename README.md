@@ -14,6 +14,8 @@ Alignments and other Maps between Graphs
 
 - integerization and good-bad map with maximum extension for linux
 
+- add wheel for packages
+
 - cython-python deployment with linux and windows.
 
 - modules: integerization, common_subgraphs, alignment, isomorphism, rebalancing, verbosity, visualization, (maybe) classes, (maybe) tests.
