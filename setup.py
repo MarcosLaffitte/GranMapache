@@ -17,9 +17,7 @@ import numpy
 # specify modules made with cython
 setup(
     ext_modules = cythonize(
-        ["gmapache/bla.pyx",
-         "gmapache/ble.pyx",
-         "gmapache/mysubmodule/bli.pyx"]
+        ["gmapache/integerization.pyx"]
     ),
     include_dirs = [numpy.get_include()]
 )

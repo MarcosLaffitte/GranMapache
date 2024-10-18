@@ -67,7 +67,7 @@ def encode_graphs(input_graphs = []):
     #     for (v, nodeInfo) in list(someG.nodes(data = True)):
     #         uniformG.add_node(v, nodeLabel = nodeInfo)
     # end of function
-    return([])
+    return(0)
 
 
 
