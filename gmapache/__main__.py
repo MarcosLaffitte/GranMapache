@@ -26,7 +26,7 @@ from copy import deepcopy
 import cython
 import networkx as nx
 import matplotlib.pyplot as plt
-
+import numpy
 
 # custom dependencies ----------------------------------------------------------
 from .integerization import encode_graphs, decode_graphs, encode_match, decode_match
