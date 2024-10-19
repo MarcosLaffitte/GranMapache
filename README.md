@@ -12,7 +12,9 @@ Alignments and other Maps between Graphs
 
 ## ToDo / Working
 
-- integerization and good-bad map with maximum extension for linux
+* done integerization
+
+> good-bad map with maximum extension
 
 - add wheel for packages
 
