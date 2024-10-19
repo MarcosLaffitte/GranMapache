@@ -63,9 +63,13 @@ def encode_graphs(input_graphs = []):
     all_nodes = []
     all_node_labels = []
     all_edge_labels = []
+    nodeInfo = dict()
+    edgeInfo = dict()
     node_name_encoding_inv = dict()    # from node names to ints
     node_label_encoding_inv = [None]   # from node label-dicts to ints (indices)
     edge_label_encoding_inv = [None]   # from edge label-dicts to ints (indices)
+    u = None
+    v = None
     int_graph = None
     # homogenize node names across input graphs
     for i in range(len(input_graphs)):
@@ -137,11 +141,15 @@ def decode_graphs(encoded_graphs = [],
     decoded_graphs = []
     # cython variables
     cdef int i = 0
+    cdef int u = 0
+    cdef int v = 0
     # local variables
     decoded_node = 0
     decoded_node_a = 0
     decoded_node_b = 0
     decoded_label = 0
+    nodeInfo = dict()
+    edgeInfo = dict()
     dec_graph = None
     # iterate decoding graphs
     for i in range(len(encoded_graphs)):
@@ -152,19 +160,85 @@ def decode_graphs(encoded_graphs = [],
             dec_graph = nx.Graph()
         # compare vertices
         for (v, nodeInfo) in list(encoded_graphs[i].nodes(data = True)):
-            decoded_node = deepcopy(node_name_encoding[v])
-            decoded_label = deepcopy(node_label_encoding[nodeInfo["GMNL"]])   # gran_mapache_node_label
-            dec_graph.add_nodes_from([(decoded_node, decoded_label)])
+            decoded_node = node_name_encoding[v]
+            decoded_label = node_label_encoding[nodeInfo["GMNL"]]   # gran_mapache_node_label
+            dec_graph.add_nodes_from([(deepcopy(decoded_node), deepcopy(decoded_label))])
         # compare edges
         for (u, v, edgeInfo) in list(encoded_graphs[i].edges(data = True)):
-            decoded_node_a = deepcopy(node_name_encoding[u])
-            decoded_node_b = deepcopy(node_name_encoding[v])
-            decoded_label = deepcopy(edge_label_encoding[edgeInfo["GMEL"]])   # gran_mapache_edge_label
-            dec_graph.add_edges_from([(decoded_node_a, decoded_node_b, decoded_label)])
+            decoded_node_a = node_name_encoding[u]
+            decoded_node_b = node_name_encoding[v]
+            decoded_label = edge_label_encoding[edgeInfo["GMEL"]]   # gran_mapache_edge_label
+            dec_graph.add_edges_from([(deepcopy(decoded_node_a), deepcopy(decoded_node_b), deepcopy(decoded_label))])
         # save graph in list
         decoded_graphs.append(deepcopy(dec_graph))
     # end of function
     return(decoded_graphs)
+
+
+# function: encode match given an encoding of node names -----------------------
+def encode_match(input_match = [],
+                 node_name_encoding = dict()):
+    # description
+    """
+    > description: receives a list of 2-tuples of nodes and a dictionary encoding
+    nodes into integers, and returns the corresponding encoded list of 2-tuples.
+
+    > input:
+    * input_match - list of 2-tuples (x, y) representing a match between graphs.
+    * node_name_encoding - dict from integers into the original nodes.
+
+    > output:
+    * encoded_match - list of 2-tuples of integers (i, j) encoding the nodes.
+    """
+    # output holders
+    encoded_match = []
+    # cython variables
+    cdef int i = 0
+    cdef int index1 = 0
+    cdef int index2 = 0
+    # local variables
+    encoding_as_array = [None]
+    # get encoding as array
+    for i in range(1, len(node_name_encoding)+1):
+        encoding_as_array.append(deepcopy(node_name_encoding[i]))
+    # encode match
+    for i in range(len(input_match)):
+        index1 = encoding_as_array.index(input_match[i][0])
+        index2 = encoding_as_array.index(input_match[i][1])
+        encoded_match.append((index1, index2))
+    # end of function
+    return(encoded_match)
+
+
+# function: decode match given an encoding of node names -----------------------
+def decode_match(encoded_match = [],
+                 node_name_encoding = dict()):
+    # description
+    """
+    > description: receives a list of 2-tuples of integers and a dictionary mapping
+    integers to nodes, and returns the corresponding decoded list of 2-tuples of nodes.
+
+    > input:
+    * encoded_match - list of 2-tuples (i, j) of integers encoding pairs of nodes.
+    * node_name_encoding - dict from integers into the original nodes.
+
+    > output:
+    * decoded_match - list of 2-tuples (x, y) of nodes representing the match.
+    """
+    # output holders
+    decoded_match = []
+    # cython variables
+    cdef int i = 0
+    # local variables
+    node1 = None
+    node2 = None
+    # decode match
+    for i in range(len(encoded_match)):
+        node1 = node_name_encoding[encoded_match[i][0]]
+        node2 = node_name_encoding[encoded_match[i][1]]
+        decoded_match.append((deepcopy(node1), deepcopy(node2)))
+    # end of function
+    return(decoded_match)
 
 
 ################################################################################

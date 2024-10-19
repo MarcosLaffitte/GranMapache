@@ -1496,6 +1496,10 @@ struct __pyx_defaults;
 typedef struct __pyx_defaults __pyx_defaults;
 struct __pyx_defaults1;
 typedef struct __pyx_defaults1 __pyx_defaults1;
+struct __pyx_defaults2;
+typedef struct __pyx_defaults2 __pyx_defaults2;
+struct __pyx_defaults3;
+typedef struct __pyx_defaults3 __pyx_defaults3;
 struct __pyx_defaults {
   PyObject *__pyx_arg_input_graphs;
 };
@@ -1504,6 +1508,14 @@ struct __pyx_defaults1 {
   PyObject *__pyx_arg_node_name_encoding;
   PyObject *__pyx_arg_node_label_encoding;
   PyObject *__pyx_arg_edge_label_encoding;
+};
+struct __pyx_defaults2 {
+  PyObject *__pyx_arg_input_match;
+  PyObject *__pyx_arg_node_name_encoding;
+};
+struct __pyx_defaults3 {
+  PyObject *__pyx_arg_encoded_match;
+  PyObject *__pyx_arg_node_name_encoding;
 };
 /* #### Code section: utility_code_proto ### */
 
@@ -2195,8 +2207,8 @@ static const char __pyx_k_i[] = "i";
 static const char __pyx_k_u[] = "u";
 static const char __pyx_k_v[] = "v";
 static const char __pyx_k__2[] = "*";
-static const char __pyx_k__7[] = "?";
 static const char __pyx_k_nx[] = "nx";
+static const char __pyx_k__11[] = "?";
 static const char __pyx_k_GMEL[] = "GMEL";
 static const char __pyx_k_GMNL[] = "GMNL";
 static const char __pyx_k_copy[] = "copy";
@@ -2208,9 +2220,13 @@ static const char __pyx_k_test[] = "__test__";
 static const char __pyx_k_Graph[] = "Graph";
 static const char __pyx_k_edges[] = "edges";
 static const char __pyx_k_index[] = "index";
+static const char __pyx_k_node1[] = "node1";
+static const char __pyx_k_node2[] = "node2";
 static const char __pyx_k_nodes[] = "nodes";
 static const char __pyx_k_range[] = "range";
 static const char __pyx_k_import[] = "__import__";
+static const char __pyx_k_index1[] = "index1";
+static const char __pyx_k_index2[] = "index2";
 static const char __pyx_k_DiGraph[] = "DiGraph";
 static const char __pyx_k_add_edge[] = "add_edge";
 static const char __pyx_k_add_node[] = "add_node";
@@ -2221,8 +2237,11 @@ static const char __pyx_k_nodeInfo[] = "nodeInfo";
 static const char __pyx_k_all_nodes[] = "all_nodes";
 static const char __pyx_k_dec_graph[] = "dec_graph";
 static const char __pyx_k_int_graph[] = "int_graph";
+static const char __pyx_k_input_match[] = "input_match";
 static const char __pyx_k_is_directed[] = "is_directed";
+static const char __pyx_k_decode_match[] = "decode_match";
 static const char __pyx_k_decoded_node[] = "decoded_node";
+static const char __pyx_k_encode_match[] = "encode_match";
 static const char __pyx_k_encoded_node[] = "encoded_node";
 static const char __pyx_k_initializing[] = "_initializing";
 static const char __pyx_k_input_graphs[] = "input_graphs";
@@ -2230,8 +2249,10 @@ static const char __pyx_k_is_coroutine[] = "_is_coroutine";
 static const char __pyx_k_class_getitem[] = "__class_getitem__";
 static const char __pyx_k_decode_graphs[] = "decode_graphs";
 static const char __pyx_k_decoded_label[] = "decoded_label";
+static const char __pyx_k_decoded_match[] = "decoded_match";
 static const char __pyx_k_encode_graphs[] = "encode_graphs";
 static const char __pyx_k_encoded_label[] = "encoded_label";
+static const char __pyx_k_encoded_match[] = "encoded_match";
 static const char __pyx_k_add_edges_from[] = "add_edges_from";
 static const char __pyx_k_add_nodes_from[] = "add_nodes_from";
 static const char __pyx_k_decoded_graphs[] = "decoded_graphs";
@@ -2244,6 +2265,7 @@ static const char __pyx_k_new_edge_label[] = "new_edge_label";
 static const char __pyx_k_new_node_label[] = "new_node_label";
 static const char __pyx_k_all_edge_labels[] = "all_edge_labels";
 static const char __pyx_k_all_node_labels[] = "all_node_labels";
+static const char __pyx_k_encoding_as_array[] = "encoding_as_array";
 static const char __pyx_k_asyncio_coroutines[] = "asyncio.coroutines";
 static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
 static const char __pyx_k_node_name_encoding[] = "node_name_encoding";
@@ -2255,10 +2277,14 @@ static const char __pyx_k_gmapache_integerization[] = "gmapache.integerization";
 static const char __pyx_k_node_label_encoding_inv[] = "node_label_encoding_inv";
 static const char __pyx_k_gmapache_integerization_pyx[] = "gmapache/integerization.pyx";
 /* #### Code section: decls ### */
-static PyObject *__pyx_pf_8gmapache_14integerization_4__defaults__(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
+static PyObject *__pyx_pf_8gmapache_14integerization_8__defaults__(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
 static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_input_graphs); /* proto */
-static PyObject *__pyx_pf_8gmapache_14integerization_6__defaults__(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
+static PyObject *__pyx_pf_8gmapache_14integerization_10__defaults__(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
 static PyObject *__pyx_pf_8gmapache_14integerization_2decode_graphs(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_encoded_graphs, PyObject *__pyx_v_node_name_encoding, PyObject *__pyx_v_node_label_encoding, PyObject *__pyx_v_edge_label_encoding); /* proto */
+static PyObject *__pyx_pf_8gmapache_14integerization_12__defaults__(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
+static PyObject *__pyx_pf_8gmapache_14integerization_4encode_match(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_input_match, PyObject *__pyx_v_node_name_encoding); /* proto */
+static PyObject *__pyx_pf_8gmapache_14integerization_14__defaults__(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
+static PyObject *__pyx_pf_8gmapache_14integerization_6decode_match(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_encoded_match, PyObject *__pyx_v_node_name_encoding); /* proto */
 static __Pyx_CachedCFunction __pyx_umethod_PyList_Type_index = {0, 0, 0, 0, 0};
 /* #### Code section: late_includes ### */
 /* #### Code section: module_state ### */
@@ -2296,8 +2322,8 @@ typedef struct {
   PyObject *__pyx_n_s_GMEL;
   PyObject *__pyx_n_s_GMNL;
   PyObject *__pyx_n_s_Graph;
+  PyObject *__pyx_n_s__11;
   PyObject *__pyx_n_s__2;
-  PyObject *__pyx_n_s__7;
   PyObject *__pyx_n_s_add_edge;
   PyObject *__pyx_n_s_add_edges_from;
   PyObject *__pyx_n_s_add_node;
@@ -2312,8 +2338,10 @@ typedef struct {
   PyObject *__pyx_n_s_data;
   PyObject *__pyx_n_s_dec_graph;
   PyObject *__pyx_n_s_decode_graphs;
+  PyObject *__pyx_n_s_decode_match;
   PyObject *__pyx_n_s_decoded_graphs;
   PyObject *__pyx_n_s_decoded_label;
+  PyObject *__pyx_n_s_decoded_match;
   PyObject *__pyx_n_s_decoded_node;
   PyObject *__pyx_n_s_decoded_node_a;
   PyObject *__pyx_n_s_decoded_node_b;
@@ -2323,18 +2351,24 @@ typedef struct {
   PyObject *__pyx_n_s_edge_label_encoding_inv;
   PyObject *__pyx_n_s_edges;
   PyObject *__pyx_n_s_encode_graphs;
+  PyObject *__pyx_n_s_encode_match;
   PyObject *__pyx_n_s_encoded_graphs;
   PyObject *__pyx_n_s_encoded_label;
+  PyObject *__pyx_n_s_encoded_match;
   PyObject *__pyx_n_s_encoded_node;
   PyObject *__pyx_n_s_encoded_node_a;
   PyObject *__pyx_n_s_encoded_node_b;
+  PyObject *__pyx_n_s_encoding_as_array;
   PyObject *__pyx_n_s_gmapache_integerization;
   PyObject *__pyx_kp_s_gmapache_integerization_pyx;
   PyObject *__pyx_n_s_i;
   PyObject *__pyx_n_s_import;
   PyObject *__pyx_n_s_index;
+  PyObject *__pyx_n_s_index1;
+  PyObject *__pyx_n_s_index2;
   PyObject *__pyx_n_s_initializing;
   PyObject *__pyx_n_s_input_graphs;
+  PyObject *__pyx_n_s_input_match;
   PyObject *__pyx_n_s_int_graph;
   PyObject *__pyx_n_s_is_coroutine;
   PyObject *__pyx_n_s_is_directed;
@@ -2343,6 +2377,8 @@ typedef struct {
   PyObject *__pyx_n_s_networkx;
   PyObject *__pyx_n_s_new_edge_label;
   PyObject *__pyx_n_s_new_node_label;
+  PyObject *__pyx_n_s_node1;
+  PyObject *__pyx_n_s_node2;
   PyObject *__pyx_n_s_nodeInfo;
   PyObject *__pyx_n_s_node_label_encoding;
   PyObject *__pyx_n_s_node_label_encoding_inv;
@@ -2359,8 +2395,12 @@ typedef struct {
   PyObject *__pyx_int_1;
   PyObject *__pyx_tuple__3;
   PyObject *__pyx_tuple__5;
+  PyObject *__pyx_tuple__7;
+  PyObject *__pyx_tuple__9;
   PyObject *__pyx_codeobj__4;
   PyObject *__pyx_codeobj__6;
+  PyObject *__pyx_codeobj__8;
+  PyObject *__pyx_codeobj__10;
 } __pyx_mstate;
 
 #if CYTHON_USE_MODULE_STATE
@@ -2408,8 +2448,8 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_n_s_GMEL);
   Py_CLEAR(clear_module_state->__pyx_n_s_GMNL);
   Py_CLEAR(clear_module_state->__pyx_n_s_Graph);
+  Py_CLEAR(clear_module_state->__pyx_n_s__11);
   Py_CLEAR(clear_module_state->__pyx_n_s__2);
-  Py_CLEAR(clear_module_state->__pyx_n_s__7);
   Py_CLEAR(clear_module_state->__pyx_n_s_add_edge);
   Py_CLEAR(clear_module_state->__pyx_n_s_add_edges_from);
   Py_CLEAR(clear_module_state->__pyx_n_s_add_node);
@@ -2424,8 +2464,10 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_n_s_data);
   Py_CLEAR(clear_module_state->__pyx_n_s_dec_graph);
   Py_CLEAR(clear_module_state->__pyx_n_s_decode_graphs);
+  Py_CLEAR(clear_module_state->__pyx_n_s_decode_match);
   Py_CLEAR(clear_module_state->__pyx_n_s_decoded_graphs);
   Py_CLEAR(clear_module_state->__pyx_n_s_decoded_label);
+  Py_CLEAR(clear_module_state->__pyx_n_s_decoded_match);
   Py_CLEAR(clear_module_state->__pyx_n_s_decoded_node);
   Py_CLEAR(clear_module_state->__pyx_n_s_decoded_node_a);
   Py_CLEAR(clear_module_state->__pyx_n_s_decoded_node_b);
@@ -2435,18 +2477,24 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_n_s_edge_label_encoding_inv);
   Py_CLEAR(clear_module_state->__pyx_n_s_edges);
   Py_CLEAR(clear_module_state->__pyx_n_s_encode_graphs);
+  Py_CLEAR(clear_module_state->__pyx_n_s_encode_match);
   Py_CLEAR(clear_module_state->__pyx_n_s_encoded_graphs);
   Py_CLEAR(clear_module_state->__pyx_n_s_encoded_label);
+  Py_CLEAR(clear_module_state->__pyx_n_s_encoded_match);
   Py_CLEAR(clear_module_state->__pyx_n_s_encoded_node);
   Py_CLEAR(clear_module_state->__pyx_n_s_encoded_node_a);
   Py_CLEAR(clear_module_state->__pyx_n_s_encoded_node_b);
+  Py_CLEAR(clear_module_state->__pyx_n_s_encoding_as_array);
   Py_CLEAR(clear_module_state->__pyx_n_s_gmapache_integerization);
   Py_CLEAR(clear_module_state->__pyx_kp_s_gmapache_integerization_pyx);
   Py_CLEAR(clear_module_state->__pyx_n_s_i);
   Py_CLEAR(clear_module_state->__pyx_n_s_import);
   Py_CLEAR(clear_module_state->__pyx_n_s_index);
+  Py_CLEAR(clear_module_state->__pyx_n_s_index1);
+  Py_CLEAR(clear_module_state->__pyx_n_s_index2);
   Py_CLEAR(clear_module_state->__pyx_n_s_initializing);
   Py_CLEAR(clear_module_state->__pyx_n_s_input_graphs);
+  Py_CLEAR(clear_module_state->__pyx_n_s_input_match);
   Py_CLEAR(clear_module_state->__pyx_n_s_int_graph);
   Py_CLEAR(clear_module_state->__pyx_n_s_is_coroutine);
   Py_CLEAR(clear_module_state->__pyx_n_s_is_directed);
@@ -2455,6 +2503,8 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_n_s_networkx);
   Py_CLEAR(clear_module_state->__pyx_n_s_new_edge_label);
   Py_CLEAR(clear_module_state->__pyx_n_s_new_node_label);
+  Py_CLEAR(clear_module_state->__pyx_n_s_node1);
+  Py_CLEAR(clear_module_state->__pyx_n_s_node2);
   Py_CLEAR(clear_module_state->__pyx_n_s_nodeInfo);
   Py_CLEAR(clear_module_state->__pyx_n_s_node_label_encoding);
   Py_CLEAR(clear_module_state->__pyx_n_s_node_label_encoding_inv);
@@ -2471,8 +2521,12 @@ static int __pyx_m_clear(PyObject *m) {
   Py_CLEAR(clear_module_state->__pyx_int_1);
   Py_CLEAR(clear_module_state->__pyx_tuple__3);
   Py_CLEAR(clear_module_state->__pyx_tuple__5);
+  Py_CLEAR(clear_module_state->__pyx_tuple__7);
+  Py_CLEAR(clear_module_state->__pyx_tuple__9);
   Py_CLEAR(clear_module_state->__pyx_codeobj__4);
   Py_CLEAR(clear_module_state->__pyx_codeobj__6);
+  Py_CLEAR(clear_module_state->__pyx_codeobj__8);
+  Py_CLEAR(clear_module_state->__pyx_codeobj__10);
   return 0;
 }
 #endif
@@ -2498,8 +2552,8 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_n_s_GMEL);
   Py_VISIT(traverse_module_state->__pyx_n_s_GMNL);
   Py_VISIT(traverse_module_state->__pyx_n_s_Graph);
+  Py_VISIT(traverse_module_state->__pyx_n_s__11);
   Py_VISIT(traverse_module_state->__pyx_n_s__2);
-  Py_VISIT(traverse_module_state->__pyx_n_s__7);
   Py_VISIT(traverse_module_state->__pyx_n_s_add_edge);
   Py_VISIT(traverse_module_state->__pyx_n_s_add_edges_from);
   Py_VISIT(traverse_module_state->__pyx_n_s_add_node);
@@ -2514,8 +2568,10 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_n_s_data);
   Py_VISIT(traverse_module_state->__pyx_n_s_dec_graph);
   Py_VISIT(traverse_module_state->__pyx_n_s_decode_graphs);
+  Py_VISIT(traverse_module_state->__pyx_n_s_decode_match);
   Py_VISIT(traverse_module_state->__pyx_n_s_decoded_graphs);
   Py_VISIT(traverse_module_state->__pyx_n_s_decoded_label);
+  Py_VISIT(traverse_module_state->__pyx_n_s_decoded_match);
   Py_VISIT(traverse_module_state->__pyx_n_s_decoded_node);
   Py_VISIT(traverse_module_state->__pyx_n_s_decoded_node_a);
   Py_VISIT(traverse_module_state->__pyx_n_s_decoded_node_b);
@@ -2525,18 +2581,24 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_n_s_edge_label_encoding_inv);
   Py_VISIT(traverse_module_state->__pyx_n_s_edges);
   Py_VISIT(traverse_module_state->__pyx_n_s_encode_graphs);
+  Py_VISIT(traverse_module_state->__pyx_n_s_encode_match);
   Py_VISIT(traverse_module_state->__pyx_n_s_encoded_graphs);
   Py_VISIT(traverse_module_state->__pyx_n_s_encoded_label);
+  Py_VISIT(traverse_module_state->__pyx_n_s_encoded_match);
   Py_VISIT(traverse_module_state->__pyx_n_s_encoded_node);
   Py_VISIT(traverse_module_state->__pyx_n_s_encoded_node_a);
   Py_VISIT(traverse_module_state->__pyx_n_s_encoded_node_b);
+  Py_VISIT(traverse_module_state->__pyx_n_s_encoding_as_array);
   Py_VISIT(traverse_module_state->__pyx_n_s_gmapache_integerization);
   Py_VISIT(traverse_module_state->__pyx_kp_s_gmapache_integerization_pyx);
   Py_VISIT(traverse_module_state->__pyx_n_s_i);
   Py_VISIT(traverse_module_state->__pyx_n_s_import);
   Py_VISIT(traverse_module_state->__pyx_n_s_index);
+  Py_VISIT(traverse_module_state->__pyx_n_s_index1);
+  Py_VISIT(traverse_module_state->__pyx_n_s_index2);
   Py_VISIT(traverse_module_state->__pyx_n_s_initializing);
   Py_VISIT(traverse_module_state->__pyx_n_s_input_graphs);
+  Py_VISIT(traverse_module_state->__pyx_n_s_input_match);
   Py_VISIT(traverse_module_state->__pyx_n_s_int_graph);
   Py_VISIT(traverse_module_state->__pyx_n_s_is_coroutine);
   Py_VISIT(traverse_module_state->__pyx_n_s_is_directed);
@@ -2545,6 +2607,8 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_n_s_networkx);
   Py_VISIT(traverse_module_state->__pyx_n_s_new_edge_label);
   Py_VISIT(traverse_module_state->__pyx_n_s_new_node_label);
+  Py_VISIT(traverse_module_state->__pyx_n_s_node1);
+  Py_VISIT(traverse_module_state->__pyx_n_s_node2);
   Py_VISIT(traverse_module_state->__pyx_n_s_nodeInfo);
   Py_VISIT(traverse_module_state->__pyx_n_s_node_label_encoding);
   Py_VISIT(traverse_module_state->__pyx_n_s_node_label_encoding_inv);
@@ -2561,8 +2625,12 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
   Py_VISIT(traverse_module_state->__pyx_int_1);
   Py_VISIT(traverse_module_state->__pyx_tuple__3);
   Py_VISIT(traverse_module_state->__pyx_tuple__5);
+  Py_VISIT(traverse_module_state->__pyx_tuple__7);
+  Py_VISIT(traverse_module_state->__pyx_tuple__9);
   Py_VISIT(traverse_module_state->__pyx_codeobj__4);
   Py_VISIT(traverse_module_state->__pyx_codeobj__6);
+  Py_VISIT(traverse_module_state->__pyx_codeobj__8);
+  Py_VISIT(traverse_module_state->__pyx_codeobj__10);
   return 0;
 }
 #endif
@@ -2600,8 +2668,8 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_n_s_GMEL __pyx_mstate_global->__pyx_n_s_GMEL
 #define __pyx_n_s_GMNL __pyx_mstate_global->__pyx_n_s_GMNL
 #define __pyx_n_s_Graph __pyx_mstate_global->__pyx_n_s_Graph
+#define __pyx_n_s__11 __pyx_mstate_global->__pyx_n_s__11
 #define __pyx_n_s__2 __pyx_mstate_global->__pyx_n_s__2
-#define __pyx_n_s__7 __pyx_mstate_global->__pyx_n_s__7
 #define __pyx_n_s_add_edge __pyx_mstate_global->__pyx_n_s_add_edge
 #define __pyx_n_s_add_edges_from __pyx_mstate_global->__pyx_n_s_add_edges_from
 #define __pyx_n_s_add_node __pyx_mstate_global->__pyx_n_s_add_node
@@ -2616,8 +2684,10 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_n_s_data __pyx_mstate_global->__pyx_n_s_data
 #define __pyx_n_s_dec_graph __pyx_mstate_global->__pyx_n_s_dec_graph
 #define __pyx_n_s_decode_graphs __pyx_mstate_global->__pyx_n_s_decode_graphs
+#define __pyx_n_s_decode_match __pyx_mstate_global->__pyx_n_s_decode_match
 #define __pyx_n_s_decoded_graphs __pyx_mstate_global->__pyx_n_s_decoded_graphs
 #define __pyx_n_s_decoded_label __pyx_mstate_global->__pyx_n_s_decoded_label
+#define __pyx_n_s_decoded_match __pyx_mstate_global->__pyx_n_s_decoded_match
 #define __pyx_n_s_decoded_node __pyx_mstate_global->__pyx_n_s_decoded_node
 #define __pyx_n_s_decoded_node_a __pyx_mstate_global->__pyx_n_s_decoded_node_a
 #define __pyx_n_s_decoded_node_b __pyx_mstate_global->__pyx_n_s_decoded_node_b
@@ -2627,18 +2697,24 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_n_s_edge_label_encoding_inv __pyx_mstate_global->__pyx_n_s_edge_label_encoding_inv
 #define __pyx_n_s_edges __pyx_mstate_global->__pyx_n_s_edges
 #define __pyx_n_s_encode_graphs __pyx_mstate_global->__pyx_n_s_encode_graphs
+#define __pyx_n_s_encode_match __pyx_mstate_global->__pyx_n_s_encode_match
 #define __pyx_n_s_encoded_graphs __pyx_mstate_global->__pyx_n_s_encoded_graphs
 #define __pyx_n_s_encoded_label __pyx_mstate_global->__pyx_n_s_encoded_label
+#define __pyx_n_s_encoded_match __pyx_mstate_global->__pyx_n_s_encoded_match
 #define __pyx_n_s_encoded_node __pyx_mstate_global->__pyx_n_s_encoded_node
 #define __pyx_n_s_encoded_node_a __pyx_mstate_global->__pyx_n_s_encoded_node_a
 #define __pyx_n_s_encoded_node_b __pyx_mstate_global->__pyx_n_s_encoded_node_b
+#define __pyx_n_s_encoding_as_array __pyx_mstate_global->__pyx_n_s_encoding_as_array
 #define __pyx_n_s_gmapache_integerization __pyx_mstate_global->__pyx_n_s_gmapache_integerization
 #define __pyx_kp_s_gmapache_integerization_pyx __pyx_mstate_global->__pyx_kp_s_gmapache_integerization_pyx
 #define __pyx_n_s_i __pyx_mstate_global->__pyx_n_s_i
 #define __pyx_n_s_import __pyx_mstate_global->__pyx_n_s_import
 #define __pyx_n_s_index __pyx_mstate_global->__pyx_n_s_index
+#define __pyx_n_s_index1 __pyx_mstate_global->__pyx_n_s_index1
+#define __pyx_n_s_index2 __pyx_mstate_global->__pyx_n_s_index2
 #define __pyx_n_s_initializing __pyx_mstate_global->__pyx_n_s_initializing
 #define __pyx_n_s_input_graphs __pyx_mstate_global->__pyx_n_s_input_graphs
+#define __pyx_n_s_input_match __pyx_mstate_global->__pyx_n_s_input_match
 #define __pyx_n_s_int_graph __pyx_mstate_global->__pyx_n_s_int_graph
 #define __pyx_n_s_is_coroutine __pyx_mstate_global->__pyx_n_s_is_coroutine
 #define __pyx_n_s_is_directed __pyx_mstate_global->__pyx_n_s_is_directed
@@ -2647,6 +2723,8 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_n_s_networkx __pyx_mstate_global->__pyx_n_s_networkx
 #define __pyx_n_s_new_edge_label __pyx_mstate_global->__pyx_n_s_new_edge_label
 #define __pyx_n_s_new_node_label __pyx_mstate_global->__pyx_n_s_new_node_label
+#define __pyx_n_s_node1 __pyx_mstate_global->__pyx_n_s_node1
+#define __pyx_n_s_node2 __pyx_mstate_global->__pyx_n_s_node2
 #define __pyx_n_s_nodeInfo __pyx_mstate_global->__pyx_n_s_nodeInfo
 #define __pyx_n_s_node_label_encoding __pyx_mstate_global->__pyx_n_s_node_label_encoding
 #define __pyx_n_s_node_label_encoding_inv __pyx_mstate_global->__pyx_n_s_node_label_encoding_inv
@@ -2663,8 +2741,12 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
 #define __pyx_int_1 __pyx_mstate_global->__pyx_int_1
 #define __pyx_tuple__3 __pyx_mstate_global->__pyx_tuple__3
 #define __pyx_tuple__5 __pyx_mstate_global->__pyx_tuple__5
+#define __pyx_tuple__7 __pyx_mstate_global->__pyx_tuple__7
+#define __pyx_tuple__9 __pyx_mstate_global->__pyx_tuple__9
 #define __pyx_codeobj__4 __pyx_mstate_global->__pyx_codeobj__4
 #define __pyx_codeobj__6 __pyx_mstate_global->__pyx_codeobj__6
+#define __pyx_codeobj__8 __pyx_mstate_global->__pyx_codeobj__8
+#define __pyx_codeobj__10 __pyx_mstate_global->__pyx_codeobj__10
 /* #### Code section: module_code ### */
 
 /* "gmapache/integerization.pyx":30
@@ -2675,7 +2757,7 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
  *     """
  */
 
-static PyObject *__pyx_pf_8gmapache_14integerization_4__defaults__(CYTHON_UNUSED PyObject *__pyx_self) {
+static PyObject *__pyx_pf_8gmapache_14integerization_8__defaults__(CYTHON_UNUSED PyObject *__pyx_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -2830,14 +2912,14 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
   PyObject *__pyx_v_all_nodes = NULL;
   CYTHON_UNUSED PyObject *__pyx_v_all_node_labels = NULL;
   CYTHON_UNUSED PyObject *__pyx_v_all_edge_labels = NULL;
+  PyObject *__pyx_v_nodeInfo = NULL;
+  PyObject *__pyx_v_edgeInfo = NULL;
   PyObject *__pyx_v_node_name_encoding_inv = NULL;
   PyObject *__pyx_v_node_label_encoding_inv = NULL;
   PyObject *__pyx_v_edge_label_encoding_inv = NULL;
-  PyObject *__pyx_v_int_graph = NULL;
-  PyObject *__pyx_v_v = NULL;
-  PyObject *__pyx_v_nodeInfo = NULL;
   PyObject *__pyx_v_u = NULL;
-  PyObject *__pyx_v_edgeInfo = NULL;
+  PyObject *__pyx_v_v = NULL;
+  PyObject *__pyx_v_int_graph = NULL;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -2993,7 +3075,7 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
  *     all_nodes = []
  *     all_node_labels = []             # <<<<<<<<<<<<<<
  *     all_edge_labels = []
- *     node_name_encoding_inv = dict()    # from node names to ints
+ *     nodeInfo = dict()
  */
   __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 64, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
@@ -3004,8 +3086,8 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
  *     all_nodes = []
  *     all_node_labels = []
  *     all_edge_labels = []             # <<<<<<<<<<<<<<
- *     node_name_encoding_inv = dict()    # from node names to ints
- *     node_label_encoding_inv = [None]   # from node label-dicts to ints (indices)
+ *     nodeInfo = dict()
+ *     edgeInfo = dict()
  */
   __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 65, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
@@ -3015,48 +3097,92 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
   /* "gmapache/integerization.pyx":66
  *     all_node_labels = []
  *     all_edge_labels = []
- *     node_name_encoding_inv = dict()    # from node names to ints             # <<<<<<<<<<<<<<
- *     node_label_encoding_inv = [None]   # from node label-dicts to ints (indices)
- *     edge_label_encoding_inv = [None]   # from edge label-dicts to ints (indices)
+ *     nodeInfo = dict()             # <<<<<<<<<<<<<<
+ *     edgeInfo = dict()
+ *     node_name_encoding_inv = dict()    # from node names to ints
  */
   __pyx_t_1 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 66, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_v_node_name_encoding_inv = ((PyObject*)__pyx_t_1);
+  __pyx_v_nodeInfo = __pyx_t_1;
   __pyx_t_1 = 0;
 
   /* "gmapache/integerization.pyx":67
  *     all_edge_labels = []
+ *     nodeInfo = dict()
+ *     edgeInfo = dict()             # <<<<<<<<<<<<<<
  *     node_name_encoding_inv = dict()    # from node names to ints
- *     node_label_encoding_inv = [None]   # from node label-dicts to ints (indices)             # <<<<<<<<<<<<<<
- *     edge_label_encoding_inv = [None]   # from edge label-dicts to ints (indices)
- *     int_graph = None
+ *     node_label_encoding_inv = [None]   # from node label-dicts to ints (indices)
  */
-  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 67, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 67, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_INCREF(Py_None);
-  __Pyx_GIVEREF(Py_None);
-  if (__Pyx_PyList_SET_ITEM(__pyx_t_1, 0, Py_None)) __PYX_ERR(0, 67, __pyx_L1_error);
-  __pyx_v_node_label_encoding_inv = ((PyObject*)__pyx_t_1);
+  __pyx_v_edgeInfo = __pyx_t_1;
   __pyx_t_1 = 0;
 
   /* "gmapache/integerization.pyx":68
- *     node_name_encoding_inv = dict()    # from node names to ints
+ *     nodeInfo = dict()
+ *     edgeInfo = dict()
+ *     node_name_encoding_inv = dict()    # from node names to ints             # <<<<<<<<<<<<<<
  *     node_label_encoding_inv = [None]   # from node label-dicts to ints (indices)
- *     edge_label_encoding_inv = [None]   # from edge label-dicts to ints (indices)             # <<<<<<<<<<<<<<
- *     int_graph = None
- *     # homogenize node names across input graphs
+ *     edge_label_encoding_inv = [None]   # from edge label-dicts to ints (indices)
  */
-  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 68, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 68, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_INCREF(Py_None);
-  __Pyx_GIVEREF(Py_None);
-  if (__Pyx_PyList_SET_ITEM(__pyx_t_1, 0, Py_None)) __PYX_ERR(0, 68, __pyx_L1_error);
-  __pyx_v_edge_label_encoding_inv = ((PyObject*)__pyx_t_1);
+  __pyx_v_node_name_encoding_inv = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
   /* "gmapache/integerization.pyx":69
+ *     edgeInfo = dict()
+ *     node_name_encoding_inv = dict()    # from node names to ints
+ *     node_label_encoding_inv = [None]   # from node label-dicts to ints (indices)             # <<<<<<<<<<<<<<
+ *     edge_label_encoding_inv = [None]   # from edge label-dicts to ints (indices)
+ *     u = None
+ */
+  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 69, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_INCREF(Py_None);
+  __Pyx_GIVEREF(Py_None);
+  if (__Pyx_PyList_SET_ITEM(__pyx_t_1, 0, Py_None)) __PYX_ERR(0, 69, __pyx_L1_error);
+  __pyx_v_node_label_encoding_inv = ((PyObject*)__pyx_t_1);
+  __pyx_t_1 = 0;
+
+  /* "gmapache/integerization.pyx":70
+ *     node_name_encoding_inv = dict()    # from node names to ints
+ *     node_label_encoding_inv = [None]   # from node label-dicts to ints (indices)
+ *     edge_label_encoding_inv = [None]   # from edge label-dicts to ints (indices)             # <<<<<<<<<<<<<<
+ *     u = None
+ *     v = None
+ */
+  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 70, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_INCREF(Py_None);
+  __Pyx_GIVEREF(Py_None);
+  if (__Pyx_PyList_SET_ITEM(__pyx_t_1, 0, Py_None)) __PYX_ERR(0, 70, __pyx_L1_error);
+  __pyx_v_edge_label_encoding_inv = ((PyObject*)__pyx_t_1);
+  __pyx_t_1 = 0;
+
+  /* "gmapache/integerization.pyx":71
  *     node_label_encoding_inv = [None]   # from node label-dicts to ints (indices)
  *     edge_label_encoding_inv = [None]   # from edge label-dicts to ints (indices)
+ *     u = None             # <<<<<<<<<<<<<<
+ *     v = None
+ *     int_graph = None
+ */
+  __Pyx_INCREF(Py_None);
+  __pyx_v_u = Py_None;
+
+  /* "gmapache/integerization.pyx":72
+ *     edge_label_encoding_inv = [None]   # from edge label-dicts to ints (indices)
+ *     u = None
+ *     v = None             # <<<<<<<<<<<<<<
+ *     int_graph = None
+ *     # homogenize node names across input graphs
+ */
+  __Pyx_INCREF(Py_None);
+  __pyx_v_v = Py_None;
+
+  /* "gmapache/integerization.pyx":73
+ *     u = None
+ *     v = None
  *     int_graph = None             # <<<<<<<<<<<<<<
  *     # homogenize node names across input graphs
  *     for i in range(len(input_graphs)):
@@ -3064,28 +3190,28 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
   __Pyx_INCREF(Py_None);
   __pyx_v_int_graph = Py_None;
 
-  /* "gmapache/integerization.pyx":71
+  /* "gmapache/integerization.pyx":75
  *     int_graph = None
  *     # homogenize node names across input graphs
  *     for i in range(len(input_graphs)):             # <<<<<<<<<<<<<<
  *         all_nodes = list(set(all_nodes + list(input_graphs[i].nodes())))
  *     for i in range(len(all_nodes)):
  */
-  __pyx_t_2 = PyObject_Length(__pyx_v_input_graphs); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 71, __pyx_L1_error)
+  __pyx_t_2 = PyObject_Length(__pyx_v_input_graphs); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 75, __pyx_L1_error)
   __pyx_t_3 = __pyx_t_2;
   for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
     __pyx_v_i = __pyx_t_4;
 
-    /* "gmapache/integerization.pyx":72
+    /* "gmapache/integerization.pyx":76
  *     # homogenize node names across input graphs
  *     for i in range(len(input_graphs)):
  *         all_nodes = list(set(all_nodes + list(input_graphs[i].nodes())))             # <<<<<<<<<<<<<<
  *     for i in range(len(all_nodes)):
  *         node_name_encoding[i+1] = deepcopy(all_nodes[i])
  */
-    __pyx_t_5 = __Pyx_GetItemInt(__pyx_v_input_graphs, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 72, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_GetItemInt(__pyx_v_input_graphs, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 76, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_nodes); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 72, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_nodes); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 76, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __pyx_t_5 = NULL;
@@ -3106,48 +3232,48 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
       PyObject *__pyx_callargs[2] = {__pyx_t_5, NULL};
       __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_6, __pyx_callargs+1-__pyx_t_7, 0+__pyx_t_7);
       __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
-      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 72, __pyx_L1_error)
+      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 76, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     }
-    __pyx_t_6 = __Pyx_PySequence_ListKeepNew(__pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 72, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PySequence_ListKeepNew(__pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 76, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = PyNumber_Add(__pyx_v_all_nodes, __pyx_t_6); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 72, __pyx_L1_error)
+    __pyx_t_1 = PyNumber_Add(__pyx_v_all_nodes, __pyx_t_6); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 76, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_6 = PySet_New(__pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 72, __pyx_L1_error)
+    __pyx_t_6 = PySet_New(__pyx_t_1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 76, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = PySequence_List(__pyx_t_6); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 72, __pyx_L1_error)
+    __pyx_t_1 = PySequence_List(__pyx_t_6); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 76, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF_SET(__pyx_v_all_nodes, ((PyObject*)__pyx_t_1));
     __pyx_t_1 = 0;
   }
 
-  /* "gmapache/integerization.pyx":73
+  /* "gmapache/integerization.pyx":77
  *     for i in range(len(input_graphs)):
  *         all_nodes = list(set(all_nodes + list(input_graphs[i].nodes())))
  *     for i in range(len(all_nodes)):             # <<<<<<<<<<<<<<
  *         node_name_encoding[i+1] = deepcopy(all_nodes[i])
  *         node_name_encoding_inv[deepcopy(all_nodes[i])] = i+1
  */
-  __pyx_t_2 = __Pyx_PyList_GET_SIZE(__pyx_v_all_nodes); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 73, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyList_GET_SIZE(__pyx_v_all_nodes); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 77, __pyx_L1_error)
   __pyx_t_3 = __pyx_t_2;
   for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
     __pyx_v_i = __pyx_t_4;
 
-    /* "gmapache/integerization.pyx":74
+    /* "gmapache/integerization.pyx":78
  *         all_nodes = list(set(all_nodes + list(input_graphs[i].nodes())))
  *     for i in range(len(all_nodes)):
  *         node_name_encoding[i+1] = deepcopy(all_nodes[i])             # <<<<<<<<<<<<<<
  *         node_name_encoding_inv[deepcopy(all_nodes[i])] = i+1
  *     # homogenize node labels across input graphs
  */
-    __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 74, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 78, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_5 = __Pyx_GetItemInt_List(__pyx_v_all_nodes, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 1, 1, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 74, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_GetItemInt_List(__pyx_v_all_nodes, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 1, 1, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 78, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __pyx_t_8 = NULL;
     __pyx_t_7 = 0;
@@ -3168,28 +3294,28 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
       __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_6, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
       __Pyx_XDECREF(__pyx_t_8); __pyx_t_8 = 0;
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 74, __pyx_L1_error)
+      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 78, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     }
-    __pyx_t_6 = __Pyx_PyInt_From_long((__pyx_v_i + 1)); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 74, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyInt_From_long((__pyx_v_i + 1)); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 78, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
-    if (unlikely((PyDict_SetItem(__pyx_v_node_name_encoding, __pyx_t_6, __pyx_t_1) < 0))) __PYX_ERR(0, 74, __pyx_L1_error)
+    if (unlikely((PyDict_SetItem(__pyx_v_node_name_encoding, __pyx_t_6, __pyx_t_1) < 0))) __PYX_ERR(0, 78, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-    /* "gmapache/integerization.pyx":75
+    /* "gmapache/integerization.pyx":79
  *     for i in range(len(all_nodes)):
  *         node_name_encoding[i+1] = deepcopy(all_nodes[i])
  *         node_name_encoding_inv[deepcopy(all_nodes[i])] = i+1             # <<<<<<<<<<<<<<
  *     # homogenize node labels across input graphs
  *     for i in range(len(input_graphs)):
  */
-    __pyx_t_1 = __Pyx_PyInt_From_long((__pyx_v_i + 1)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 75, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyInt_From_long((__pyx_v_i + 1)); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 79, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 75, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 79, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_8 = __Pyx_GetItemInt_List(__pyx_v_all_nodes, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 1, 1, 1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 75, __pyx_L1_error)
+    __pyx_t_8 = __Pyx_GetItemInt_List(__pyx_v_all_nodes, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 1, 1, 1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 79, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
     __pyx_t_9 = NULL;
     __pyx_t_7 = 0;
@@ -3210,47 +3336,47 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
       __pyx_t_6 = __Pyx_PyObject_FastCall(__pyx_t_5, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
       __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-      if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 75, __pyx_L1_error)
+      if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 79, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     }
-    if (unlikely((PyDict_SetItem(__pyx_v_node_name_encoding_inv, __pyx_t_6, __pyx_t_1) < 0))) __PYX_ERR(0, 75, __pyx_L1_error)
+    if (unlikely((PyDict_SetItem(__pyx_v_node_name_encoding_inv, __pyx_t_6, __pyx_t_1) < 0))) __PYX_ERR(0, 79, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   }
 
-  /* "gmapache/integerization.pyx":77
+  /* "gmapache/integerization.pyx":81
  *         node_name_encoding_inv[deepcopy(all_nodes[i])] = i+1
  *     # homogenize node labels across input graphs
  *     for i in range(len(input_graphs)):             # <<<<<<<<<<<<<<
  *         for (v, nodeInfo) in list(input_graphs[i].nodes(data = True)):
  *             if(nodeInfo not in node_label_encoding_inv):
  */
-  __pyx_t_2 = PyObject_Length(__pyx_v_input_graphs); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 77, __pyx_L1_error)
+  __pyx_t_2 = PyObject_Length(__pyx_v_input_graphs); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 81, __pyx_L1_error)
   __pyx_t_3 = __pyx_t_2;
   for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
     __pyx_v_i = __pyx_t_4;
 
-    /* "gmapache/integerization.pyx":78
+    /* "gmapache/integerization.pyx":82
  *     # homogenize node labels across input graphs
  *     for i in range(len(input_graphs)):
  *         for (v, nodeInfo) in list(input_graphs[i].nodes(data = True)):             # <<<<<<<<<<<<<<
  *             if(nodeInfo not in node_label_encoding_inv):
  *                 node_label_encoding[new_node_label] = deepcopy(nodeInfo)
  */
-    __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_input_graphs, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 78, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_input_graphs, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 82, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_nodes); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 78, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_nodes); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 82, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 78, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 82, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_data, Py_True) < 0) __PYX_ERR(0, 78, __pyx_L1_error)
-    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_empty_tuple, __pyx_t_1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 78, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_data, Py_True) < 0) __PYX_ERR(0, 82, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_empty_tuple, __pyx_t_1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 82, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PySequence_ListKeepNew(__pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 78, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PySequence_ListKeepNew(__pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 82, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __pyx_t_5 = __pyx_t_1; __Pyx_INCREF(__pyx_t_5);
@@ -3260,14 +3386,14 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
       {
         Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_5);
         #if !CYTHON_ASSUME_SAFE_MACROS
-        if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 78, __pyx_L1_error)
+        if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 82, __pyx_L1_error)
         #endif
         if (__pyx_t_10 >= __pyx_temp) break;
       }
       #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-      __pyx_t_1 = PyList_GET_ITEM(__pyx_t_5, __pyx_t_10); __Pyx_INCREF(__pyx_t_1); __pyx_t_10++; if (unlikely((0 < 0))) __PYX_ERR(0, 78, __pyx_L1_error)
+      __pyx_t_1 = PyList_GET_ITEM(__pyx_t_5, __pyx_t_10); __Pyx_INCREF(__pyx_t_1); __pyx_t_10++; if (unlikely((0 < 0))) __PYX_ERR(0, 82, __pyx_L1_error)
       #else
-      __pyx_t_1 = __Pyx_PySequence_ITEM(__pyx_t_5, __pyx_t_10); __pyx_t_10++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 78, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PySequence_ITEM(__pyx_t_5, __pyx_t_10); __pyx_t_10++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 82, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       #endif
       if ((likely(PyTuple_CheckExact(__pyx_t_1))) || (PyList_CheckExact(__pyx_t_1))) {
@@ -3276,7 +3402,7 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
         if (unlikely(size != 2)) {
           if (size > 2) __Pyx_RaiseTooManyValuesError(2);
           else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-          __PYX_ERR(0, 78, __pyx_L1_error)
+          __PYX_ERR(0, 82, __pyx_L1_error)
         }
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
         if (likely(PyTuple_CheckExact(sequence))) {
@@ -3289,15 +3415,15 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
         __Pyx_INCREF(__pyx_t_6);
         __Pyx_INCREF(__pyx_t_8);
         #else
-        __pyx_t_6 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 78, __pyx_L1_error)
+        __pyx_t_6 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 82, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
-        __pyx_t_8 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 78, __pyx_L1_error)
+        __pyx_t_8 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 82, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_8);
         #endif
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
       } else {
         Py_ssize_t index = -1;
-        __pyx_t_9 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 78, __pyx_L1_error)
+        __pyx_t_9 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 82, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_9);
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
         __pyx_t_11 = __Pyx_PyObject_GetIterNextFunc(__pyx_t_9);
@@ -3305,7 +3431,7 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
         __Pyx_GOTREF(__pyx_t_6);
         index = 1; __pyx_t_8 = __pyx_t_11(__pyx_t_9); if (unlikely(!__pyx_t_8)) goto __pyx_L11_unpacking_failed;
         __Pyx_GOTREF(__pyx_t_8);
-        if (__Pyx_IternextUnpackEndCheck(__pyx_t_11(__pyx_t_9), 2) < 0) __PYX_ERR(0, 78, __pyx_L1_error)
+        if (__Pyx_IternextUnpackEndCheck(__pyx_t_11(__pyx_t_9), 2) < 0) __PYX_ERR(0, 82, __pyx_L1_error)
         __pyx_t_11 = NULL;
         __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
         goto __pyx_L12_unpacking_done;
@@ -3313,32 +3439,32 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
         __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
         __pyx_t_11 = NULL;
         if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
-        __PYX_ERR(0, 78, __pyx_L1_error)
+        __PYX_ERR(0, 82, __pyx_L1_error)
         __pyx_L12_unpacking_done:;
       }
-      __Pyx_XDECREF_SET(__pyx_v_v, __pyx_t_6);
+      __Pyx_DECREF_SET(__pyx_v_v, __pyx_t_6);
       __pyx_t_6 = 0;
-      __Pyx_XDECREF_SET(__pyx_v_nodeInfo, __pyx_t_8);
+      __Pyx_DECREF_SET(__pyx_v_nodeInfo, __pyx_t_8);
       __pyx_t_8 = 0;
 
-      /* "gmapache/integerization.pyx":79
+      /* "gmapache/integerization.pyx":83
  *     for i in range(len(input_graphs)):
  *         for (v, nodeInfo) in list(input_graphs[i].nodes(data = True)):
  *             if(nodeInfo not in node_label_encoding_inv):             # <<<<<<<<<<<<<<
  *                 node_label_encoding[new_node_label] = deepcopy(nodeInfo)
  *                 node_label_encoding_inv.append(deepcopy(nodeInfo))
  */
-      __pyx_t_12 = (__Pyx_PySequence_ContainsTF(__pyx_v_nodeInfo, __pyx_v_node_label_encoding_inv, Py_NE)); if (unlikely((__pyx_t_12 < 0))) __PYX_ERR(0, 79, __pyx_L1_error)
+      __pyx_t_12 = (__Pyx_PySequence_ContainsTF(__pyx_v_nodeInfo, __pyx_v_node_label_encoding_inv, Py_NE)); if (unlikely((__pyx_t_12 < 0))) __PYX_ERR(0, 83, __pyx_L1_error)
       if (__pyx_t_12) {
 
-        /* "gmapache/integerization.pyx":80
+        /* "gmapache/integerization.pyx":84
  *         for (v, nodeInfo) in list(input_graphs[i].nodes(data = True)):
  *             if(nodeInfo not in node_label_encoding_inv):
  *                 node_label_encoding[new_node_label] = deepcopy(nodeInfo)             # <<<<<<<<<<<<<<
  *                 node_label_encoding_inv.append(deepcopy(nodeInfo))
  *                 new_node_label = new_node_label + 1
  */
-        __Pyx_GetModuleGlobalName(__pyx_t_8, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 80, __pyx_L1_error)
+        __Pyx_GetModuleGlobalName(__pyx_t_8, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 84, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_8);
         __pyx_t_6 = NULL;
         __pyx_t_7 = 0;
@@ -3358,21 +3484,21 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
           PyObject *__pyx_callargs[2] = {__pyx_t_6, __pyx_v_nodeInfo};
           __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_8, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
           __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-          if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 80, __pyx_L1_error)
+          if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 84, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_1);
           __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
         }
-        if (unlikely((PyDict_SetItem(__pyx_v_node_label_encoding, __pyx_v_new_node_label, __pyx_t_1) < 0))) __PYX_ERR(0, 80, __pyx_L1_error)
+        if (unlikely((PyDict_SetItem(__pyx_v_node_label_encoding, __pyx_v_new_node_label, __pyx_t_1) < 0))) __PYX_ERR(0, 84, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-        /* "gmapache/integerization.pyx":81
+        /* "gmapache/integerization.pyx":85
  *             if(nodeInfo not in node_label_encoding_inv):
  *                 node_label_encoding[new_node_label] = deepcopy(nodeInfo)
  *                 node_label_encoding_inv.append(deepcopy(nodeInfo))             # <<<<<<<<<<<<<<
  *                 new_node_label = new_node_label + 1
  *     # homogenize edge labels across input graphs
  */
-        __Pyx_GetModuleGlobalName(__pyx_t_8, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 81, __pyx_L1_error)
+        __Pyx_GetModuleGlobalName(__pyx_t_8, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 85, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_8);
         __pyx_t_6 = NULL;
         __pyx_t_7 = 0;
@@ -3392,26 +3518,26 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
           PyObject *__pyx_callargs[2] = {__pyx_t_6, __pyx_v_nodeInfo};
           __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_8, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
           __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-          if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 81, __pyx_L1_error)
+          if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 85, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_1);
           __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
         }
-        __pyx_t_13 = __Pyx_PyList_Append(__pyx_v_node_label_encoding_inv, __pyx_t_1); if (unlikely(__pyx_t_13 == ((int)-1))) __PYX_ERR(0, 81, __pyx_L1_error)
+        __pyx_t_13 = __Pyx_PyList_Append(__pyx_v_node_label_encoding_inv, __pyx_t_1); if (unlikely(__pyx_t_13 == ((int)-1))) __PYX_ERR(0, 85, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-        /* "gmapache/integerization.pyx":82
+        /* "gmapache/integerization.pyx":86
  *                 node_label_encoding[new_node_label] = deepcopy(nodeInfo)
  *                 node_label_encoding_inv.append(deepcopy(nodeInfo))
  *                 new_node_label = new_node_label + 1             # <<<<<<<<<<<<<<
  *     # homogenize edge labels across input graphs
  *     for i in range(len(input_graphs)):
  */
-        __pyx_t_1 = __Pyx_PyInt_AddObjC(__pyx_v_new_node_label, __pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 82, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyInt_AddObjC(__pyx_v_new_node_label, __pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 86, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_DECREF_SET(__pyx_v_new_node_label, __pyx_t_1);
         __pyx_t_1 = 0;
 
-        /* "gmapache/integerization.pyx":79
+        /* "gmapache/integerization.pyx":83
  *     for i in range(len(input_graphs)):
  *         for (v, nodeInfo) in list(input_graphs[i].nodes(data = True)):
  *             if(nodeInfo not in node_label_encoding_inv):             # <<<<<<<<<<<<<<
@@ -3420,7 +3546,7 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
  */
       }
 
-      /* "gmapache/integerization.pyx":78
+      /* "gmapache/integerization.pyx":82
  *     # homogenize node labels across input graphs
  *     for i in range(len(input_graphs)):
  *         for (v, nodeInfo) in list(input_graphs[i].nodes(data = True)):             # <<<<<<<<<<<<<<
@@ -3431,38 +3557,38 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   }
 
-  /* "gmapache/integerization.pyx":84
+  /* "gmapache/integerization.pyx":88
  *                 new_node_label = new_node_label + 1
  *     # homogenize edge labels across input graphs
  *     for i in range(len(input_graphs)):             # <<<<<<<<<<<<<<
  *         for (u, v, edgeInfo) in list(input_graphs[i].edges(data = True)):
  *             if(edgeInfo not in edge_label_encoding_inv):
  */
-  __pyx_t_2 = PyObject_Length(__pyx_v_input_graphs); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 84, __pyx_L1_error)
+  __pyx_t_2 = PyObject_Length(__pyx_v_input_graphs); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 88, __pyx_L1_error)
   __pyx_t_3 = __pyx_t_2;
   for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
     __pyx_v_i = __pyx_t_4;
 
-    /* "gmapache/integerization.pyx":85
+    /* "gmapache/integerization.pyx":89
  *     # homogenize edge labels across input graphs
  *     for i in range(len(input_graphs)):
  *         for (u, v, edgeInfo) in list(input_graphs[i].edges(data = True)):             # <<<<<<<<<<<<<<
  *             if(edgeInfo not in edge_label_encoding_inv):
  *                 edge_label_encoding[new_edge_label] = deepcopy(edgeInfo)
  */
-    __pyx_t_5 = __Pyx_GetItemInt(__pyx_v_input_graphs, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 85, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_GetItemInt(__pyx_v_input_graphs, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 89, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_edges); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 85, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_edges); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 89, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __pyx_t_5 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 85, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 89, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_data, Py_True) < 0) __PYX_ERR(0, 85, __pyx_L1_error)
-    __pyx_t_8 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_empty_tuple, __pyx_t_5); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 85, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_data, Py_True) < 0) __PYX_ERR(0, 89, __pyx_L1_error)
+    __pyx_t_8 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_empty_tuple, __pyx_t_5); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 89, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __pyx_t_5 = __Pyx_PySequence_ListKeepNew(__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 85, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PySequence_ListKeepNew(__pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 89, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
     __pyx_t_8 = __pyx_t_5; __Pyx_INCREF(__pyx_t_8);
@@ -3472,14 +3598,14 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
       {
         Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_8);
         #if !CYTHON_ASSUME_SAFE_MACROS
-        if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 85, __pyx_L1_error)
+        if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 89, __pyx_L1_error)
         #endif
         if (__pyx_t_10 >= __pyx_temp) break;
       }
       #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-      __pyx_t_5 = PyList_GET_ITEM(__pyx_t_8, __pyx_t_10); __Pyx_INCREF(__pyx_t_5); __pyx_t_10++; if (unlikely((0 < 0))) __PYX_ERR(0, 85, __pyx_L1_error)
+      __pyx_t_5 = PyList_GET_ITEM(__pyx_t_8, __pyx_t_10); __Pyx_INCREF(__pyx_t_5); __pyx_t_10++; if (unlikely((0 < 0))) __PYX_ERR(0, 89, __pyx_L1_error)
       #else
-      __pyx_t_5 = __Pyx_PySequence_ITEM(__pyx_t_8, __pyx_t_10); __pyx_t_10++; if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 85, __pyx_L1_error)
+      __pyx_t_5 = __Pyx_PySequence_ITEM(__pyx_t_8, __pyx_t_10); __pyx_t_10++; if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 89, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
       #endif
       if ((likely(PyTuple_CheckExact(__pyx_t_5))) || (PyList_CheckExact(__pyx_t_5))) {
@@ -3488,7 +3614,7 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
         if (unlikely(size != 3)) {
           if (size > 3) __Pyx_RaiseTooManyValuesError(3);
           else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-          __PYX_ERR(0, 85, __pyx_L1_error)
+          __PYX_ERR(0, 89, __pyx_L1_error)
         }
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
         if (likely(PyTuple_CheckExact(sequence))) {
@@ -3504,17 +3630,17 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
         __Pyx_INCREF(__pyx_t_6);
         __Pyx_INCREF(__pyx_t_9);
         #else
-        __pyx_t_1 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 85, __pyx_L1_error)
+        __pyx_t_1 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 89, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __pyx_t_6 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 85, __pyx_L1_error)
+        __pyx_t_6 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 89, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
-        __pyx_t_9 = PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 85, __pyx_L1_error)
+        __pyx_t_9 = PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 89, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_9);
         #endif
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       } else {
         Py_ssize_t index = -1;
-        __pyx_t_14 = PyObject_GetIter(__pyx_t_5); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 85, __pyx_L1_error)
+        __pyx_t_14 = PyObject_GetIter(__pyx_t_5); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 89, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_14);
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
         __pyx_t_11 = __Pyx_PyObject_GetIterNextFunc(__pyx_t_14);
@@ -3524,7 +3650,7 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
         __Pyx_GOTREF(__pyx_t_6);
         index = 2; __pyx_t_9 = __pyx_t_11(__pyx_t_14); if (unlikely(!__pyx_t_9)) goto __pyx_L19_unpacking_failed;
         __Pyx_GOTREF(__pyx_t_9);
-        if (__Pyx_IternextUnpackEndCheck(__pyx_t_11(__pyx_t_14), 3) < 0) __PYX_ERR(0, 85, __pyx_L1_error)
+        if (__Pyx_IternextUnpackEndCheck(__pyx_t_11(__pyx_t_14), 3) < 0) __PYX_ERR(0, 89, __pyx_L1_error)
         __pyx_t_11 = NULL;
         __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
         goto __pyx_L20_unpacking_done;
@@ -3532,34 +3658,34 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
         __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
         __pyx_t_11 = NULL;
         if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
-        __PYX_ERR(0, 85, __pyx_L1_error)
+        __PYX_ERR(0, 89, __pyx_L1_error)
         __pyx_L20_unpacking_done:;
       }
-      __Pyx_XDECREF_SET(__pyx_v_u, __pyx_t_1);
+      __Pyx_DECREF_SET(__pyx_v_u, __pyx_t_1);
       __pyx_t_1 = 0;
-      __Pyx_XDECREF_SET(__pyx_v_v, __pyx_t_6);
+      __Pyx_DECREF_SET(__pyx_v_v, __pyx_t_6);
       __pyx_t_6 = 0;
-      __Pyx_XDECREF_SET(__pyx_v_edgeInfo, __pyx_t_9);
+      __Pyx_DECREF_SET(__pyx_v_edgeInfo, __pyx_t_9);
       __pyx_t_9 = 0;
 
-      /* "gmapache/integerization.pyx":86
+      /* "gmapache/integerization.pyx":90
  *     for i in range(len(input_graphs)):
  *         for (u, v, edgeInfo) in list(input_graphs[i].edges(data = True)):
  *             if(edgeInfo not in edge_label_encoding_inv):             # <<<<<<<<<<<<<<
  *                 edge_label_encoding[new_edge_label] = deepcopy(edgeInfo)
  *                 edge_label_encoding_inv.append(deepcopy(edgeInfo))
  */
-      __pyx_t_12 = (__Pyx_PySequence_ContainsTF(__pyx_v_edgeInfo, __pyx_v_edge_label_encoding_inv, Py_NE)); if (unlikely((__pyx_t_12 < 0))) __PYX_ERR(0, 86, __pyx_L1_error)
+      __pyx_t_12 = (__Pyx_PySequence_ContainsTF(__pyx_v_edgeInfo, __pyx_v_edge_label_encoding_inv, Py_NE)); if (unlikely((__pyx_t_12 < 0))) __PYX_ERR(0, 90, __pyx_L1_error)
       if (__pyx_t_12) {
 
-        /* "gmapache/integerization.pyx":87
+        /* "gmapache/integerization.pyx":91
  *         for (u, v, edgeInfo) in list(input_graphs[i].edges(data = True)):
  *             if(edgeInfo not in edge_label_encoding_inv):
  *                 edge_label_encoding[new_edge_label] = deepcopy(edgeInfo)             # <<<<<<<<<<<<<<
  *                 edge_label_encoding_inv.append(deepcopy(edgeInfo))
  *                 new_edge_label = new_edge_label + 1
  */
-        __Pyx_GetModuleGlobalName(__pyx_t_9, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 87, __pyx_L1_error)
+        __Pyx_GetModuleGlobalName(__pyx_t_9, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 91, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_9);
         __pyx_t_6 = NULL;
         __pyx_t_7 = 0;
@@ -3579,21 +3705,21 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
           PyObject *__pyx_callargs[2] = {__pyx_t_6, __pyx_v_edgeInfo};
           __pyx_t_5 = __Pyx_PyObject_FastCall(__pyx_t_9, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
           __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-          if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 87, __pyx_L1_error)
+          if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 91, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_5);
           __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
         }
-        if (unlikely((PyDict_SetItem(__pyx_v_edge_label_encoding, __pyx_v_new_edge_label, __pyx_t_5) < 0))) __PYX_ERR(0, 87, __pyx_L1_error)
+        if (unlikely((PyDict_SetItem(__pyx_v_edge_label_encoding, __pyx_v_new_edge_label, __pyx_t_5) < 0))) __PYX_ERR(0, 91, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-        /* "gmapache/integerization.pyx":88
+        /* "gmapache/integerization.pyx":92
  *             if(edgeInfo not in edge_label_encoding_inv):
  *                 edge_label_encoding[new_edge_label] = deepcopy(edgeInfo)
  *                 edge_label_encoding_inv.append(deepcopy(edgeInfo))             # <<<<<<<<<<<<<<
  *                 new_edge_label = new_edge_label + 1
  *     # create integerized copies of input graphs
  */
-        __Pyx_GetModuleGlobalName(__pyx_t_9, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 88, __pyx_L1_error)
+        __Pyx_GetModuleGlobalName(__pyx_t_9, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 92, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_9);
         __pyx_t_6 = NULL;
         __pyx_t_7 = 0;
@@ -3613,26 +3739,26 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
           PyObject *__pyx_callargs[2] = {__pyx_t_6, __pyx_v_edgeInfo};
           __pyx_t_5 = __Pyx_PyObject_FastCall(__pyx_t_9, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
           __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-          if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 88, __pyx_L1_error)
+          if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 92, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_5);
           __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
         }
-        __pyx_t_13 = __Pyx_PyList_Append(__pyx_v_edge_label_encoding_inv, __pyx_t_5); if (unlikely(__pyx_t_13 == ((int)-1))) __PYX_ERR(0, 88, __pyx_L1_error)
+        __pyx_t_13 = __Pyx_PyList_Append(__pyx_v_edge_label_encoding_inv, __pyx_t_5); if (unlikely(__pyx_t_13 == ((int)-1))) __PYX_ERR(0, 92, __pyx_L1_error)
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-        /* "gmapache/integerization.pyx":89
+        /* "gmapache/integerization.pyx":93
  *                 edge_label_encoding[new_edge_label] = deepcopy(edgeInfo)
  *                 edge_label_encoding_inv.append(deepcopy(edgeInfo))
  *                 new_edge_label = new_edge_label + 1             # <<<<<<<<<<<<<<
  *     # create integerized copies of input graphs
  *     for i in range(len(input_graphs)):
  */
-        __pyx_t_5 = __Pyx_PyInt_AddObjC(__pyx_v_new_edge_label, __pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 89, __pyx_L1_error)
+        __pyx_t_5 = __Pyx_PyInt_AddObjC(__pyx_v_new_edge_label, __pyx_int_1, 1, 0, 0); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 93, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_5);
         __Pyx_DECREF_SET(__pyx_v_new_edge_label, __pyx_t_5);
         __pyx_t_5 = 0;
 
-        /* "gmapache/integerization.pyx":86
+        /* "gmapache/integerization.pyx":90
  *     for i in range(len(input_graphs)):
  *         for (u, v, edgeInfo) in list(input_graphs[i].edges(data = True)):
  *             if(edgeInfo not in edge_label_encoding_inv):             # <<<<<<<<<<<<<<
@@ -3641,7 +3767,7 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
  */
       }
 
-      /* "gmapache/integerization.pyx":85
+      /* "gmapache/integerization.pyx":89
  *     # homogenize edge labels across input graphs
  *     for i in range(len(input_graphs)):
  *         for (u, v, edgeInfo) in list(input_graphs[i].edges(data = True)):             # <<<<<<<<<<<<<<
@@ -3652,28 +3778,28 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
   }
 
-  /* "gmapache/integerization.pyx":91
+  /* "gmapache/integerization.pyx":95
  *                 new_edge_label = new_edge_label + 1
  *     # create integerized copies of input graphs
  *     for i in range(len(input_graphs)):             # <<<<<<<<<<<<<<
  *         # initialize graph with original type
  *         if(input_graphs[i].is_directed()):
  */
-  __pyx_t_2 = PyObject_Length(__pyx_v_input_graphs); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 91, __pyx_L1_error)
+  __pyx_t_2 = PyObject_Length(__pyx_v_input_graphs); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 95, __pyx_L1_error)
   __pyx_t_3 = __pyx_t_2;
   for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
     __pyx_v_i = __pyx_t_4;
 
-    /* "gmapache/integerization.pyx":93
+    /* "gmapache/integerization.pyx":97
  *     for i in range(len(input_graphs)):
  *         # initialize graph with original type
  *         if(input_graphs[i].is_directed()):             # <<<<<<<<<<<<<<
  *             int_graph = nx.DiGraph()
  *         else:
  */
-    __pyx_t_5 = __Pyx_GetItemInt(__pyx_v_input_graphs, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 93, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_GetItemInt(__pyx_v_input_graphs, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 97, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_is_directed); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 93, __pyx_L1_error)
+    __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_is_directed); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 97, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __pyx_t_5 = NULL;
@@ -3694,24 +3820,24 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
       PyObject *__pyx_callargs[2] = {__pyx_t_5, NULL};
       __pyx_t_8 = __Pyx_PyObject_FastCall(__pyx_t_9, __pyx_callargs+1-__pyx_t_7, 0+__pyx_t_7);
       __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
-      if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 93, __pyx_L1_error)
+      if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 97, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
     }
-    __pyx_t_12 = __Pyx_PyObject_IsTrue(__pyx_t_8); if (unlikely((__pyx_t_12 < 0))) __PYX_ERR(0, 93, __pyx_L1_error)
+    __pyx_t_12 = __Pyx_PyObject_IsTrue(__pyx_t_8); if (unlikely((__pyx_t_12 < 0))) __PYX_ERR(0, 97, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
     if (__pyx_t_12) {
 
-      /* "gmapache/integerization.pyx":94
+      /* "gmapache/integerization.pyx":98
  *         # initialize graph with original type
  *         if(input_graphs[i].is_directed()):
  *             int_graph = nx.DiGraph()             # <<<<<<<<<<<<<<
  *         else:
  *             int_graph = nx.Graph()
  */
-      __Pyx_GetModuleGlobalName(__pyx_t_9, __pyx_n_s_nx); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 94, __pyx_L1_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_9, __pyx_n_s_nx); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 98, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_9);
-      __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_9, __pyx_n_s_DiGraph); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 94, __pyx_L1_error)
+      __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_9, __pyx_n_s_DiGraph); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 98, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
       __pyx_t_9 = NULL;
@@ -3732,14 +3858,14 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
         PyObject *__pyx_callargs[2] = {__pyx_t_9, NULL};
         __pyx_t_8 = __Pyx_PyObject_FastCall(__pyx_t_5, __pyx_callargs+1-__pyx_t_7, 0+__pyx_t_7);
         __Pyx_XDECREF(__pyx_t_9); __pyx_t_9 = 0;
-        if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 94, __pyx_L1_error)
+        if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 98, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_8);
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       }
       __Pyx_DECREF_SET(__pyx_v_int_graph, __pyx_t_8);
       __pyx_t_8 = 0;
 
-      /* "gmapache/integerization.pyx":93
+      /* "gmapache/integerization.pyx":97
  *     for i in range(len(input_graphs)):
  *         # initialize graph with original type
  *         if(input_graphs[i].is_directed()):             # <<<<<<<<<<<<<<
@@ -3749,7 +3875,7 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
       goto __pyx_L25;
     }
 
-    /* "gmapache/integerization.pyx":96
+    /* "gmapache/integerization.pyx":100
  *             int_graph = nx.DiGraph()
  *         else:
  *             int_graph = nx.Graph()             # <<<<<<<<<<<<<<
@@ -3757,9 +3883,9 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
  *         for (v, nodeInfo) in list(input_graphs[i].nodes(data = True)):
  */
     /*else*/ {
-      __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_nx); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 96, __pyx_L1_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_nx); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 100, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
-      __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_Graph); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 96, __pyx_L1_error)
+      __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_Graph); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 100, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_9);
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       __pyx_t_5 = NULL;
@@ -3780,7 +3906,7 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
         PyObject *__pyx_callargs[2] = {__pyx_t_5, NULL};
         __pyx_t_8 = __Pyx_PyObject_FastCall(__pyx_t_9, __pyx_callargs+1-__pyx_t_7, 0+__pyx_t_7);
         __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
-        if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 96, __pyx_L1_error)
+        if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 100, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_8);
         __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
       }
@@ -3789,26 +3915,26 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
     }
     __pyx_L25:;
 
-    /* "gmapache/integerization.pyx":98
+    /* "gmapache/integerization.pyx":102
  *             int_graph = nx.Graph()
  *         # add encoded nodes with encoded node labels
  *         for (v, nodeInfo) in list(input_graphs[i].nodes(data = True)):             # <<<<<<<<<<<<<<
  *             encoded_node = node_name_encoding_inv[v]
  *             encoded_label = node_label_encoding_inv.index(nodeInfo)
  */
-    __pyx_t_8 = __Pyx_GetItemInt(__pyx_v_input_graphs, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 98, __pyx_L1_error)
+    __pyx_t_8 = __Pyx_GetItemInt(__pyx_v_input_graphs, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 102, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
-    __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_8, __pyx_n_s_nodes); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 98, __pyx_L1_error)
+    __pyx_t_9 = __Pyx_PyObject_GetAttrStr(__pyx_t_8, __pyx_n_s_nodes); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 102, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-    __pyx_t_8 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 98, __pyx_L1_error)
+    __pyx_t_8 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 102, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
-    if (PyDict_SetItem(__pyx_t_8, __pyx_n_s_data, Py_True) < 0) __PYX_ERR(0, 98, __pyx_L1_error)
-    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_9, __pyx_empty_tuple, __pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 98, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_8, __pyx_n_s_data, Py_True) < 0) __PYX_ERR(0, 102, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_9, __pyx_empty_tuple, __pyx_t_8); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 102, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
     __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-    __pyx_t_8 = __Pyx_PySequence_ListKeepNew(__pyx_t_5); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 98, __pyx_L1_error)
+    __pyx_t_8 = __Pyx_PySequence_ListKeepNew(__pyx_t_5); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 102, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_8);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __pyx_t_5 = __pyx_t_8; __Pyx_INCREF(__pyx_t_5);
@@ -3818,14 +3944,14 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
       {
         Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_5);
         #if !CYTHON_ASSUME_SAFE_MACROS
-        if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 98, __pyx_L1_error)
+        if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 102, __pyx_L1_error)
         #endif
         if (__pyx_t_10 >= __pyx_temp) break;
       }
       #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-      __pyx_t_8 = PyList_GET_ITEM(__pyx_t_5, __pyx_t_10); __Pyx_INCREF(__pyx_t_8); __pyx_t_10++; if (unlikely((0 < 0))) __PYX_ERR(0, 98, __pyx_L1_error)
+      __pyx_t_8 = PyList_GET_ITEM(__pyx_t_5, __pyx_t_10); __Pyx_INCREF(__pyx_t_8); __pyx_t_10++; if (unlikely((0 < 0))) __PYX_ERR(0, 102, __pyx_L1_error)
       #else
-      __pyx_t_8 = __Pyx_PySequence_ITEM(__pyx_t_5, __pyx_t_10); __pyx_t_10++; if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 98, __pyx_L1_error)
+      __pyx_t_8 = __Pyx_PySequence_ITEM(__pyx_t_5, __pyx_t_10); __pyx_t_10++; if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 102, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_8);
       #endif
       if ((likely(PyTuple_CheckExact(__pyx_t_8))) || (PyList_CheckExact(__pyx_t_8))) {
@@ -3834,7 +3960,7 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
         if (unlikely(size != 2)) {
           if (size > 2) __Pyx_RaiseTooManyValuesError(2);
           else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-          __PYX_ERR(0, 98, __pyx_L1_error)
+          __PYX_ERR(0, 102, __pyx_L1_error)
         }
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
         if (likely(PyTuple_CheckExact(sequence))) {
@@ -3847,15 +3973,15 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
         __Pyx_INCREF(__pyx_t_9);
         __Pyx_INCREF(__pyx_t_6);
         #else
-        __pyx_t_9 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 98, __pyx_L1_error)
+        __pyx_t_9 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 102, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_9);
-        __pyx_t_6 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 98, __pyx_L1_error)
+        __pyx_t_6 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 102, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
         #endif
         __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
       } else {
         Py_ssize_t index = -1;
-        __pyx_t_1 = PyObject_GetIter(__pyx_t_8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 98, __pyx_L1_error)
+        __pyx_t_1 = PyObject_GetIter(__pyx_t_8); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 102, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
         __pyx_t_11 = __Pyx_PyObject_GetIterNextFunc(__pyx_t_1);
@@ -3863,7 +3989,7 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
         __Pyx_GOTREF(__pyx_t_9);
         index = 1; __pyx_t_6 = __pyx_t_11(__pyx_t_1); if (unlikely(!__pyx_t_6)) goto __pyx_L28_unpacking_failed;
         __Pyx_GOTREF(__pyx_t_6);
-        if (__Pyx_IternextUnpackEndCheck(__pyx_t_11(__pyx_t_1), 2) < 0) __PYX_ERR(0, 98, __pyx_L1_error)
+        if (__Pyx_IternextUnpackEndCheck(__pyx_t_11(__pyx_t_1), 2) < 0) __PYX_ERR(0, 102, __pyx_L1_error)
         __pyx_t_11 = NULL;
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
         goto __pyx_L29_unpacking_done;
@@ -3871,79 +3997,79 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
         __pyx_t_11 = NULL;
         if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
-        __PYX_ERR(0, 98, __pyx_L1_error)
+        __PYX_ERR(0, 102, __pyx_L1_error)
         __pyx_L29_unpacking_done:;
       }
-      __Pyx_XDECREF_SET(__pyx_v_v, __pyx_t_9);
+      __Pyx_DECREF_SET(__pyx_v_v, __pyx_t_9);
       __pyx_t_9 = 0;
-      __Pyx_XDECREF_SET(__pyx_v_nodeInfo, __pyx_t_6);
+      __Pyx_DECREF_SET(__pyx_v_nodeInfo, __pyx_t_6);
       __pyx_t_6 = 0;
 
-      /* "gmapache/integerization.pyx":99
+      /* "gmapache/integerization.pyx":103
  *         # add encoded nodes with encoded node labels
  *         for (v, nodeInfo) in list(input_graphs[i].nodes(data = True)):
  *             encoded_node = node_name_encoding_inv[v]             # <<<<<<<<<<<<<<
  *             encoded_label = node_label_encoding_inv.index(nodeInfo)
  *             int_graph.add_node(encoded_node,
  */
-      __pyx_t_8 = __Pyx_PyDict_GetItem(__pyx_v_node_name_encoding_inv, __pyx_v_v); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 99, __pyx_L1_error)
+      __pyx_t_8 = __Pyx_PyDict_GetItem(__pyx_v_node_name_encoding_inv, __pyx_v_v); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 103, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_DECREF_SET(__pyx_v_encoded_node, __pyx_t_8);
       __pyx_t_8 = 0;
 
-      /* "gmapache/integerization.pyx":100
+      /* "gmapache/integerization.pyx":104
  *         for (v, nodeInfo) in list(input_graphs[i].nodes(data = True)):
  *             encoded_node = node_name_encoding_inv[v]
  *             encoded_label = node_label_encoding_inv.index(nodeInfo)             # <<<<<<<<<<<<<<
  *             int_graph.add_node(encoded_node,
  *                                GMNL = encoded_label)   # gran_mapache_node_label
  */
-      __pyx_t_8 = __Pyx_CallUnboundCMethod1(&__pyx_umethod_PyList_Type_index, __pyx_v_node_label_encoding_inv, __pyx_v_nodeInfo); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 100, __pyx_L1_error)
+      __pyx_t_8 = __Pyx_CallUnboundCMethod1(&__pyx_umethod_PyList_Type_index, __pyx_v_node_label_encoding_inv, __pyx_v_nodeInfo); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 104, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_DECREF_SET(__pyx_v_encoded_label, __pyx_t_8);
       __pyx_t_8 = 0;
 
-      /* "gmapache/integerization.pyx":101
+      /* "gmapache/integerization.pyx":105
  *             encoded_node = node_name_encoding_inv[v]
  *             encoded_label = node_label_encoding_inv.index(nodeInfo)
  *             int_graph.add_node(encoded_node,             # <<<<<<<<<<<<<<
  *                                GMNL = encoded_label)   # gran_mapache_node_label
  *         # add encoded edges with encoded edge labels
  */
-      __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_v_int_graph, __pyx_n_s_add_node); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 101, __pyx_L1_error)
+      __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_v_int_graph, __pyx_n_s_add_node); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 105, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_8);
-      __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 101, __pyx_L1_error)
+      __pyx_t_6 = PyTuple_New(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 105, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_INCREF(__pyx_v_encoded_node);
       __Pyx_GIVEREF(__pyx_v_encoded_node);
-      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_v_encoded_node)) __PYX_ERR(0, 101, __pyx_L1_error);
+      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_v_encoded_node)) __PYX_ERR(0, 105, __pyx_L1_error);
 
-      /* "gmapache/integerization.pyx":102
+      /* "gmapache/integerization.pyx":106
  *             encoded_label = node_label_encoding_inv.index(nodeInfo)
  *             int_graph.add_node(encoded_node,
  *                                GMNL = encoded_label)   # gran_mapache_node_label             # <<<<<<<<<<<<<<
  *         # add encoded edges with encoded edge labels
  *         for (u, v, edgeInfo) in list(input_graphs[i].edges(data = True)):
  */
-      __pyx_t_9 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 102, __pyx_L1_error)
+      __pyx_t_9 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 106, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_9);
-      if (PyDict_SetItem(__pyx_t_9, __pyx_n_s_GMNL, __pyx_v_encoded_label) < 0) __PYX_ERR(0, 102, __pyx_L1_error)
+      if (PyDict_SetItem(__pyx_t_9, __pyx_n_s_GMNL, __pyx_v_encoded_label) < 0) __PYX_ERR(0, 106, __pyx_L1_error)
 
-      /* "gmapache/integerization.pyx":101
+      /* "gmapache/integerization.pyx":105
  *             encoded_node = node_name_encoding_inv[v]
  *             encoded_label = node_label_encoding_inv.index(nodeInfo)
  *             int_graph.add_node(encoded_node,             # <<<<<<<<<<<<<<
  *                                GMNL = encoded_label)   # gran_mapache_node_label
  *         # add encoded edges with encoded edge labels
  */
-      __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_8, __pyx_t_6, __pyx_t_9); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 101, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_8, __pyx_t_6, __pyx_t_9); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 105, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
       __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-      /* "gmapache/integerization.pyx":98
+      /* "gmapache/integerization.pyx":102
  *             int_graph = nx.Graph()
  *         # add encoded nodes with encoded node labels
  *         for (v, nodeInfo) in list(input_graphs[i].nodes(data = True)):             # <<<<<<<<<<<<<<
@@ -3953,26 +4079,26 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
     }
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-    /* "gmapache/integerization.pyx":104
+    /* "gmapache/integerization.pyx":108
  *                                GMNL = encoded_label)   # gran_mapache_node_label
  *         # add encoded edges with encoded edge labels
  *         for (u, v, edgeInfo) in list(input_graphs[i].edges(data = True)):             # <<<<<<<<<<<<<<
  *             encoded_node_a = node_name_encoding_inv[u]
  *             encoded_node_b = node_name_encoding_inv[v]
  */
-    __pyx_t_5 = __Pyx_GetItemInt(__pyx_v_input_graphs, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 104, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_GetItemInt(__pyx_v_input_graphs, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 108, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_edges); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 104, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_edges); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 108, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __pyx_t_5 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 104, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 108, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_data, Py_True) < 0) __PYX_ERR(0, 104, __pyx_L1_error)
-    __pyx_t_9 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_empty_tuple, __pyx_t_5); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 104, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_data, Py_True) < 0) __PYX_ERR(0, 108, __pyx_L1_error)
+    __pyx_t_9 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_empty_tuple, __pyx_t_5); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 108, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_9);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __pyx_t_5 = __Pyx_PySequence_ListKeepNew(__pyx_t_9); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 104, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PySequence_ListKeepNew(__pyx_t_9); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 108, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
     __pyx_t_9 = __pyx_t_5; __Pyx_INCREF(__pyx_t_9);
@@ -3982,14 +4108,14 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
       {
         Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_9);
         #if !CYTHON_ASSUME_SAFE_MACROS
-        if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 104, __pyx_L1_error)
+        if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 108, __pyx_L1_error)
         #endif
         if (__pyx_t_10 >= __pyx_temp) break;
       }
       #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-      __pyx_t_5 = PyList_GET_ITEM(__pyx_t_9, __pyx_t_10); __Pyx_INCREF(__pyx_t_5); __pyx_t_10++; if (unlikely((0 < 0))) __PYX_ERR(0, 104, __pyx_L1_error)
+      __pyx_t_5 = PyList_GET_ITEM(__pyx_t_9, __pyx_t_10); __Pyx_INCREF(__pyx_t_5); __pyx_t_10++; if (unlikely((0 < 0))) __PYX_ERR(0, 108, __pyx_L1_error)
       #else
-      __pyx_t_5 = __Pyx_PySequence_ITEM(__pyx_t_9, __pyx_t_10); __pyx_t_10++; if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 104, __pyx_L1_error)
+      __pyx_t_5 = __Pyx_PySequence_ITEM(__pyx_t_9, __pyx_t_10); __pyx_t_10++; if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 108, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
       #endif
       if ((likely(PyTuple_CheckExact(__pyx_t_5))) || (PyList_CheckExact(__pyx_t_5))) {
@@ -3998,7 +4124,7 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
         if (unlikely(size != 3)) {
           if (size > 3) __Pyx_RaiseTooManyValuesError(3);
           else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-          __PYX_ERR(0, 104, __pyx_L1_error)
+          __PYX_ERR(0, 108, __pyx_L1_error)
         }
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
         if (likely(PyTuple_CheckExact(sequence))) {
@@ -4014,17 +4140,17 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
         __Pyx_INCREF(__pyx_t_6);
         __Pyx_INCREF(__pyx_t_8);
         #else
-        __pyx_t_1 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 104, __pyx_L1_error)
+        __pyx_t_1 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 108, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
-        __pyx_t_6 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 104, __pyx_L1_error)
+        __pyx_t_6 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 108, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
-        __pyx_t_8 = PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 104, __pyx_L1_error)
+        __pyx_t_8 = PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 108, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_8);
         #endif
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       } else {
         Py_ssize_t index = -1;
-        __pyx_t_14 = PyObject_GetIter(__pyx_t_5); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 104, __pyx_L1_error)
+        __pyx_t_14 = PyObject_GetIter(__pyx_t_5); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 108, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_14);
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
         __pyx_t_11 = __Pyx_PyObject_GetIterNextFunc(__pyx_t_14);
@@ -4034,7 +4160,7 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
         __Pyx_GOTREF(__pyx_t_6);
         index = 2; __pyx_t_8 = __pyx_t_11(__pyx_t_14); if (unlikely(!__pyx_t_8)) goto __pyx_L33_unpacking_failed;
         __Pyx_GOTREF(__pyx_t_8);
-        if (__Pyx_IternextUnpackEndCheck(__pyx_t_11(__pyx_t_14), 3) < 0) __PYX_ERR(0, 104, __pyx_L1_error)
+        if (__Pyx_IternextUnpackEndCheck(__pyx_t_11(__pyx_t_14), 3) < 0) __PYX_ERR(0, 108, __pyx_L1_error)
         __pyx_t_11 = NULL;
         __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
         goto __pyx_L34_unpacking_done;
@@ -4042,96 +4168,96 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
         __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
         __pyx_t_11 = NULL;
         if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
-        __PYX_ERR(0, 104, __pyx_L1_error)
+        __PYX_ERR(0, 108, __pyx_L1_error)
         __pyx_L34_unpacking_done:;
       }
-      __Pyx_XDECREF_SET(__pyx_v_u, __pyx_t_1);
+      __Pyx_DECREF_SET(__pyx_v_u, __pyx_t_1);
       __pyx_t_1 = 0;
-      __Pyx_XDECREF_SET(__pyx_v_v, __pyx_t_6);
+      __Pyx_DECREF_SET(__pyx_v_v, __pyx_t_6);
       __pyx_t_6 = 0;
-      __Pyx_XDECREF_SET(__pyx_v_edgeInfo, __pyx_t_8);
+      __Pyx_DECREF_SET(__pyx_v_edgeInfo, __pyx_t_8);
       __pyx_t_8 = 0;
 
-      /* "gmapache/integerization.pyx":105
+      /* "gmapache/integerization.pyx":109
  *         # add encoded edges with encoded edge labels
  *         for (u, v, edgeInfo) in list(input_graphs[i].edges(data = True)):
  *             encoded_node_a = node_name_encoding_inv[u]             # <<<<<<<<<<<<<<
  *             encoded_node_b = node_name_encoding_inv[v]
  *             encoded_label = edge_label_encoding_inv.index(edgeInfo)
  */
-      __pyx_t_5 = __Pyx_PyDict_GetItem(__pyx_v_node_name_encoding_inv, __pyx_v_u); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 105, __pyx_L1_error)
+      __pyx_t_5 = __Pyx_PyDict_GetItem(__pyx_v_node_name_encoding_inv, __pyx_v_u); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 109, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_DECREF_SET(__pyx_v_encoded_node_a, __pyx_t_5);
       __pyx_t_5 = 0;
 
-      /* "gmapache/integerization.pyx":106
+      /* "gmapache/integerization.pyx":110
  *         for (u, v, edgeInfo) in list(input_graphs[i].edges(data = True)):
  *             encoded_node_a = node_name_encoding_inv[u]
  *             encoded_node_b = node_name_encoding_inv[v]             # <<<<<<<<<<<<<<
  *             encoded_label = edge_label_encoding_inv.index(edgeInfo)
  *             int_graph.add_edge(encoded_node_a, encoded_node_b,
  */
-      __pyx_t_5 = __Pyx_PyDict_GetItem(__pyx_v_node_name_encoding_inv, __pyx_v_v); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 106, __pyx_L1_error)
+      __pyx_t_5 = __Pyx_PyDict_GetItem(__pyx_v_node_name_encoding_inv, __pyx_v_v); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 110, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_DECREF_SET(__pyx_v_encoded_node_b, __pyx_t_5);
       __pyx_t_5 = 0;
 
-      /* "gmapache/integerization.pyx":107
+      /* "gmapache/integerization.pyx":111
  *             encoded_node_a = node_name_encoding_inv[u]
  *             encoded_node_b = node_name_encoding_inv[v]
  *             encoded_label = edge_label_encoding_inv.index(edgeInfo)             # <<<<<<<<<<<<<<
  *             int_graph.add_edge(encoded_node_a, encoded_node_b,
  *                                GMEL = encoded_label)   # gran_mapache_edge_label
  */
-      __pyx_t_5 = __Pyx_CallUnboundCMethod1(&__pyx_umethod_PyList_Type_index, __pyx_v_edge_label_encoding_inv, __pyx_v_edgeInfo); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 107, __pyx_L1_error)
+      __pyx_t_5 = __Pyx_CallUnboundCMethod1(&__pyx_umethod_PyList_Type_index, __pyx_v_edge_label_encoding_inv, __pyx_v_edgeInfo); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 111, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_DECREF_SET(__pyx_v_encoded_label, __pyx_t_5);
       __pyx_t_5 = 0;
 
-      /* "gmapache/integerization.pyx":108
+      /* "gmapache/integerization.pyx":112
  *             encoded_node_b = node_name_encoding_inv[v]
  *             encoded_label = edge_label_encoding_inv.index(edgeInfo)
  *             int_graph.add_edge(encoded_node_a, encoded_node_b,             # <<<<<<<<<<<<<<
  *                                GMEL = encoded_label)   # gran_mapache_edge_label
  *         # save graph in list
  */
-      __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_int_graph, __pyx_n_s_add_edge); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 108, __pyx_L1_error)
+      __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_int_graph, __pyx_n_s_add_edge); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 112, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
-      __pyx_t_8 = PyTuple_New(2); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 108, __pyx_L1_error)
+      __pyx_t_8 = PyTuple_New(2); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 112, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_INCREF(__pyx_v_encoded_node_a);
       __Pyx_GIVEREF(__pyx_v_encoded_node_a);
-      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_v_encoded_node_a)) __PYX_ERR(0, 108, __pyx_L1_error);
+      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_v_encoded_node_a)) __PYX_ERR(0, 112, __pyx_L1_error);
       __Pyx_INCREF(__pyx_v_encoded_node_b);
       __Pyx_GIVEREF(__pyx_v_encoded_node_b);
-      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_8, 1, __pyx_v_encoded_node_b)) __PYX_ERR(0, 108, __pyx_L1_error);
+      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_8, 1, __pyx_v_encoded_node_b)) __PYX_ERR(0, 112, __pyx_L1_error);
 
-      /* "gmapache/integerization.pyx":109
+      /* "gmapache/integerization.pyx":113
  *             encoded_label = edge_label_encoding_inv.index(edgeInfo)
  *             int_graph.add_edge(encoded_node_a, encoded_node_b,
  *                                GMEL = encoded_label)   # gran_mapache_edge_label             # <<<<<<<<<<<<<<
  *         # save graph in list
  *         encoded_graphs.append(deepcopy(int_graph))
  */
-      __pyx_t_6 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 109, __pyx_L1_error)
+      __pyx_t_6 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 113, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
-      if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_GMEL, __pyx_v_encoded_label) < 0) __PYX_ERR(0, 109, __pyx_L1_error)
+      if (PyDict_SetItem(__pyx_t_6, __pyx_n_s_GMEL, __pyx_v_encoded_label) < 0) __PYX_ERR(0, 113, __pyx_L1_error)
 
-      /* "gmapache/integerization.pyx":108
+      /* "gmapache/integerization.pyx":112
  *             encoded_node_b = node_name_encoding_inv[v]
  *             encoded_label = edge_label_encoding_inv.index(edgeInfo)
  *             int_graph.add_edge(encoded_node_a, encoded_node_b,             # <<<<<<<<<<<<<<
  *                                GMEL = encoded_label)   # gran_mapache_edge_label
  *         # save graph in list
  */
-      __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_8, __pyx_t_6); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 108, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_8, __pyx_t_6); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 112, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-      /* "gmapache/integerization.pyx":104
+      /* "gmapache/integerization.pyx":108
  *                                GMNL = encoded_label)   # gran_mapache_node_label
  *         # add encoded edges with encoded edge labels
  *         for (u, v, edgeInfo) in list(input_graphs[i].edges(data = True)):             # <<<<<<<<<<<<<<
@@ -4141,14 +4267,14 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
     }
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
 
-    /* "gmapache/integerization.pyx":111
+    /* "gmapache/integerization.pyx":115
  *                                GMEL = encoded_label)   # gran_mapache_edge_label
  *         # save graph in list
  *         encoded_graphs.append(deepcopy(int_graph))             # <<<<<<<<<<<<<<
  *     # end of function
  *     return(encoded_graphs, node_name_encoding, node_label_encoding, edge_label_encoding)
  */
-    __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 111, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 115, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __pyx_t_6 = NULL;
     __pyx_t_7 = 0;
@@ -4168,15 +4294,15 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
       PyObject *__pyx_callargs[2] = {__pyx_t_6, __pyx_v_int_graph};
       __pyx_t_9 = __Pyx_PyObject_FastCall(__pyx_t_1, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
       __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-      if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 111, __pyx_L1_error)
+      if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 115, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_9);
       __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     }
-    __pyx_t_13 = __Pyx_PyList_Append(__pyx_v_encoded_graphs, __pyx_t_9); if (unlikely(__pyx_t_13 == ((int)-1))) __PYX_ERR(0, 111, __pyx_L1_error)
+    __pyx_t_13 = __Pyx_PyList_Append(__pyx_v_encoded_graphs, __pyx_t_9); if (unlikely(__pyx_t_13 == ((int)-1))) __PYX_ERR(0, 115, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
   }
 
-  /* "gmapache/integerization.pyx":113
+  /* "gmapache/integerization.pyx":117
  *         encoded_graphs.append(deepcopy(int_graph))
  *     # end of function
  *     return(encoded_graphs, node_name_encoding, node_label_encoding, edge_label_encoding)             # <<<<<<<<<<<<<<
@@ -4184,20 +4310,20 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_9 = PyTuple_New(4); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 113, __pyx_L1_error)
+  __pyx_t_9 = PyTuple_New(4); if (unlikely(!__pyx_t_9)) __PYX_ERR(0, 117, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_9);
   __Pyx_INCREF(__pyx_v_encoded_graphs);
   __Pyx_GIVEREF(__pyx_v_encoded_graphs);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_9, 0, __pyx_v_encoded_graphs)) __PYX_ERR(0, 113, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_9, 0, __pyx_v_encoded_graphs)) __PYX_ERR(0, 117, __pyx_L1_error);
   __Pyx_INCREF(__pyx_v_node_name_encoding);
   __Pyx_GIVEREF(__pyx_v_node_name_encoding);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_9, 1, __pyx_v_node_name_encoding)) __PYX_ERR(0, 113, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_9, 1, __pyx_v_node_name_encoding)) __PYX_ERR(0, 117, __pyx_L1_error);
   __Pyx_INCREF(__pyx_v_node_label_encoding);
   __Pyx_GIVEREF(__pyx_v_node_label_encoding);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_9, 2, __pyx_v_node_label_encoding)) __PYX_ERR(0, 113, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_9, 2, __pyx_v_node_label_encoding)) __PYX_ERR(0, 117, __pyx_L1_error);
   __Pyx_INCREF(__pyx_v_edge_label_encoding);
   __Pyx_GIVEREF(__pyx_v_edge_label_encoding);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_9, 3, __pyx_v_edge_label_encoding)) __PYX_ERR(0, 113, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_9, 3, __pyx_v_edge_label_encoding)) __PYX_ERR(0, 117, __pyx_L1_error);
   __pyx_r = __pyx_t_9;
   __pyx_t_9 = 0;
   goto __pyx_L0;
@@ -4234,20 +4360,20 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
   __Pyx_XDECREF(__pyx_v_all_nodes);
   __Pyx_XDECREF(__pyx_v_all_node_labels);
   __Pyx_XDECREF(__pyx_v_all_edge_labels);
+  __Pyx_XDECREF(__pyx_v_nodeInfo);
+  __Pyx_XDECREF(__pyx_v_edgeInfo);
   __Pyx_XDECREF(__pyx_v_node_name_encoding_inv);
   __Pyx_XDECREF(__pyx_v_node_label_encoding_inv);
   __Pyx_XDECREF(__pyx_v_edge_label_encoding_inv);
-  __Pyx_XDECREF(__pyx_v_int_graph);
-  __Pyx_XDECREF(__pyx_v_v);
-  __Pyx_XDECREF(__pyx_v_nodeInfo);
   __Pyx_XDECREF(__pyx_v_u);
-  __Pyx_XDECREF(__pyx_v_edgeInfo);
+  __Pyx_XDECREF(__pyx_v_v);
+  __Pyx_XDECREF(__pyx_v_int_graph);
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-/* "gmapache/integerization.pyx":117
+/* "gmapache/integerization.pyx":121
  * 
  * # function: decode graphs in list recovering original input graphs -------------
  * def decode_graphs(encoded_graphs = [],             # <<<<<<<<<<<<<<
@@ -4255,7 +4381,7 @@ static PyObject *__pyx_pf_8gmapache_14integerization_encode_graphs(CYTHON_UNUSED
  *                   node_label_encoding = dict(),
  */
 
-static PyObject *__pyx_pf_8gmapache_14integerization_6__defaults__(CYTHON_UNUSED PyObject *__pyx_self) {
+static PyObject *__pyx_pf_8gmapache_14integerization_10__defaults__(CYTHON_UNUSED PyObject *__pyx_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -4265,27 +4391,27 @@ static PyObject *__pyx_pf_8gmapache_14integerization_6__defaults__(CYTHON_UNUSED
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__defaults__", 1);
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyTuple_New(4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 117, __pyx_L1_error)
+  __pyx_t_1 = PyTuple_New(4); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 121, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(__Pyx_CyFunction_Defaults(__pyx_defaults1, __pyx_self)->__pyx_arg_encoded_graphs);
   __Pyx_GIVEREF(__Pyx_CyFunction_Defaults(__pyx_defaults1, __pyx_self)->__pyx_arg_encoded_graphs);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 0, __Pyx_CyFunction_Defaults(__pyx_defaults1, __pyx_self)->__pyx_arg_encoded_graphs)) __PYX_ERR(0, 117, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 0, __Pyx_CyFunction_Defaults(__pyx_defaults1, __pyx_self)->__pyx_arg_encoded_graphs)) __PYX_ERR(0, 121, __pyx_L1_error);
   __Pyx_INCREF(__Pyx_CyFunction_Defaults(__pyx_defaults1, __pyx_self)->__pyx_arg_node_name_encoding);
   __Pyx_GIVEREF(__Pyx_CyFunction_Defaults(__pyx_defaults1, __pyx_self)->__pyx_arg_node_name_encoding);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 1, __Pyx_CyFunction_Defaults(__pyx_defaults1, __pyx_self)->__pyx_arg_node_name_encoding)) __PYX_ERR(0, 117, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 1, __Pyx_CyFunction_Defaults(__pyx_defaults1, __pyx_self)->__pyx_arg_node_name_encoding)) __PYX_ERR(0, 121, __pyx_L1_error);
   __Pyx_INCREF(__Pyx_CyFunction_Defaults(__pyx_defaults1, __pyx_self)->__pyx_arg_node_label_encoding);
   __Pyx_GIVEREF(__Pyx_CyFunction_Defaults(__pyx_defaults1, __pyx_self)->__pyx_arg_node_label_encoding);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 2, __Pyx_CyFunction_Defaults(__pyx_defaults1, __pyx_self)->__pyx_arg_node_label_encoding)) __PYX_ERR(0, 117, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 2, __Pyx_CyFunction_Defaults(__pyx_defaults1, __pyx_self)->__pyx_arg_node_label_encoding)) __PYX_ERR(0, 121, __pyx_L1_error);
   __Pyx_INCREF(__Pyx_CyFunction_Defaults(__pyx_defaults1, __pyx_self)->__pyx_arg_edge_label_encoding);
   __Pyx_GIVEREF(__Pyx_CyFunction_Defaults(__pyx_defaults1, __pyx_self)->__pyx_arg_edge_label_encoding);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 3, __Pyx_CyFunction_Defaults(__pyx_defaults1, __pyx_self)->__pyx_arg_edge_label_encoding)) __PYX_ERR(0, 117, __pyx_L1_error);
-  __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 117, __pyx_L1_error)
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 3, __Pyx_CyFunction_Defaults(__pyx_defaults1, __pyx_self)->__pyx_arg_edge_label_encoding)) __PYX_ERR(0, 121, __pyx_L1_error);
+  __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 121, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_GIVEREF(__pyx_t_1);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_1)) __PYX_ERR(0, 117, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_1)) __PYX_ERR(0, 121, __pyx_L1_error);
   __Pyx_INCREF(Py_None);
   __Pyx_GIVEREF(Py_None);
-  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 1, Py_None)) __PYX_ERR(0, 117, __pyx_L1_error);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 1, Py_None)) __PYX_ERR(0, 121, __pyx_L1_error);
   __pyx_t_1 = 0;
   __pyx_r = __pyx_t_2;
   __pyx_t_2 = 0;
@@ -4370,33 +4496,33 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_encoded_graphs);
           if (value) { values[0] = __Pyx_Arg_NewRef_FASTCALL(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 117, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 121, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  1:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_node_name_encoding);
           if (value) { values[1] = __Pyx_Arg_NewRef_FASTCALL(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 117, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 121, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_node_label_encoding);
           if (value) { values[2] = __Pyx_Arg_NewRef_FASTCALL(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 117, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 121, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (kw_args > 0) {
           PyObject* value = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_edge_label_encoding);
           if (value) { values[3] = __Pyx_Arg_NewRef_FASTCALL(value); kw_args--; }
-          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 117, __pyx_L3_error)
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 121, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
         const Py_ssize_t kwd_pos_args = __pyx_nargs;
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "decode_graphs") < 0)) __PYX_ERR(0, 117, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "decode_graphs") < 0)) __PYX_ERR(0, 121, __pyx_L3_error)
       }
     } else {
       switch (__pyx_nargs) {
@@ -4419,7 +4545,7 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
   }
   goto __pyx_L6_skip;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("decode_graphs", 0, 0, 4, __pyx_nargs); __PYX_ERR(0, 117, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("decode_graphs", 0, 0, 4, __pyx_nargs); __PYX_ERR(0, 121, __pyx_L3_error)
   __pyx_L6_skip:;
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L3_error:;
@@ -4449,15 +4575,15 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
 static PyObject *__pyx_pf_8gmapache_14integerization_2decode_graphs(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_encoded_graphs, PyObject *__pyx_v_node_name_encoding, PyObject *__pyx_v_node_label_encoding, PyObject *__pyx_v_edge_label_encoding) {
   PyObject *__pyx_v_decoded_graphs = NULL;
   int __pyx_v_i;
+  int __pyx_v_u;
+  int __pyx_v_v;
   PyObject *__pyx_v_decoded_node = NULL;
   PyObject *__pyx_v_decoded_node_a = NULL;
   PyObject *__pyx_v_decoded_node_b = NULL;
   PyObject *__pyx_v_decoded_label = NULL;
-  PyObject *__pyx_v_dec_graph = NULL;
-  PyObject *__pyx_v_v = NULL;
   PyObject *__pyx_v_nodeInfo = NULL;
-  PyObject *__pyx_v_u = NULL;
   PyObject *__pyx_v_edgeInfo = NULL;
+  PyObject *__pyx_v_dec_graph = NULL;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -4472,36 +4598,58 @@ static PyObject *__pyx_pf_8gmapache_14integerization_2decode_graphs(CYTHON_UNUSE
   PyObject *__pyx_t_10 = NULL;
   PyObject *__pyx_t_11 = NULL;
   PyObject *(*__pyx_t_12)(PyObject *);
-  PyObject *__pyx_t_13 = NULL;
-  int __pyx_t_14;
+  int __pyx_t_13;
+  PyObject *__pyx_t_14 = NULL;
+  PyObject *__pyx_t_15 = NULL;
+  int __pyx_t_16;
+  PyObject *__pyx_t_17 = NULL;
+  int __pyx_t_18;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("decode_graphs", 1);
 
-  /* "gmapache/integerization.pyx":137
+  /* "gmapache/integerization.pyx":141
  *     """
  *     # output holders
  *     decoded_graphs = []             # <<<<<<<<<<<<<<
  *     # cython variables
  *     cdef int i = 0
  */
-  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 137, __pyx_L1_error)
+  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 141, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_v_decoded_graphs = ((PyObject*)__pyx_t_1);
   __pyx_t_1 = 0;
 
-  /* "gmapache/integerization.pyx":139
+  /* "gmapache/integerization.pyx":143
  *     decoded_graphs = []
  *     # cython variables
  *     cdef int i = 0             # <<<<<<<<<<<<<<
- *     # local variables
- *     decoded_node = 0
+ *     cdef int u = 0
+ *     cdef int v = 0
  */
   __pyx_v_i = 0;
 
-  /* "gmapache/integerization.pyx":141
+  /* "gmapache/integerization.pyx":144
+ *     # cython variables
  *     cdef int i = 0
+ *     cdef int u = 0             # <<<<<<<<<<<<<<
+ *     cdef int v = 0
+ *     # local variables
+ */
+  __pyx_v_u = 0;
+
+  /* "gmapache/integerization.pyx":145
+ *     cdef int i = 0
+ *     cdef int u = 0
+ *     cdef int v = 0             # <<<<<<<<<<<<<<
+ *     # local variables
+ *     decoded_node = 0
+ */
+  __pyx_v_v = 0;
+
+  /* "gmapache/integerization.pyx":147
+ *     cdef int v = 0
  *     # local variables
  *     decoded_node = 0             # <<<<<<<<<<<<<<
  *     decoded_node_a = 0
@@ -4510,7 +4658,7 @@ static PyObject *__pyx_pf_8gmapache_14integerization_2decode_graphs(CYTHON_UNUSE
   __Pyx_INCREF(__pyx_int_0);
   __pyx_v_decoded_node = __pyx_int_0;
 
-  /* "gmapache/integerization.pyx":142
+  /* "gmapache/integerization.pyx":148
  *     # local variables
  *     decoded_node = 0
  *     decoded_node_a = 0             # <<<<<<<<<<<<<<
@@ -4520,29 +4668,53 @@ static PyObject *__pyx_pf_8gmapache_14integerization_2decode_graphs(CYTHON_UNUSE
   __Pyx_INCREF(__pyx_int_0);
   __pyx_v_decoded_node_a = __pyx_int_0;
 
-  /* "gmapache/integerization.pyx":143
+  /* "gmapache/integerization.pyx":149
  *     decoded_node = 0
  *     decoded_node_a = 0
  *     decoded_node_b = 0             # <<<<<<<<<<<<<<
  *     decoded_label = 0
- *     dec_graph = None
+ *     nodeInfo = dict()
  */
   __Pyx_INCREF(__pyx_int_0);
   __pyx_v_decoded_node_b = __pyx_int_0;
 
-  /* "gmapache/integerization.pyx":144
+  /* "gmapache/integerization.pyx":150
  *     decoded_node_a = 0
  *     decoded_node_b = 0
  *     decoded_label = 0             # <<<<<<<<<<<<<<
- *     dec_graph = None
- *     # iterate decoding graphs
+ *     nodeInfo = dict()
+ *     edgeInfo = dict()
  */
   __Pyx_INCREF(__pyx_int_0);
   __pyx_v_decoded_label = __pyx_int_0;
 
-  /* "gmapache/integerization.pyx":145
+  /* "gmapache/integerization.pyx":151
  *     decoded_node_b = 0
  *     decoded_label = 0
+ *     nodeInfo = dict()             # <<<<<<<<<<<<<<
+ *     edgeInfo = dict()
+ *     dec_graph = None
+ */
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 151, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_v_nodeInfo = __pyx_t_1;
+  __pyx_t_1 = 0;
+
+  /* "gmapache/integerization.pyx":152
+ *     decoded_label = 0
+ *     nodeInfo = dict()
+ *     edgeInfo = dict()             # <<<<<<<<<<<<<<
+ *     dec_graph = None
+ *     # iterate decoding graphs
+ */
+  __pyx_t_1 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 152, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_v_edgeInfo = __pyx_t_1;
+  __pyx_t_1 = 0;
+
+  /* "gmapache/integerization.pyx":153
+ *     nodeInfo = dict()
+ *     edgeInfo = dict()
  *     dec_graph = None             # <<<<<<<<<<<<<<
  *     # iterate decoding graphs
  *     for i in range(len(encoded_graphs)):
@@ -4550,28 +4722,28 @@ static PyObject *__pyx_pf_8gmapache_14integerization_2decode_graphs(CYTHON_UNUSE
   __Pyx_INCREF(Py_None);
   __pyx_v_dec_graph = Py_None;
 
-  /* "gmapache/integerization.pyx":147
+  /* "gmapache/integerization.pyx":155
  *     dec_graph = None
  *     # iterate decoding graphs
  *     for i in range(len(encoded_graphs)):             # <<<<<<<<<<<<<<
  *         # initialize graph with original type
  *         if(encoded_graphs[i].is_directed()):
  */
-  __pyx_t_2 = PyObject_Length(__pyx_v_encoded_graphs); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 147, __pyx_L1_error)
+  __pyx_t_2 = PyObject_Length(__pyx_v_encoded_graphs); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 155, __pyx_L1_error)
   __pyx_t_3 = __pyx_t_2;
   for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
     __pyx_v_i = __pyx_t_4;
 
-    /* "gmapache/integerization.pyx":149
+    /* "gmapache/integerization.pyx":157
  *     for i in range(len(encoded_graphs)):
  *         # initialize graph with original type
  *         if(encoded_graphs[i].is_directed()):             # <<<<<<<<<<<<<<
  *             dec_graph = nx.DiGraph()
  *         else:
  */
-    __pyx_t_5 = __Pyx_GetItemInt(__pyx_v_encoded_graphs, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 149, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_GetItemInt(__pyx_v_encoded_graphs, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 157, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_is_directed); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 149, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_is_directed); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 157, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __pyx_t_5 = NULL;
@@ -4592,24 +4764,24 @@ static PyObject *__pyx_pf_8gmapache_14integerization_2decode_graphs(CYTHON_UNUSE
       PyObject *__pyx_callargs[2] = {__pyx_t_5, NULL};
       __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_6, __pyx_callargs+1-__pyx_t_7, 0+__pyx_t_7);
       __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
-      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 149, __pyx_L1_error)
+      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 157, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     }
-    __pyx_t_8 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely((__pyx_t_8 < 0))) __PYX_ERR(0, 149, __pyx_L1_error)
+    __pyx_t_8 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely((__pyx_t_8 < 0))) __PYX_ERR(0, 157, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     if (__pyx_t_8) {
 
-      /* "gmapache/integerization.pyx":150
+      /* "gmapache/integerization.pyx":158
  *         # initialize graph with original type
  *         if(encoded_graphs[i].is_directed()):
  *             dec_graph = nx.DiGraph()             # <<<<<<<<<<<<<<
  *         else:
  *             dec_graph = nx.Graph()
  */
-      __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_nx); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 150, __pyx_L1_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_nx); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 158, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
-      __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_DiGraph); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 150, __pyx_L1_error)
+      __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_DiGraph); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 158, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
       __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
       __pyx_t_6 = NULL;
@@ -4630,14 +4802,14 @@ static PyObject *__pyx_pf_8gmapache_14integerization_2decode_graphs(CYTHON_UNUSE
         PyObject *__pyx_callargs[2] = {__pyx_t_6, NULL};
         __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_5, __pyx_callargs+1-__pyx_t_7, 0+__pyx_t_7);
         __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-        if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 150, __pyx_L1_error)
+        if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 158, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       }
       __Pyx_DECREF_SET(__pyx_v_dec_graph, __pyx_t_1);
       __pyx_t_1 = 0;
 
-      /* "gmapache/integerization.pyx":149
+      /* "gmapache/integerization.pyx":157
  *     for i in range(len(encoded_graphs)):
  *         # initialize graph with original type
  *         if(encoded_graphs[i].is_directed()):             # <<<<<<<<<<<<<<
@@ -4647,7 +4819,7 @@ static PyObject *__pyx_pf_8gmapache_14integerization_2decode_graphs(CYTHON_UNUSE
       goto __pyx_L5;
     }
 
-    /* "gmapache/integerization.pyx":152
+    /* "gmapache/integerization.pyx":160
  *             dec_graph = nx.DiGraph()
  *         else:
  *             dec_graph = nx.Graph()             # <<<<<<<<<<<<<<
@@ -4655,9 +4827,9 @@ static PyObject *__pyx_pf_8gmapache_14integerization_2decode_graphs(CYTHON_UNUSE
  *         for (v, nodeInfo) in list(encoded_graphs[i].nodes(data = True)):
  */
     /*else*/ {
-      __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_nx); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 152, __pyx_L1_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_nx); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 160, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_5);
-      __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_Graph); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 152, __pyx_L1_error)
+      __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_Graph); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 160, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       __pyx_t_5 = NULL;
@@ -4678,7 +4850,7 @@ static PyObject *__pyx_pf_8gmapache_14integerization_2decode_graphs(CYTHON_UNUSE
         PyObject *__pyx_callargs[2] = {__pyx_t_5, NULL};
         __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_6, __pyx_callargs+1-__pyx_t_7, 0+__pyx_t_7);
         __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
-        if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 152, __pyx_L1_error)
+        if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 160, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
       }
@@ -4687,26 +4859,26 @@ static PyObject *__pyx_pf_8gmapache_14integerization_2decode_graphs(CYTHON_UNUSE
     }
     __pyx_L5:;
 
-    /* "gmapache/integerization.pyx":154
+    /* "gmapache/integerization.pyx":162
  *             dec_graph = nx.Graph()
  *         # compare vertices
  *         for (v, nodeInfo) in list(encoded_graphs[i].nodes(data = True)):             # <<<<<<<<<<<<<<
- *             decoded_node = deepcopy(node_name_encoding[v])
- *             decoded_label = deepcopy(node_label_encoding[nodeInfo["GMNL"]])   # gran_mapache_node_label
+ *             decoded_node = node_name_encoding[v]
+ *             decoded_label = node_label_encoding[nodeInfo["GMNL"]]   # gran_mapache_node_label
  */
-    __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_encoded_graphs, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 154, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_encoded_graphs, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 162, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_nodes); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 154, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_nodes); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 162, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 154, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 162, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_data, Py_True) < 0) __PYX_ERR(0, 154, __pyx_L1_error)
-    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_empty_tuple, __pyx_t_1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 154, __pyx_L1_error)
+    if (PyDict_SetItem(__pyx_t_1, __pyx_n_s_data, Py_True) < 0) __PYX_ERR(0, 162, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_empty_tuple, __pyx_t_1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 162, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = __Pyx_PySequence_ListKeepNew(__pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 154, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PySequence_ListKeepNew(__pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 162, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __pyx_t_5 = __pyx_t_1; __Pyx_INCREF(__pyx_t_5);
@@ -4716,14 +4888,14 @@ static PyObject *__pyx_pf_8gmapache_14integerization_2decode_graphs(CYTHON_UNUSE
       {
         Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_5);
         #if !CYTHON_ASSUME_SAFE_MACROS
-        if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 154, __pyx_L1_error)
+        if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 162, __pyx_L1_error)
         #endif
         if (__pyx_t_9 >= __pyx_temp) break;
       }
       #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-      __pyx_t_1 = PyList_GET_ITEM(__pyx_t_5, __pyx_t_9); __Pyx_INCREF(__pyx_t_1); __pyx_t_9++; if (unlikely((0 < 0))) __PYX_ERR(0, 154, __pyx_L1_error)
+      __pyx_t_1 = PyList_GET_ITEM(__pyx_t_5, __pyx_t_9); __Pyx_INCREF(__pyx_t_1); __pyx_t_9++; if (unlikely((0 < 0))) __PYX_ERR(0, 162, __pyx_L1_error)
       #else
-      __pyx_t_1 = __Pyx_PySequence_ITEM(__pyx_t_5, __pyx_t_9); __pyx_t_9++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 154, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_PySequence_ITEM(__pyx_t_5, __pyx_t_9); __pyx_t_9++; if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 162, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_1);
       #endif
       if ((likely(PyTuple_CheckExact(__pyx_t_1))) || (PyList_CheckExact(__pyx_t_1))) {
@@ -4732,7 +4904,7 @@ static PyObject *__pyx_pf_8gmapache_14integerization_2decode_graphs(CYTHON_UNUSE
         if (unlikely(size != 2)) {
           if (size > 2) __Pyx_RaiseTooManyValuesError(2);
           else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-          __PYX_ERR(0, 154, __pyx_L1_error)
+          __PYX_ERR(0, 162, __pyx_L1_error)
         }
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
         if (likely(PyTuple_CheckExact(sequence))) {
@@ -4745,15 +4917,15 @@ static PyObject *__pyx_pf_8gmapache_14integerization_2decode_graphs(CYTHON_UNUSE
         __Pyx_INCREF(__pyx_t_6);
         __Pyx_INCREF(__pyx_t_10);
         #else
-        __pyx_t_6 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 154, __pyx_L1_error)
+        __pyx_t_6 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 162, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_6);
-        __pyx_t_10 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 154, __pyx_L1_error)
+        __pyx_t_10 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 162, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_10);
         #endif
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
       } else {
         Py_ssize_t index = -1;
-        __pyx_t_11 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 154, __pyx_L1_error)
+        __pyx_t_11 = PyObject_GetIter(__pyx_t_1); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 162, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_11);
         __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
         __pyx_t_12 = __Pyx_PyObject_GetIterNextFunc(__pyx_t_11);
@@ -4761,7 +4933,7 @@ static PyObject *__pyx_pf_8gmapache_14integerization_2decode_graphs(CYTHON_UNUSE
         __Pyx_GOTREF(__pyx_t_6);
         index = 1; __pyx_t_10 = __pyx_t_12(__pyx_t_11); if (unlikely(!__pyx_t_10)) goto __pyx_L8_unpacking_failed;
         __Pyx_GOTREF(__pyx_t_10);
-        if (__Pyx_IternextUnpackEndCheck(__pyx_t_12(__pyx_t_11), 2) < 0) __PYX_ERR(0, 154, __pyx_L1_error)
+        if (__Pyx_IternextUnpackEndCheck(__pyx_t_12(__pyx_t_11), 2) < 0) __PYX_ERR(0, 162, __pyx_L1_error)
         __pyx_t_12 = NULL;
         __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
         goto __pyx_L9_unpacking_done;
@@ -4769,65 +4941,298 @@ static PyObject *__pyx_pf_8gmapache_14integerization_2decode_graphs(CYTHON_UNUSE
         __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
         __pyx_t_12 = NULL;
         if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
-        __PYX_ERR(0, 154, __pyx_L1_error)
+        __PYX_ERR(0, 162, __pyx_L1_error)
         __pyx_L9_unpacking_done:;
       }
-      __Pyx_XDECREF_SET(__pyx_v_v, __pyx_t_6);
-      __pyx_t_6 = 0;
-      __Pyx_XDECREF_SET(__pyx_v_nodeInfo, __pyx_t_10);
+      __pyx_t_13 = __Pyx_PyInt_As_int(__pyx_t_6); if (unlikely((__pyx_t_13 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 162, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      __pyx_v_v = __pyx_t_13;
+      __Pyx_DECREF_SET(__pyx_v_nodeInfo, __pyx_t_10);
       __pyx_t_10 = 0;
 
-      /* "gmapache/integerization.pyx":155
+      /* "gmapache/integerization.pyx":163
  *         # compare vertices
  *         for (v, nodeInfo) in list(encoded_graphs[i].nodes(data = True)):
- *             decoded_node = deepcopy(node_name_encoding[v])             # <<<<<<<<<<<<<<
- *             decoded_label = deepcopy(node_label_encoding[nodeInfo["GMNL"]])   # gran_mapache_node_label
- *             dec_graph.add_nodes_from([(decoded_node, decoded_label)])
+ *             decoded_node = node_name_encoding[v]             # <<<<<<<<<<<<<<
+ *             decoded_label = node_label_encoding[nodeInfo["GMNL"]]   # gran_mapache_node_label
+ *             dec_graph.add_nodes_from([(deepcopy(decoded_node), deepcopy(decoded_label))])
  */
-      __Pyx_GetModuleGlobalName(__pyx_t_10, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 155, __pyx_L1_error)
+      __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_node_name_encoding, __pyx_v_v, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 163, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_1);
+      __Pyx_DECREF_SET(__pyx_v_decoded_node, __pyx_t_1);
+      __pyx_t_1 = 0;
+
+      /* "gmapache/integerization.pyx":164
+ *         for (v, nodeInfo) in list(encoded_graphs[i].nodes(data = True)):
+ *             decoded_node = node_name_encoding[v]
+ *             decoded_label = node_label_encoding[nodeInfo["GMNL"]]   # gran_mapache_node_label             # <<<<<<<<<<<<<<
+ *             dec_graph.add_nodes_from([(deepcopy(decoded_node), deepcopy(decoded_label))])
+ *         # compare edges
+ */
+      __pyx_t_1 = __Pyx_PyObject_Dict_GetItem(__pyx_v_nodeInfo, __pyx_n_s_GMNL); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 164, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_1);
+      __pyx_t_10 = __Pyx_PyObject_GetItem(__pyx_v_node_label_encoding, __pyx_t_1); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 164, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_10);
-      __pyx_t_6 = __Pyx_PyObject_GetItem(__pyx_v_node_name_encoding, __pyx_v_v); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 155, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_6);
-      __pyx_t_11 = NULL;
+      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+      __Pyx_DECREF_SET(__pyx_v_decoded_label, __pyx_t_10);
+      __pyx_t_10 = 0;
+
+      /* "gmapache/integerization.pyx":165
+ *             decoded_node = node_name_encoding[v]
+ *             decoded_label = node_label_encoding[nodeInfo["GMNL"]]   # gran_mapache_node_label
+ *             dec_graph.add_nodes_from([(deepcopy(decoded_node), deepcopy(decoded_label))])             # <<<<<<<<<<<<<<
+ *         # compare edges
+ *         for (u, v, edgeInfo) in list(encoded_graphs[i].edges(data = True)):
+ */
+      __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_dec_graph, __pyx_n_s_add_nodes_from); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 165, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_1);
+      __Pyx_GetModuleGlobalName(__pyx_t_11, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 165, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_11);
+      __pyx_t_14 = NULL;
       __pyx_t_7 = 0;
       #if CYTHON_UNPACK_METHODS
-      if (unlikely(PyMethod_Check(__pyx_t_10))) {
-        __pyx_t_11 = PyMethod_GET_SELF(__pyx_t_10);
-        if (likely(__pyx_t_11)) {
-          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_10);
-          __Pyx_INCREF(__pyx_t_11);
+      if (unlikely(PyMethod_Check(__pyx_t_11))) {
+        __pyx_t_14 = PyMethod_GET_SELF(__pyx_t_11);
+        if (likely(__pyx_t_14)) {
+          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_11);
+          __Pyx_INCREF(__pyx_t_14);
           __Pyx_INCREF(function);
-          __Pyx_DECREF_SET(__pyx_t_10, function);
+          __Pyx_DECREF_SET(__pyx_t_11, function);
           __pyx_t_7 = 1;
         }
       }
       #endif
       {
-        PyObject *__pyx_callargs[2] = {__pyx_t_11, __pyx_t_6};
-        __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_10, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
-        __Pyx_XDECREF(__pyx_t_11); __pyx_t_11 = 0;
-        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-        if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 155, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_1);
-        __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
+        PyObject *__pyx_callargs[2] = {__pyx_t_14, __pyx_v_decoded_node};
+        __pyx_t_6 = __Pyx_PyObject_FastCall(__pyx_t_11, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
+        __Pyx_XDECREF(__pyx_t_14); __pyx_t_14 = 0;
+        if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 165, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_6);
+        __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
       }
-      __Pyx_DECREF_SET(__pyx_v_decoded_node, __pyx_t_1);
-      __pyx_t_1 = 0;
-
-      /* "gmapache/integerization.pyx":156
- *         for (v, nodeInfo) in list(encoded_graphs[i].nodes(data = True)):
- *             decoded_node = deepcopy(node_name_encoding[v])
- *             decoded_label = deepcopy(node_label_encoding[nodeInfo["GMNL"]])   # gran_mapache_node_label             # <<<<<<<<<<<<<<
- *             dec_graph.add_nodes_from([(decoded_node, decoded_label)])
- *         # compare edges
- */
-      __Pyx_GetModuleGlobalName(__pyx_t_10, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 156, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_10);
-      __pyx_t_6 = __Pyx_PyObject_Dict_GetItem(__pyx_v_nodeInfo, __pyx_n_s_GMNL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 156, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_6);
-      __pyx_t_11 = __Pyx_PyObject_GetItem(__pyx_v_node_label_encoding, __pyx_t_6); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 156, __pyx_L1_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_14, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 165, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_14);
+      __pyx_t_15 = NULL;
+      __pyx_t_7 = 0;
+      #if CYTHON_UNPACK_METHODS
+      if (unlikely(PyMethod_Check(__pyx_t_14))) {
+        __pyx_t_15 = PyMethod_GET_SELF(__pyx_t_14);
+        if (likely(__pyx_t_15)) {
+          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_14);
+          __Pyx_INCREF(__pyx_t_15);
+          __Pyx_INCREF(function);
+          __Pyx_DECREF_SET(__pyx_t_14, function);
+          __pyx_t_7 = 1;
+        }
+      }
+      #endif
+      {
+        PyObject *__pyx_callargs[2] = {__pyx_t_15, __pyx_v_decoded_label};
+        __pyx_t_11 = __Pyx_PyObject_FastCall(__pyx_t_14, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
+        __Pyx_XDECREF(__pyx_t_15); __pyx_t_15 = 0;
+        if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 165, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_11);
+        __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
+      }
+      __pyx_t_14 = PyTuple_New(2); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 165, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_14);
+      __Pyx_GIVEREF(__pyx_t_6);
+      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_14, 0, __pyx_t_6)) __PYX_ERR(0, 165, __pyx_L1_error);
+      __Pyx_GIVEREF(__pyx_t_11);
+      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_14, 1, __pyx_t_11)) __PYX_ERR(0, 165, __pyx_L1_error);
+      __pyx_t_6 = 0;
+      __pyx_t_11 = 0;
+      __pyx_t_11 = PyList_New(1); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 165, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_11);
-      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      __Pyx_GIVEREF(__pyx_t_14);
+      if (__Pyx_PyList_SET_ITEM(__pyx_t_11, 0, __pyx_t_14)) __PYX_ERR(0, 165, __pyx_L1_error);
+      __pyx_t_14 = 0;
+      __pyx_t_14 = NULL;
+      __pyx_t_7 = 0;
+      #if CYTHON_UNPACK_METHODS
+      if (likely(PyMethod_Check(__pyx_t_1))) {
+        __pyx_t_14 = PyMethod_GET_SELF(__pyx_t_1);
+        if (likely(__pyx_t_14)) {
+          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_1);
+          __Pyx_INCREF(__pyx_t_14);
+          __Pyx_INCREF(function);
+          __Pyx_DECREF_SET(__pyx_t_1, function);
+          __pyx_t_7 = 1;
+        }
+      }
+      #endif
+      {
+        PyObject *__pyx_callargs[2] = {__pyx_t_14, __pyx_t_11};
+        __pyx_t_10 = __Pyx_PyObject_FastCall(__pyx_t_1, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
+        __Pyx_XDECREF(__pyx_t_14); __pyx_t_14 = 0;
+        __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+        if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 165, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_10);
+        __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+      }
+      __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
+
+      /* "gmapache/integerization.pyx":162
+ *             dec_graph = nx.Graph()
+ *         # compare vertices
+ *         for (v, nodeInfo) in list(encoded_graphs[i].nodes(data = True)):             # <<<<<<<<<<<<<<
+ *             decoded_node = node_name_encoding[v]
+ *             decoded_label = node_label_encoding[nodeInfo["GMNL"]]   # gran_mapache_node_label
+ */
+    }
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+
+    /* "gmapache/integerization.pyx":167
+ *             dec_graph.add_nodes_from([(deepcopy(decoded_node), deepcopy(decoded_label))])
+ *         # compare edges
+ *         for (u, v, edgeInfo) in list(encoded_graphs[i].edges(data = True)):             # <<<<<<<<<<<<<<
+ *             decoded_node_a = node_name_encoding[u]
+ *             decoded_node_b = node_name_encoding[v]
+ */
+    __pyx_t_5 = __Pyx_GetItemInt(__pyx_v_encoded_graphs, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 167, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_edges); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 167, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_10);
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    __pyx_t_5 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 167, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_data, Py_True) < 0) __PYX_ERR(0, 167, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_Call(__pyx_t_10, __pyx_empty_tuple, __pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 167, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    __pyx_t_5 = __Pyx_PySequence_ListKeepNew(__pyx_t_1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 167, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_1 = __pyx_t_5; __Pyx_INCREF(__pyx_t_1);
+    __pyx_t_9 = 0;
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    for (;;) {
+      {
+        Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_1);
+        #if !CYTHON_ASSUME_SAFE_MACROS
+        if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 167, __pyx_L1_error)
+        #endif
+        if (__pyx_t_9 >= __pyx_temp) break;
+      }
+      #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
+      __pyx_t_5 = PyList_GET_ITEM(__pyx_t_1, __pyx_t_9); __Pyx_INCREF(__pyx_t_5); __pyx_t_9++; if (unlikely((0 < 0))) __PYX_ERR(0, 167, __pyx_L1_error)
+      #else
+      __pyx_t_5 = __Pyx_PySequence_ITEM(__pyx_t_1, __pyx_t_9); __pyx_t_9++; if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 167, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_5);
+      #endif
+      if ((likely(PyTuple_CheckExact(__pyx_t_5))) || (PyList_CheckExact(__pyx_t_5))) {
+        PyObject* sequence = __pyx_t_5;
+        Py_ssize_t size = __Pyx_PySequence_SIZE(sequence);
+        if (unlikely(size != 3)) {
+          if (size > 3) __Pyx_RaiseTooManyValuesError(3);
+          else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
+          __PYX_ERR(0, 167, __pyx_L1_error)
+        }
+        #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
+        if (likely(PyTuple_CheckExact(sequence))) {
+          __pyx_t_10 = PyTuple_GET_ITEM(sequence, 0); 
+          __pyx_t_11 = PyTuple_GET_ITEM(sequence, 1); 
+          __pyx_t_14 = PyTuple_GET_ITEM(sequence, 2); 
+        } else {
+          __pyx_t_10 = PyList_GET_ITEM(sequence, 0); 
+          __pyx_t_11 = PyList_GET_ITEM(sequence, 1); 
+          __pyx_t_14 = PyList_GET_ITEM(sequence, 2); 
+        }
+        __Pyx_INCREF(__pyx_t_10);
+        __Pyx_INCREF(__pyx_t_11);
+        __Pyx_INCREF(__pyx_t_14);
+        #else
+        __pyx_t_10 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 167, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_10);
+        __pyx_t_11 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 167, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_11);
+        __pyx_t_14 = PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 167, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_14);
+        #endif
+        __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+      } else {
+        Py_ssize_t index = -1;
+        __pyx_t_6 = PyObject_GetIter(__pyx_t_5); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 167, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_6);
+        __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+        __pyx_t_12 = __Pyx_PyObject_GetIterNextFunc(__pyx_t_6);
+        index = 0; __pyx_t_10 = __pyx_t_12(__pyx_t_6); if (unlikely(!__pyx_t_10)) goto __pyx_L13_unpacking_failed;
+        __Pyx_GOTREF(__pyx_t_10);
+        index = 1; __pyx_t_11 = __pyx_t_12(__pyx_t_6); if (unlikely(!__pyx_t_11)) goto __pyx_L13_unpacking_failed;
+        __Pyx_GOTREF(__pyx_t_11);
+        index = 2; __pyx_t_14 = __pyx_t_12(__pyx_t_6); if (unlikely(!__pyx_t_14)) goto __pyx_L13_unpacking_failed;
+        __Pyx_GOTREF(__pyx_t_14);
+        if (__Pyx_IternextUnpackEndCheck(__pyx_t_12(__pyx_t_6), 3) < 0) __PYX_ERR(0, 167, __pyx_L1_error)
+        __pyx_t_12 = NULL;
+        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+        goto __pyx_L14_unpacking_done;
+        __pyx_L13_unpacking_failed:;
+        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+        __pyx_t_12 = NULL;
+        if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
+        __PYX_ERR(0, 167, __pyx_L1_error)
+        __pyx_L14_unpacking_done:;
+      }
+      __pyx_t_13 = __Pyx_PyInt_As_int(__pyx_t_10); if (unlikely((__pyx_t_13 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 167, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
+      __pyx_t_16 = __Pyx_PyInt_As_int(__pyx_t_11); if (unlikely((__pyx_t_16 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 167, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+      __pyx_v_u = __pyx_t_13;
+      __pyx_v_v = __pyx_t_16;
+      __Pyx_DECREF_SET(__pyx_v_edgeInfo, __pyx_t_14);
+      __pyx_t_14 = 0;
+
+      /* "gmapache/integerization.pyx":168
+ *         # compare edges
+ *         for (u, v, edgeInfo) in list(encoded_graphs[i].edges(data = True)):
+ *             decoded_node_a = node_name_encoding[u]             # <<<<<<<<<<<<<<
+ *             decoded_node_b = node_name_encoding[v]
+ *             decoded_label = edge_label_encoding[edgeInfo["GMEL"]]   # gran_mapache_edge_label
+ */
+      __pyx_t_5 = __Pyx_GetItemInt(__pyx_v_node_name_encoding, __pyx_v_u, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 168, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_5);
+      __Pyx_DECREF_SET(__pyx_v_decoded_node_a, __pyx_t_5);
+      __pyx_t_5 = 0;
+
+      /* "gmapache/integerization.pyx":169
+ *         for (u, v, edgeInfo) in list(encoded_graphs[i].edges(data = True)):
+ *             decoded_node_a = node_name_encoding[u]
+ *             decoded_node_b = node_name_encoding[v]             # <<<<<<<<<<<<<<
+ *             decoded_label = edge_label_encoding[edgeInfo["GMEL"]]   # gran_mapache_edge_label
+ *             dec_graph.add_edges_from([(deepcopy(decoded_node_a), deepcopy(decoded_node_b), deepcopy(decoded_label))])
+ */
+      __pyx_t_5 = __Pyx_GetItemInt(__pyx_v_node_name_encoding, __pyx_v_v, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 169, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_5);
+      __Pyx_DECREF_SET(__pyx_v_decoded_node_b, __pyx_t_5);
+      __pyx_t_5 = 0;
+
+      /* "gmapache/integerization.pyx":170
+ *             decoded_node_a = node_name_encoding[u]
+ *             decoded_node_b = node_name_encoding[v]
+ *             decoded_label = edge_label_encoding[edgeInfo["GMEL"]]   # gran_mapache_edge_label             # <<<<<<<<<<<<<<
+ *             dec_graph.add_edges_from([(deepcopy(decoded_node_a), deepcopy(decoded_node_b), deepcopy(decoded_label))])
+ *         # save graph in list
+ */
+      __pyx_t_5 = __Pyx_PyObject_Dict_GetItem(__pyx_v_edgeInfo, __pyx_n_s_GMEL); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 170, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_5);
+      __pyx_t_14 = __Pyx_PyObject_GetItem(__pyx_v_edge_label_encoding, __pyx_t_5); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 170, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_14);
+      __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+      __Pyx_DECREF_SET(__pyx_v_decoded_label, __pyx_t_14);
+      __pyx_t_14 = 0;
+
+      /* "gmapache/integerization.pyx":171
+ *             decoded_node_b = node_name_encoding[v]
+ *             decoded_label = edge_label_encoding[edgeInfo["GMEL"]]   # gran_mapache_edge_label
+ *             dec_graph.add_edges_from([(deepcopy(decoded_node_a), deepcopy(decoded_node_b), deepcopy(decoded_label))])             # <<<<<<<<<<<<<<
+ *         # save graph in list
+ *         decoded_graphs.append(deepcopy(dec_graph))
+ */
+      __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_dec_graph, __pyx_n_s_add_edges_from); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 171, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_5);
+      __Pyx_GetModuleGlobalName(__pyx_t_10, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 171, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_10);
       __pyx_t_6 = NULL;
       __pyx_t_7 = 0;
       #if CYTHON_UNPACK_METHODS
@@ -4843,383 +5248,148 @@ static PyObject *__pyx_pf_8gmapache_14integerization_2decode_graphs(CYTHON_UNUSE
       }
       #endif
       {
-        PyObject *__pyx_callargs[2] = {__pyx_t_6, __pyx_t_11};
-        __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_10, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
+        PyObject *__pyx_callargs[2] = {__pyx_t_6, __pyx_v_decoded_node_a};
+        __pyx_t_11 = __Pyx_PyObject_FastCall(__pyx_t_10, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
         __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-        __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-        if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 156, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_1);
+        if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 171, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_11);
         __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
       }
-      __Pyx_DECREF_SET(__pyx_v_decoded_label, __pyx_t_1);
-      __pyx_t_1 = 0;
-
-      /* "gmapache/integerization.pyx":157
- *             decoded_node = deepcopy(node_name_encoding[v])
- *             decoded_label = deepcopy(node_label_encoding[nodeInfo["GMNL"]])   # gran_mapache_node_label
- *             dec_graph.add_nodes_from([(decoded_node, decoded_label)])             # <<<<<<<<<<<<<<
- *         # compare edges
- *         for (u, v, edgeInfo) in list(encoded_graphs[i].edges(data = True)):
- */
-      __pyx_t_10 = __Pyx_PyObject_GetAttrStr(__pyx_v_dec_graph, __pyx_n_s_add_nodes_from); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 157, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_10);
-      __pyx_t_11 = PyTuple_New(2); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 157, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_11);
-      __Pyx_INCREF(__pyx_v_decoded_node);
-      __Pyx_GIVEREF(__pyx_v_decoded_node);
-      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_11, 0, __pyx_v_decoded_node)) __PYX_ERR(0, 157, __pyx_L1_error);
-      __Pyx_INCREF(__pyx_v_decoded_label);
-      __Pyx_GIVEREF(__pyx_v_decoded_label);
-      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_11, 1, __pyx_v_decoded_label)) __PYX_ERR(0, 157, __pyx_L1_error);
-      __pyx_t_6 = PyList_New(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 157, __pyx_L1_error)
+      __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 171, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
+      __pyx_t_15 = NULL;
+      __pyx_t_7 = 0;
+      #if CYTHON_UNPACK_METHODS
+      if (unlikely(PyMethod_Check(__pyx_t_6))) {
+        __pyx_t_15 = PyMethod_GET_SELF(__pyx_t_6);
+        if (likely(__pyx_t_15)) {
+          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_6);
+          __Pyx_INCREF(__pyx_t_15);
+          __Pyx_INCREF(function);
+          __Pyx_DECREF_SET(__pyx_t_6, function);
+          __pyx_t_7 = 1;
+        }
+      }
+      #endif
+      {
+        PyObject *__pyx_callargs[2] = {__pyx_t_15, __pyx_v_decoded_node_b};
+        __pyx_t_10 = __Pyx_PyObject_FastCall(__pyx_t_6, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
+        __Pyx_XDECREF(__pyx_t_15); __pyx_t_15 = 0;
+        if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 171, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_10);
+        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      }
+      __Pyx_GetModuleGlobalName(__pyx_t_15, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 171, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_15);
+      __pyx_t_17 = NULL;
+      __pyx_t_7 = 0;
+      #if CYTHON_UNPACK_METHODS
+      if (unlikely(PyMethod_Check(__pyx_t_15))) {
+        __pyx_t_17 = PyMethod_GET_SELF(__pyx_t_15);
+        if (likely(__pyx_t_17)) {
+          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_15);
+          __Pyx_INCREF(__pyx_t_17);
+          __Pyx_INCREF(function);
+          __Pyx_DECREF_SET(__pyx_t_15, function);
+          __pyx_t_7 = 1;
+        }
+      }
+      #endif
+      {
+        PyObject *__pyx_callargs[2] = {__pyx_t_17, __pyx_v_decoded_label};
+        __pyx_t_6 = __Pyx_PyObject_FastCall(__pyx_t_15, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
+        __Pyx_XDECREF(__pyx_t_17); __pyx_t_17 = 0;
+        if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 171, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_6);
+        __Pyx_DECREF(__pyx_t_15); __pyx_t_15 = 0;
+      }
+      __pyx_t_15 = PyTuple_New(3); if (unlikely(!__pyx_t_15)) __PYX_ERR(0, 171, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_15);
       __Pyx_GIVEREF(__pyx_t_11);
-      if (__Pyx_PyList_SET_ITEM(__pyx_t_6, 0, __pyx_t_11)) __PYX_ERR(0, 157, __pyx_L1_error);
+      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_15, 0, __pyx_t_11)) __PYX_ERR(0, 171, __pyx_L1_error);
+      __Pyx_GIVEREF(__pyx_t_10);
+      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_15, 1, __pyx_t_10)) __PYX_ERR(0, 171, __pyx_L1_error);
+      __Pyx_GIVEREF(__pyx_t_6);
+      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_15, 2, __pyx_t_6)) __PYX_ERR(0, 171, __pyx_L1_error);
       __pyx_t_11 = 0;
-      __pyx_t_11 = NULL;
-      __pyx_t_7 = 0;
-      #if CYTHON_UNPACK_METHODS
-      if (likely(PyMethod_Check(__pyx_t_10))) {
-        __pyx_t_11 = PyMethod_GET_SELF(__pyx_t_10);
-        if (likely(__pyx_t_11)) {
-          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_10);
-          __Pyx_INCREF(__pyx_t_11);
-          __Pyx_INCREF(function);
-          __Pyx_DECREF_SET(__pyx_t_10, function);
-          __pyx_t_7 = 1;
-        }
-      }
-      #endif
-      {
-        PyObject *__pyx_callargs[2] = {__pyx_t_11, __pyx_t_6};
-        __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_10, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
-        __Pyx_XDECREF(__pyx_t_11); __pyx_t_11 = 0;
-        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-        if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 157, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_1);
-        __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-      }
-      __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-      /* "gmapache/integerization.pyx":154
- *             dec_graph = nx.Graph()
- *         # compare vertices
- *         for (v, nodeInfo) in list(encoded_graphs[i].nodes(data = True)):             # <<<<<<<<<<<<<<
- *             decoded_node = deepcopy(node_name_encoding[v])
- *             decoded_label = deepcopy(node_label_encoding[nodeInfo["GMNL"]])   # gran_mapache_node_label
- */
-    }
-    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-
-    /* "gmapache/integerization.pyx":159
- *             dec_graph.add_nodes_from([(decoded_node, decoded_label)])
- *         # compare edges
- *         for (u, v, edgeInfo) in list(encoded_graphs[i].edges(data = True)):             # <<<<<<<<<<<<<<
- *             decoded_node_a = deepcopy(node_name_encoding[u])
- *             decoded_node_b = deepcopy(node_name_encoding[v])
- */
-    __pyx_t_5 = __Pyx_GetItemInt(__pyx_v_encoded_graphs, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 159, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_t_5, __pyx_n_s_edges); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 159, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_1);
-    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __pyx_t_5 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 159, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    if (PyDict_SetItem(__pyx_t_5, __pyx_n_s_data, Py_True) < 0) __PYX_ERR(0, 159, __pyx_L1_error)
-    __pyx_t_10 = __Pyx_PyObject_Call(__pyx_t_1, __pyx_empty_tuple, __pyx_t_5); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 159, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_10);
-    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __pyx_t_5 = __Pyx_PySequence_ListKeepNew(__pyx_t_10); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 159, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-    __pyx_t_10 = __pyx_t_5; __Pyx_INCREF(__pyx_t_10);
-    __pyx_t_9 = 0;
-    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    for (;;) {
-      {
-        Py_ssize_t __pyx_temp = __Pyx_PyList_GET_SIZE(__pyx_t_10);
-        #if !CYTHON_ASSUME_SAFE_MACROS
-        if (unlikely((__pyx_temp < 0))) __PYX_ERR(0, 159, __pyx_L1_error)
-        #endif
-        if (__pyx_t_9 >= __pyx_temp) break;
-      }
-      #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-      __pyx_t_5 = PyList_GET_ITEM(__pyx_t_10, __pyx_t_9); __Pyx_INCREF(__pyx_t_5); __pyx_t_9++; if (unlikely((0 < 0))) __PYX_ERR(0, 159, __pyx_L1_error)
-      #else
-      __pyx_t_5 = __Pyx_PySequence_ITEM(__pyx_t_10, __pyx_t_9); __pyx_t_9++; if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 159, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_5);
-      #endif
-      if ((likely(PyTuple_CheckExact(__pyx_t_5))) || (PyList_CheckExact(__pyx_t_5))) {
-        PyObject* sequence = __pyx_t_5;
-        Py_ssize_t size = __Pyx_PySequence_SIZE(sequence);
-        if (unlikely(size != 3)) {
-          if (size > 3) __Pyx_RaiseTooManyValuesError(3);
-          else if (size >= 0) __Pyx_RaiseNeedMoreValuesError(size);
-          __PYX_ERR(0, 159, __pyx_L1_error)
-        }
-        #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        if (likely(PyTuple_CheckExact(sequence))) {
-          __pyx_t_1 = PyTuple_GET_ITEM(sequence, 0); 
-          __pyx_t_6 = PyTuple_GET_ITEM(sequence, 1); 
-          __pyx_t_11 = PyTuple_GET_ITEM(sequence, 2); 
-        } else {
-          __pyx_t_1 = PyList_GET_ITEM(sequence, 0); 
-          __pyx_t_6 = PyList_GET_ITEM(sequence, 1); 
-          __pyx_t_11 = PyList_GET_ITEM(sequence, 2); 
-        }
-        __Pyx_INCREF(__pyx_t_1);
-        __Pyx_INCREF(__pyx_t_6);
-        __Pyx_INCREF(__pyx_t_11);
-        #else
-        __pyx_t_1 = PySequence_ITEM(sequence, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 159, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_1);
-        __pyx_t_6 = PySequence_ITEM(sequence, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 159, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_6);
-        __pyx_t_11 = PySequence_ITEM(sequence, 2); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 159, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_11);
-        #endif
-        __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-      } else {
-        Py_ssize_t index = -1;
-        __pyx_t_13 = PyObject_GetIter(__pyx_t_5); if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 159, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_13);
-        __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-        __pyx_t_12 = __Pyx_PyObject_GetIterNextFunc(__pyx_t_13);
-        index = 0; __pyx_t_1 = __pyx_t_12(__pyx_t_13); if (unlikely(!__pyx_t_1)) goto __pyx_L13_unpacking_failed;
-        __Pyx_GOTREF(__pyx_t_1);
-        index = 1; __pyx_t_6 = __pyx_t_12(__pyx_t_13); if (unlikely(!__pyx_t_6)) goto __pyx_L13_unpacking_failed;
-        __Pyx_GOTREF(__pyx_t_6);
-        index = 2; __pyx_t_11 = __pyx_t_12(__pyx_t_13); if (unlikely(!__pyx_t_11)) goto __pyx_L13_unpacking_failed;
-        __Pyx_GOTREF(__pyx_t_11);
-        if (__Pyx_IternextUnpackEndCheck(__pyx_t_12(__pyx_t_13), 3) < 0) __PYX_ERR(0, 159, __pyx_L1_error)
-        __pyx_t_12 = NULL;
-        __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-        goto __pyx_L14_unpacking_done;
-        __pyx_L13_unpacking_failed:;
-        __Pyx_DECREF(__pyx_t_13); __pyx_t_13 = 0;
-        __pyx_t_12 = NULL;
-        if (__Pyx_IterFinish() == 0) __Pyx_RaiseNeedMoreValuesError(index);
-        __PYX_ERR(0, 159, __pyx_L1_error)
-        __pyx_L14_unpacking_done:;
-      }
-      __Pyx_XDECREF_SET(__pyx_v_u, __pyx_t_1);
-      __pyx_t_1 = 0;
-      __Pyx_XDECREF_SET(__pyx_v_v, __pyx_t_6);
+      __pyx_t_10 = 0;
       __pyx_t_6 = 0;
-      __Pyx_XDECREF_SET(__pyx_v_edgeInfo, __pyx_t_11);
-      __pyx_t_11 = 0;
-
-      /* "gmapache/integerization.pyx":160
- *         # compare edges
- *         for (u, v, edgeInfo) in list(encoded_graphs[i].edges(data = True)):
- *             decoded_node_a = deepcopy(node_name_encoding[u])             # <<<<<<<<<<<<<<
- *             decoded_node_b = deepcopy(node_name_encoding[v])
- *             decoded_label = deepcopy(edge_label_encoding[edgeInfo["GMEL"]])   # gran_mapache_edge_label
- */
-      __Pyx_GetModuleGlobalName(__pyx_t_11, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 160, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_11);
-      __pyx_t_6 = __Pyx_PyObject_GetItem(__pyx_v_node_name_encoding, __pyx_v_u); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 160, __pyx_L1_error)
+      __pyx_t_6 = PyList_New(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 171, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_6);
-      __pyx_t_1 = NULL;
+      __Pyx_GIVEREF(__pyx_t_15);
+      if (__Pyx_PyList_SET_ITEM(__pyx_t_6, 0, __pyx_t_15)) __PYX_ERR(0, 171, __pyx_L1_error);
+      __pyx_t_15 = 0;
+      __pyx_t_15 = NULL;
       __pyx_t_7 = 0;
       #if CYTHON_UNPACK_METHODS
-      if (unlikely(PyMethod_Check(__pyx_t_11))) {
-        __pyx_t_1 = PyMethod_GET_SELF(__pyx_t_11);
-        if (likely(__pyx_t_1)) {
-          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_11);
-          __Pyx_INCREF(__pyx_t_1);
+      if (likely(PyMethod_Check(__pyx_t_5))) {
+        __pyx_t_15 = PyMethod_GET_SELF(__pyx_t_5);
+        if (likely(__pyx_t_15)) {
+          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_5);
+          __Pyx_INCREF(__pyx_t_15);
           __Pyx_INCREF(function);
-          __Pyx_DECREF_SET(__pyx_t_11, function);
+          __Pyx_DECREF_SET(__pyx_t_5, function);
           __pyx_t_7 = 1;
         }
       }
       #endif
       {
-        PyObject *__pyx_callargs[2] = {__pyx_t_1, __pyx_t_6};
-        __pyx_t_5 = __Pyx_PyObject_FastCall(__pyx_t_11, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
-        __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
+        PyObject *__pyx_callargs[2] = {__pyx_t_15, __pyx_t_6};
+        __pyx_t_14 = __Pyx_PyObject_FastCall(__pyx_t_5, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
+        __Pyx_XDECREF(__pyx_t_15); __pyx_t_15 = 0;
         __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-        if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 160, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_5);
-        __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+        if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 171, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_14);
+        __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
       }
-      __Pyx_DECREF_SET(__pyx_v_decoded_node_a, __pyx_t_5);
-      __pyx_t_5 = 0;
+      __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
 
-      /* "gmapache/integerization.pyx":161
- *         for (u, v, edgeInfo) in list(encoded_graphs[i].edges(data = True)):
- *             decoded_node_a = deepcopy(node_name_encoding[u])
- *             decoded_node_b = deepcopy(node_name_encoding[v])             # <<<<<<<<<<<<<<
- *             decoded_label = deepcopy(edge_label_encoding[edgeInfo["GMEL"]])   # gran_mapache_edge_label
- *             dec_graph.add_edges_from([(decoded_node_a, decoded_node_b, decoded_label)])
- */
-      __Pyx_GetModuleGlobalName(__pyx_t_11, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 161, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_11);
-      __pyx_t_6 = __Pyx_PyObject_GetItem(__pyx_v_node_name_encoding, __pyx_v_v); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 161, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_6);
-      __pyx_t_1 = NULL;
-      __pyx_t_7 = 0;
-      #if CYTHON_UNPACK_METHODS
-      if (unlikely(PyMethod_Check(__pyx_t_11))) {
-        __pyx_t_1 = PyMethod_GET_SELF(__pyx_t_11);
-        if (likely(__pyx_t_1)) {
-          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_11);
-          __Pyx_INCREF(__pyx_t_1);
-          __Pyx_INCREF(function);
-          __Pyx_DECREF_SET(__pyx_t_11, function);
-          __pyx_t_7 = 1;
-        }
-      }
-      #endif
-      {
-        PyObject *__pyx_callargs[2] = {__pyx_t_1, __pyx_t_6};
-        __pyx_t_5 = __Pyx_PyObject_FastCall(__pyx_t_11, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
-        __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
-        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-        if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 161, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_5);
-        __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-      }
-      __Pyx_DECREF_SET(__pyx_v_decoded_node_b, __pyx_t_5);
-      __pyx_t_5 = 0;
-
-      /* "gmapache/integerization.pyx":162
- *             decoded_node_a = deepcopy(node_name_encoding[u])
- *             decoded_node_b = deepcopy(node_name_encoding[v])
- *             decoded_label = deepcopy(edge_label_encoding[edgeInfo["GMEL"]])   # gran_mapache_edge_label             # <<<<<<<<<<<<<<
- *             dec_graph.add_edges_from([(decoded_node_a, decoded_node_b, decoded_label)])
- *         # save graph in list
- */
-      __Pyx_GetModuleGlobalName(__pyx_t_11, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 162, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_11);
-      __pyx_t_6 = __Pyx_PyObject_Dict_GetItem(__pyx_v_edgeInfo, __pyx_n_s_GMEL); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 162, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_6);
-      __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_v_edge_label_encoding, __pyx_t_6); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 162, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_1);
-      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-      __pyx_t_6 = NULL;
-      __pyx_t_7 = 0;
-      #if CYTHON_UNPACK_METHODS
-      if (unlikely(PyMethod_Check(__pyx_t_11))) {
-        __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_11);
-        if (likely(__pyx_t_6)) {
-          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_11);
-          __Pyx_INCREF(__pyx_t_6);
-          __Pyx_INCREF(function);
-          __Pyx_DECREF_SET(__pyx_t_11, function);
-          __pyx_t_7 = 1;
-        }
-      }
-      #endif
-      {
-        PyObject *__pyx_callargs[2] = {__pyx_t_6, __pyx_t_1};
-        __pyx_t_5 = __Pyx_PyObject_FastCall(__pyx_t_11, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
-        __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-        __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-        if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 162, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_5);
-        __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-      }
-      __Pyx_DECREF_SET(__pyx_v_decoded_label, __pyx_t_5);
-      __pyx_t_5 = 0;
-
-      /* "gmapache/integerization.pyx":163
- *             decoded_node_b = deepcopy(node_name_encoding[v])
- *             decoded_label = deepcopy(edge_label_encoding[edgeInfo["GMEL"]])   # gran_mapache_edge_label
- *             dec_graph.add_edges_from([(decoded_node_a, decoded_node_b, decoded_label)])             # <<<<<<<<<<<<<<
- *         # save graph in list
- *         decoded_graphs.append(deepcopy(dec_graph))
- */
-      __pyx_t_11 = __Pyx_PyObject_GetAttrStr(__pyx_v_dec_graph, __pyx_n_s_add_edges_from); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 163, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_11);
-      __pyx_t_1 = PyTuple_New(3); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 163, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_1);
-      __Pyx_INCREF(__pyx_v_decoded_node_a);
-      __Pyx_GIVEREF(__pyx_v_decoded_node_a);
-      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_v_decoded_node_a)) __PYX_ERR(0, 163, __pyx_L1_error);
-      __Pyx_INCREF(__pyx_v_decoded_node_b);
-      __Pyx_GIVEREF(__pyx_v_decoded_node_b);
-      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 1, __pyx_v_decoded_node_b)) __PYX_ERR(0, 163, __pyx_L1_error);
-      __Pyx_INCREF(__pyx_v_decoded_label);
-      __Pyx_GIVEREF(__pyx_v_decoded_label);
-      if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 2, __pyx_v_decoded_label)) __PYX_ERR(0, 163, __pyx_L1_error);
-      __pyx_t_6 = PyList_New(1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 163, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_6);
-      __Pyx_GIVEREF(__pyx_t_1);
-      if (__Pyx_PyList_SET_ITEM(__pyx_t_6, 0, __pyx_t_1)) __PYX_ERR(0, 163, __pyx_L1_error);
-      __pyx_t_1 = 0;
-      __pyx_t_1 = NULL;
-      __pyx_t_7 = 0;
-      #if CYTHON_UNPACK_METHODS
-      if (likely(PyMethod_Check(__pyx_t_11))) {
-        __pyx_t_1 = PyMethod_GET_SELF(__pyx_t_11);
-        if (likely(__pyx_t_1)) {
-          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_11);
-          __Pyx_INCREF(__pyx_t_1);
-          __Pyx_INCREF(function);
-          __Pyx_DECREF_SET(__pyx_t_11, function);
-          __pyx_t_7 = 1;
-        }
-      }
-      #endif
-      {
-        PyObject *__pyx_callargs[2] = {__pyx_t_1, __pyx_t_6};
-        __pyx_t_5 = __Pyx_PyObject_FastCall(__pyx_t_11, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
-        __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
-        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-        if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 163, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_5);
-        __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-      }
-      __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-
-      /* "gmapache/integerization.pyx":159
- *             dec_graph.add_nodes_from([(decoded_node, decoded_label)])
+      /* "gmapache/integerization.pyx":167
+ *             dec_graph.add_nodes_from([(deepcopy(decoded_node), deepcopy(decoded_label))])
  *         # compare edges
  *         for (u, v, edgeInfo) in list(encoded_graphs[i].edges(data = True)):             # <<<<<<<<<<<<<<
- *             decoded_node_a = deepcopy(node_name_encoding[u])
- *             decoded_node_b = deepcopy(node_name_encoding[v])
+ *             decoded_node_a = node_name_encoding[u]
+ *             decoded_node_b = node_name_encoding[v]
  */
     }
-    __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-    /* "gmapache/integerization.pyx":165
- *             dec_graph.add_edges_from([(decoded_node_a, decoded_node_b, decoded_label)])
+    /* "gmapache/integerization.pyx":173
+ *             dec_graph.add_edges_from([(deepcopy(decoded_node_a), deepcopy(decoded_node_b), deepcopy(decoded_label))])
  *         # save graph in list
  *         decoded_graphs.append(deepcopy(dec_graph))             # <<<<<<<<<<<<<<
  *     # end of function
  *     return(decoded_graphs)
  */
-    __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 165, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_11 = NULL;
+    __Pyx_GetModuleGlobalName(__pyx_t_14, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_14)) __PYX_ERR(0, 173, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_14);
+    __pyx_t_5 = NULL;
     __pyx_t_7 = 0;
     #if CYTHON_UNPACK_METHODS
-    if (unlikely(PyMethod_Check(__pyx_t_5))) {
-      __pyx_t_11 = PyMethod_GET_SELF(__pyx_t_5);
-      if (likely(__pyx_t_11)) {
-        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_5);
-        __Pyx_INCREF(__pyx_t_11);
+    if (unlikely(PyMethod_Check(__pyx_t_14))) {
+      __pyx_t_5 = PyMethod_GET_SELF(__pyx_t_14);
+      if (likely(__pyx_t_5)) {
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_14);
+        __Pyx_INCREF(__pyx_t_5);
         __Pyx_INCREF(function);
-        __Pyx_DECREF_SET(__pyx_t_5, function);
+        __Pyx_DECREF_SET(__pyx_t_14, function);
         __pyx_t_7 = 1;
       }
     }
     #endif
     {
-      PyObject *__pyx_callargs[2] = {__pyx_t_11, __pyx_v_dec_graph};
-      __pyx_t_10 = __Pyx_PyObject_FastCall(__pyx_t_5, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
-      __Pyx_XDECREF(__pyx_t_11); __pyx_t_11 = 0;
-      if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 165, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_10);
-      __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+      PyObject *__pyx_callargs[2] = {__pyx_t_5, __pyx_v_dec_graph};
+      __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_14, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
+      __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
+      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 173, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_1);
+      __Pyx_DECREF(__pyx_t_14); __pyx_t_14 = 0;
     }
-    __pyx_t_14 = __Pyx_PyList_Append(__pyx_v_decoded_graphs, __pyx_t_10); if (unlikely(__pyx_t_14 == ((int)-1))) __PYX_ERR(0, 165, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
+    __pyx_t_18 = __Pyx_PyList_Append(__pyx_v_decoded_graphs, __pyx_t_1); if (unlikely(__pyx_t_18 == ((int)-1))) __PYX_ERR(0, 173, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   }
 
-  /* "gmapache/integerization.pyx":167
+  /* "gmapache/integerization.pyx":175
  *         decoded_graphs.append(deepcopy(dec_graph))
  *     # end of function
  *     return(decoded_graphs)             # <<<<<<<<<<<<<<
@@ -5231,7 +5401,7 @@ static PyObject *__pyx_pf_8gmapache_14integerization_2decode_graphs(CYTHON_UNUSE
   __pyx_r = __pyx_v_decoded_graphs;
   goto __pyx_L0;
 
-  /* "gmapache/integerization.pyx":117
+  /* "gmapache/integerization.pyx":121
  * 
  * # function: decode graphs in list recovering original input graphs -------------
  * def decode_graphs(encoded_graphs = [],             # <<<<<<<<<<<<<<
@@ -5246,7 +5416,9 @@ static PyObject *__pyx_pf_8gmapache_14integerization_2decode_graphs(CYTHON_UNUSE
   __Pyx_XDECREF(__pyx_t_6);
   __Pyx_XDECREF(__pyx_t_10);
   __Pyx_XDECREF(__pyx_t_11);
-  __Pyx_XDECREF(__pyx_t_13);
+  __Pyx_XDECREF(__pyx_t_14);
+  __Pyx_XDECREF(__pyx_t_15);
+  __Pyx_XDECREF(__pyx_t_17);
   __Pyx_AddTraceback("gmapache.integerization.decode_graphs", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
@@ -5255,11 +5427,790 @@ static PyObject *__pyx_pf_8gmapache_14integerization_2decode_graphs(CYTHON_UNUSE
   __Pyx_XDECREF(__pyx_v_decoded_node_a);
   __Pyx_XDECREF(__pyx_v_decoded_node_b);
   __Pyx_XDECREF(__pyx_v_decoded_label);
-  __Pyx_XDECREF(__pyx_v_dec_graph);
-  __Pyx_XDECREF(__pyx_v_v);
   __Pyx_XDECREF(__pyx_v_nodeInfo);
-  __Pyx_XDECREF(__pyx_v_u);
   __Pyx_XDECREF(__pyx_v_edgeInfo);
+  __Pyx_XDECREF(__pyx_v_dec_graph);
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "gmapache/integerization.pyx":179
+ * 
+ * # function: encode match given an encoding of node names -----------------------
+ * def encode_match(input_match = [],             # <<<<<<<<<<<<<<
+ *                  node_name_encoding = dict()):
+ *     # description
+ */
+
+static PyObject *__pyx_pf_8gmapache_14integerization_12__defaults__(CYTHON_UNUSED PyObject *__pyx_self) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("__defaults__", 1);
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 179, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_INCREF(__Pyx_CyFunction_Defaults(__pyx_defaults2, __pyx_self)->__pyx_arg_input_match);
+  __Pyx_GIVEREF(__Pyx_CyFunction_Defaults(__pyx_defaults2, __pyx_self)->__pyx_arg_input_match);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 0, __Pyx_CyFunction_Defaults(__pyx_defaults2, __pyx_self)->__pyx_arg_input_match)) __PYX_ERR(0, 179, __pyx_L1_error);
+  __Pyx_INCREF(__Pyx_CyFunction_Defaults(__pyx_defaults2, __pyx_self)->__pyx_arg_node_name_encoding);
+  __Pyx_GIVEREF(__Pyx_CyFunction_Defaults(__pyx_defaults2, __pyx_self)->__pyx_arg_node_name_encoding);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 1, __Pyx_CyFunction_Defaults(__pyx_defaults2, __pyx_self)->__pyx_arg_node_name_encoding)) __PYX_ERR(0, 179, __pyx_L1_error);
+  __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 179, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_GIVEREF(__pyx_t_1);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_1)) __PYX_ERR(0, 179, __pyx_L1_error);
+  __Pyx_INCREF(Py_None);
+  __Pyx_GIVEREF(Py_None);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 1, Py_None)) __PYX_ERR(0, 179, __pyx_L1_error);
+  __pyx_t_1 = 0;
+  __pyx_r = __pyx_t_2;
+  __pyx_t_2 = 0;
+  goto __pyx_L0;
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_AddTraceback("gmapache.integerization.__defaults__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* Python wrapper */
+static PyObject *__pyx_pw_8gmapache_14integerization_5encode_match(PyObject *__pyx_self, 
+#if CYTHON_METH_FASTCALL
+PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
+#else
+PyObject *__pyx_args, PyObject *__pyx_kwds
+#endif
+); /*proto*/
+PyDoc_STRVAR(__pyx_doc_8gmapache_14integerization_4encode_match, "\n    > description: receives a list of 2-tuples of nodes and a dictionary encoding\n    nodes into integers, and returns the corresponding encoded list of 2-tuples.\n\n    > input:\n    * input_match - list of 2-tuples (x, y) representing a match between graphs.\n    * node_name_encoding - dict from integers into the original nodes.\n\n    > output:\n    * encoded_match - list of 2-tuples of integers (i, j) encoding the nodes.\n    ");
+static PyMethodDef __pyx_mdef_8gmapache_14integerization_5encode_match = {"encode_match", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_8gmapache_14integerization_5encode_match, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_8gmapache_14integerization_4encode_match};
+static PyObject *__pyx_pw_8gmapache_14integerization_5encode_match(PyObject *__pyx_self, 
+#if CYTHON_METH_FASTCALL
+PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
+#else
+PyObject *__pyx_args, PyObject *__pyx_kwds
+#endif
+) {
+  PyObject *__pyx_v_input_match = 0;
+  PyObject *__pyx_v_node_name_encoding = 0;
+  #if !CYTHON_METH_FASTCALL
+  CYTHON_UNUSED Py_ssize_t __pyx_nargs;
+  #endif
+  CYTHON_UNUSED PyObject *const *__pyx_kwvalues;
+  PyObject* values[2] = {0,0};
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("encode_match (wrapper)", 0);
+  #if !CYTHON_METH_FASTCALL
+  #if CYTHON_ASSUME_SAFE_MACROS
+  __pyx_nargs = PyTuple_GET_SIZE(__pyx_args);
+  #else
+  __pyx_nargs = PyTuple_Size(__pyx_args); if (unlikely(__pyx_nargs < 0)) return NULL;
+  #endif
+  #endif
+  __pyx_kwvalues = __Pyx_KwValues_FASTCALL(__pyx_args, __pyx_nargs);
+  {
+    PyObject **__pyx_pyargnames[] = {&__pyx_n_s_input_match,&__pyx_n_s_node_name_encoding,0};
+    __pyx_defaults2 *__pyx_dynamic_args = __Pyx_CyFunction_Defaults(__pyx_defaults2, __pyx_self);
+    values[0] = __Pyx_Arg_NewRef_FASTCALL(__pyx_dynamic_args->__pyx_arg_input_match);
+    values[1] = __Pyx_Arg_NewRef_FASTCALL(__pyx_dynamic_args->__pyx_arg_node_name_encoding);
+    if (__pyx_kwds) {
+      Py_ssize_t kw_args;
+      switch (__pyx_nargs) {
+        case  2: values[1] = __Pyx_Arg_FASTCALL(__pyx_args, 1);
+        CYTHON_FALLTHROUGH;
+        case  1: values[0] = __Pyx_Arg_FASTCALL(__pyx_args, 0);
+        CYTHON_FALLTHROUGH;
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = __Pyx_NumKwargs_FASTCALL(__pyx_kwds);
+      switch (__pyx_nargs) {
+        case  0:
+        if (kw_args > 0) {
+          PyObject* value = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_input_match);
+          if (value) { values[0] = __Pyx_Arg_NewRef_FASTCALL(value); kw_args--; }
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 179, __pyx_L3_error)
+        }
+        CYTHON_FALLTHROUGH;
+        case  1:
+        if (kw_args > 0) {
+          PyObject* value = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_node_name_encoding);
+          if (value) { values[1] = __Pyx_Arg_NewRef_FASTCALL(value); kw_args--; }
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 179, __pyx_L3_error)
+        }
+      }
+      if (unlikely(kw_args > 0)) {
+        const Py_ssize_t kwd_pos_args = __pyx_nargs;
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "encode_match") < 0)) __PYX_ERR(0, 179, __pyx_L3_error)
+      }
+    } else {
+      switch (__pyx_nargs) {
+        case  2: values[1] = __Pyx_Arg_FASTCALL(__pyx_args, 1);
+        CYTHON_FALLTHROUGH;
+        case  1: values[0] = __Pyx_Arg_FASTCALL(__pyx_args, 0);
+        CYTHON_FALLTHROUGH;
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+    }
+    __pyx_v_input_match = values[0];
+    __pyx_v_node_name_encoding = values[1];
+  }
+  goto __pyx_L6_skip;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("encode_match", 0, 0, 2, __pyx_nargs); __PYX_ERR(0, 179, __pyx_L3_error)
+  __pyx_L6_skip:;
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L3_error:;
+  {
+    Py_ssize_t __pyx_temp;
+    for (__pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
+      __Pyx_Arg_XDECREF_FASTCALL(values[__pyx_temp]);
+    }
+  }
+  __Pyx_AddTraceback("gmapache.integerization.encode_match", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  __pyx_r = __pyx_pf_8gmapache_14integerization_4encode_match(__pyx_self, __pyx_v_input_match, __pyx_v_node_name_encoding);
+
+  /* function exit code */
+  {
+    Py_ssize_t __pyx_temp;
+    for (__pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
+      __Pyx_Arg_XDECREF_FASTCALL(values[__pyx_temp]);
+    }
+  }
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_8gmapache_14integerization_4encode_match(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_input_match, PyObject *__pyx_v_node_name_encoding) {
+  PyObject *__pyx_v_encoded_match = NULL;
+  int __pyx_v_i;
+  int __pyx_v_index1;
+  int __pyx_v_index2;
+  PyObject *__pyx_v_encoding_as_array = NULL;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  Py_ssize_t __pyx_t_2;
+  Py_ssize_t __pyx_t_3;
+  int __pyx_t_4;
+  PyObject *__pyx_t_5 = NULL;
+  PyObject *__pyx_t_6 = NULL;
+  PyObject *__pyx_t_7 = NULL;
+  unsigned int __pyx_t_8;
+  int __pyx_t_9;
+  int __pyx_t_10;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("encode_match", 1);
+
+  /* "gmapache/integerization.pyx":194
+ *     """
+ *     # output holders
+ *     encoded_match = []             # <<<<<<<<<<<<<<
+ *     # cython variables
+ *     cdef int i = 0
+ */
+  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 194, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_v_encoded_match = ((PyObject*)__pyx_t_1);
+  __pyx_t_1 = 0;
+
+  /* "gmapache/integerization.pyx":196
+ *     encoded_match = []
+ *     # cython variables
+ *     cdef int i = 0             # <<<<<<<<<<<<<<
+ *     cdef int index1 = 0
+ *     cdef int index2 = 0
+ */
+  __pyx_v_i = 0;
+
+  /* "gmapache/integerization.pyx":197
+ *     # cython variables
+ *     cdef int i = 0
+ *     cdef int index1 = 0             # <<<<<<<<<<<<<<
+ *     cdef int index2 = 0
+ *     # local variables
+ */
+  __pyx_v_index1 = 0;
+
+  /* "gmapache/integerization.pyx":198
+ *     cdef int i = 0
+ *     cdef int index1 = 0
+ *     cdef int index2 = 0             # <<<<<<<<<<<<<<
+ *     # local variables
+ *     encoding_as_array = [None]
+ */
+  __pyx_v_index2 = 0;
+
+  /* "gmapache/integerization.pyx":200
+ *     cdef int index2 = 0
+ *     # local variables
+ *     encoding_as_array = [None]             # <<<<<<<<<<<<<<
+ *     # get encoding as array
+ *     for i in range(1, len(node_name_encoding)+1):
+ */
+  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 200, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_INCREF(Py_None);
+  __Pyx_GIVEREF(Py_None);
+  if (__Pyx_PyList_SET_ITEM(__pyx_t_1, 0, Py_None)) __PYX_ERR(0, 200, __pyx_L1_error);
+  __pyx_v_encoding_as_array = ((PyObject*)__pyx_t_1);
+  __pyx_t_1 = 0;
+
+  /* "gmapache/integerization.pyx":202
+ *     encoding_as_array = [None]
+ *     # get encoding as array
+ *     for i in range(1, len(node_name_encoding)+1):             # <<<<<<<<<<<<<<
+ *         encoding_as_array.append(deepcopy(node_name_encoding[i]))
+ *     # encode match
+ */
+  __pyx_t_2 = PyObject_Length(__pyx_v_node_name_encoding); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 202, __pyx_L1_error)
+  __pyx_t_3 = (__pyx_t_2 + 1);
+  __pyx_t_2 = __pyx_t_3;
+  for (__pyx_t_4 = 1; __pyx_t_4 < __pyx_t_2; __pyx_t_4+=1) {
+    __pyx_v_i = __pyx_t_4;
+
+    /* "gmapache/integerization.pyx":203
+ *     # get encoding as array
+ *     for i in range(1, len(node_name_encoding)+1):
+ *         encoding_as_array.append(deepcopy(node_name_encoding[i]))             # <<<<<<<<<<<<<<
+ *     # encode match
+ *     for i in range(len(input_match)):
+ */
+    __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 203, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    __pyx_t_6 = __Pyx_GetItemInt(__pyx_v_node_name_encoding, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 203, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_6);
+    __pyx_t_7 = NULL;
+    __pyx_t_8 = 0;
+    #if CYTHON_UNPACK_METHODS
+    if (unlikely(PyMethod_Check(__pyx_t_5))) {
+      __pyx_t_7 = PyMethod_GET_SELF(__pyx_t_5);
+      if (likely(__pyx_t_7)) {
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_5);
+        __Pyx_INCREF(__pyx_t_7);
+        __Pyx_INCREF(function);
+        __Pyx_DECREF_SET(__pyx_t_5, function);
+        __pyx_t_8 = 1;
+      }
+    }
+    #endif
+    {
+      PyObject *__pyx_callargs[2] = {__pyx_t_7, __pyx_t_6};
+      __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_5, __pyx_callargs+1-__pyx_t_8, 1+__pyx_t_8);
+      __Pyx_XDECREF(__pyx_t_7); __pyx_t_7 = 0;
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 203, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_1);
+      __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    }
+    __pyx_t_9 = __Pyx_PyList_Append(__pyx_v_encoding_as_array, __pyx_t_1); if (unlikely(__pyx_t_9 == ((int)-1))) __PYX_ERR(0, 203, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  }
+
+  /* "gmapache/integerization.pyx":205
+ *         encoding_as_array.append(deepcopy(node_name_encoding[i]))
+ *     # encode match
+ *     for i in range(len(input_match)):             # <<<<<<<<<<<<<<
+ *         index1 = encoding_as_array.index(input_match[i][0])
+ *         index2 = encoding_as_array.index(input_match[i][1])
+ */
+  __pyx_t_3 = PyObject_Length(__pyx_v_input_match); if (unlikely(__pyx_t_3 == ((Py_ssize_t)-1))) __PYX_ERR(0, 205, __pyx_L1_error)
+  __pyx_t_2 = __pyx_t_3;
+  for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_2; __pyx_t_4+=1) {
+    __pyx_v_i = __pyx_t_4;
+
+    /* "gmapache/integerization.pyx":206
+ *     # encode match
+ *     for i in range(len(input_match)):
+ *         index1 = encoding_as_array.index(input_match[i][0])             # <<<<<<<<<<<<<<
+ *         index2 = encoding_as_array.index(input_match[i][1])
+ *         encoded_match.append((index1, index2))
+ */
+    __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_input_match, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 206, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_5 = __Pyx_GetItemInt(__pyx_t_1, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 206, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_1 = __Pyx_CallUnboundCMethod1(&__pyx_umethod_PyList_Type_index, __pyx_v_encoding_as_array, __pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 206, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    __pyx_t_10 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_10 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 206, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_v_index1 = __pyx_t_10;
+
+    /* "gmapache/integerization.pyx":207
+ *     for i in range(len(input_match)):
+ *         index1 = encoding_as_array.index(input_match[i][0])
+ *         index2 = encoding_as_array.index(input_match[i][1])             # <<<<<<<<<<<<<<
+ *         encoded_match.append((index1, index2))
+ *     # end of function
+ */
+    __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_input_match, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 207, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_5 = __Pyx_GetItemInt(__pyx_t_1, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 207, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_1 = __Pyx_CallUnboundCMethod1(&__pyx_umethod_PyList_Type_index, __pyx_v_encoding_as_array, __pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 207, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    __pyx_t_10 = __Pyx_PyInt_As_int(__pyx_t_1); if (unlikely((__pyx_t_10 == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 207, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_v_index2 = __pyx_t_10;
+
+    /* "gmapache/integerization.pyx":208
+ *         index1 = encoding_as_array.index(input_match[i][0])
+ *         index2 = encoding_as_array.index(input_match[i][1])
+ *         encoded_match.append((index1, index2))             # <<<<<<<<<<<<<<
+ *     # end of function
+ *     return(encoded_match)
+ */
+    __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_index1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 208, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_index2); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 208, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    __pyx_t_6 = PyTuple_New(2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 208, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_6);
+    __Pyx_GIVEREF(__pyx_t_1);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_1)) __PYX_ERR(0, 208, __pyx_L1_error);
+    __Pyx_GIVEREF(__pyx_t_5);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 1, __pyx_t_5)) __PYX_ERR(0, 208, __pyx_L1_error);
+    __pyx_t_1 = 0;
+    __pyx_t_5 = 0;
+    __pyx_t_9 = __Pyx_PyList_Append(__pyx_v_encoded_match, __pyx_t_6); if (unlikely(__pyx_t_9 == ((int)-1))) __PYX_ERR(0, 208, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+  }
+
+  /* "gmapache/integerization.pyx":210
+ *         encoded_match.append((index1, index2))
+ *     # end of function
+ *     return(encoded_match)             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __Pyx_INCREF(__pyx_v_encoded_match);
+  __pyx_r = __pyx_v_encoded_match;
+  goto __pyx_L0;
+
+  /* "gmapache/integerization.pyx":179
+ * 
+ * # function: encode match given an encoding of node names -----------------------
+ * def encode_match(input_match = [],             # <<<<<<<<<<<<<<
+ *                  node_name_encoding = dict()):
+ *     # description
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_5);
+  __Pyx_XDECREF(__pyx_t_6);
+  __Pyx_XDECREF(__pyx_t_7);
+  __Pyx_AddTraceback("gmapache.integerization.encode_match", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XDECREF(__pyx_v_encoded_match);
+  __Pyx_XDECREF(__pyx_v_encoding_as_array);
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "gmapache/integerization.pyx":214
+ * 
+ * # function: decode match given an encoding of node names -----------------------
+ * def decode_match(encoded_match = [],             # <<<<<<<<<<<<<<
+ *                  node_name_encoding = dict()):
+ *     # description
+ */
+
+static PyObject *__pyx_pf_8gmapache_14integerization_14__defaults__(CYTHON_UNUSED PyObject *__pyx_self) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  PyObject *__pyx_t_2 = NULL;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("__defaults__", 1);
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_1 = PyTuple_New(2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 214, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __Pyx_INCREF(__Pyx_CyFunction_Defaults(__pyx_defaults3, __pyx_self)->__pyx_arg_encoded_match);
+  __Pyx_GIVEREF(__Pyx_CyFunction_Defaults(__pyx_defaults3, __pyx_self)->__pyx_arg_encoded_match);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 0, __Pyx_CyFunction_Defaults(__pyx_defaults3, __pyx_self)->__pyx_arg_encoded_match)) __PYX_ERR(0, 214, __pyx_L1_error);
+  __Pyx_INCREF(__Pyx_CyFunction_Defaults(__pyx_defaults3, __pyx_self)->__pyx_arg_node_name_encoding);
+  __Pyx_GIVEREF(__Pyx_CyFunction_Defaults(__pyx_defaults3, __pyx_self)->__pyx_arg_node_name_encoding);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_1, 1, __Pyx_CyFunction_Defaults(__pyx_defaults3, __pyx_self)->__pyx_arg_node_name_encoding)) __PYX_ERR(0, 214, __pyx_L1_error);
+  __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 214, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_GIVEREF(__pyx_t_1);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 0, __pyx_t_1)) __PYX_ERR(0, 214, __pyx_L1_error);
+  __Pyx_INCREF(Py_None);
+  __Pyx_GIVEREF(Py_None);
+  if (__Pyx_PyTuple_SET_ITEM(__pyx_t_2, 1, Py_None)) __PYX_ERR(0, 214, __pyx_L1_error);
+  __pyx_t_1 = 0;
+  __pyx_r = __pyx_t_2;
+  __pyx_t_2 = 0;
+  goto __pyx_L0;
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_AddTraceback("gmapache.integerization.__defaults__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* Python wrapper */
+static PyObject *__pyx_pw_8gmapache_14integerization_7decode_match(PyObject *__pyx_self, 
+#if CYTHON_METH_FASTCALL
+PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
+#else
+PyObject *__pyx_args, PyObject *__pyx_kwds
+#endif
+); /*proto*/
+PyDoc_STRVAR(__pyx_doc_8gmapache_14integerization_6decode_match, "\n    > description: receives a list of 2-tuples of integers and a dictionary mapping\n    integers to nodes, and returns the corresponding decoded list of 2-tuples of nodes.\n\n    > input:\n    * encoded_match - list of 2-tuples (i, j) of integers encoding pairs of nodes.\n    * node_name_encoding - dict from integers into the original nodes.\n\n    > output:\n    * decoded_match - list of 2-tuples (x, y) of nodes representing the match.\n    ");
+static PyMethodDef __pyx_mdef_8gmapache_14integerization_7decode_match = {"decode_match", (PyCFunction)(void*)(__Pyx_PyCFunction_FastCallWithKeywords)__pyx_pw_8gmapache_14integerization_7decode_match, __Pyx_METH_FASTCALL|METH_KEYWORDS, __pyx_doc_8gmapache_14integerization_6decode_match};
+static PyObject *__pyx_pw_8gmapache_14integerization_7decode_match(PyObject *__pyx_self, 
+#if CYTHON_METH_FASTCALL
+PyObject *const *__pyx_args, Py_ssize_t __pyx_nargs, PyObject *__pyx_kwds
+#else
+PyObject *__pyx_args, PyObject *__pyx_kwds
+#endif
+) {
+  PyObject *__pyx_v_encoded_match = 0;
+  PyObject *__pyx_v_node_name_encoding = 0;
+  #if !CYTHON_METH_FASTCALL
+  CYTHON_UNUSED Py_ssize_t __pyx_nargs;
+  #endif
+  CYTHON_UNUSED PyObject *const *__pyx_kwvalues;
+  PyObject* values[2] = {0,0};
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("decode_match (wrapper)", 0);
+  #if !CYTHON_METH_FASTCALL
+  #if CYTHON_ASSUME_SAFE_MACROS
+  __pyx_nargs = PyTuple_GET_SIZE(__pyx_args);
+  #else
+  __pyx_nargs = PyTuple_Size(__pyx_args); if (unlikely(__pyx_nargs < 0)) return NULL;
+  #endif
+  #endif
+  __pyx_kwvalues = __Pyx_KwValues_FASTCALL(__pyx_args, __pyx_nargs);
+  {
+    PyObject **__pyx_pyargnames[] = {&__pyx_n_s_encoded_match,&__pyx_n_s_node_name_encoding,0};
+    __pyx_defaults3 *__pyx_dynamic_args = __Pyx_CyFunction_Defaults(__pyx_defaults3, __pyx_self);
+    values[0] = __Pyx_Arg_NewRef_FASTCALL(__pyx_dynamic_args->__pyx_arg_encoded_match);
+    values[1] = __Pyx_Arg_NewRef_FASTCALL(__pyx_dynamic_args->__pyx_arg_node_name_encoding);
+    if (__pyx_kwds) {
+      Py_ssize_t kw_args;
+      switch (__pyx_nargs) {
+        case  2: values[1] = __Pyx_Arg_FASTCALL(__pyx_args, 1);
+        CYTHON_FALLTHROUGH;
+        case  1: values[0] = __Pyx_Arg_FASTCALL(__pyx_args, 0);
+        CYTHON_FALLTHROUGH;
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = __Pyx_NumKwargs_FASTCALL(__pyx_kwds);
+      switch (__pyx_nargs) {
+        case  0:
+        if (kw_args > 0) {
+          PyObject* value = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_encoded_match);
+          if (value) { values[0] = __Pyx_Arg_NewRef_FASTCALL(value); kw_args--; }
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 214, __pyx_L3_error)
+        }
+        CYTHON_FALLTHROUGH;
+        case  1:
+        if (kw_args > 0) {
+          PyObject* value = __Pyx_GetKwValue_FASTCALL(__pyx_kwds, __pyx_kwvalues, __pyx_n_s_node_name_encoding);
+          if (value) { values[1] = __Pyx_Arg_NewRef_FASTCALL(value); kw_args--; }
+          else if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 214, __pyx_L3_error)
+        }
+      }
+      if (unlikely(kw_args > 0)) {
+        const Py_ssize_t kwd_pos_args = __pyx_nargs;
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_kwvalues, __pyx_pyargnames, 0, values + 0, kwd_pos_args, "decode_match") < 0)) __PYX_ERR(0, 214, __pyx_L3_error)
+      }
+    } else {
+      switch (__pyx_nargs) {
+        case  2: values[1] = __Pyx_Arg_FASTCALL(__pyx_args, 1);
+        CYTHON_FALLTHROUGH;
+        case  1: values[0] = __Pyx_Arg_FASTCALL(__pyx_args, 0);
+        CYTHON_FALLTHROUGH;
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+    }
+    __pyx_v_encoded_match = values[0];
+    __pyx_v_node_name_encoding = values[1];
+  }
+  goto __pyx_L6_skip;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("decode_match", 0, 0, 2, __pyx_nargs); __PYX_ERR(0, 214, __pyx_L3_error)
+  __pyx_L6_skip:;
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L3_error:;
+  {
+    Py_ssize_t __pyx_temp;
+    for (__pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
+      __Pyx_Arg_XDECREF_FASTCALL(values[__pyx_temp]);
+    }
+  }
+  __Pyx_AddTraceback("gmapache.integerization.decode_match", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  __pyx_r = __pyx_pf_8gmapache_14integerization_6decode_match(__pyx_self, __pyx_v_encoded_match, __pyx_v_node_name_encoding);
+
+  /* function exit code */
+  {
+    Py_ssize_t __pyx_temp;
+    for (__pyx_temp=0; __pyx_temp < (Py_ssize_t)(sizeof(values)/sizeof(values[0])); ++__pyx_temp) {
+      __Pyx_Arg_XDECREF_FASTCALL(values[__pyx_temp]);
+    }
+  }
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_8gmapache_14integerization_6decode_match(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_encoded_match, PyObject *__pyx_v_node_name_encoding) {
+  PyObject *__pyx_v_decoded_match = NULL;
+  int __pyx_v_i;
+  PyObject *__pyx_v_node1 = NULL;
+  PyObject *__pyx_v_node2 = NULL;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  Py_ssize_t __pyx_t_2;
+  Py_ssize_t __pyx_t_3;
+  int __pyx_t_4;
+  PyObject *__pyx_t_5 = NULL;
+  PyObject *__pyx_t_6 = NULL;
+  unsigned int __pyx_t_7;
+  PyObject *__pyx_t_8 = NULL;
+  int __pyx_t_9;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("decode_match", 1);
+
+  /* "gmapache/integerization.pyx":229
+ *     """
+ *     # output holders
+ *     decoded_match = []             # <<<<<<<<<<<<<<
+ *     # cython variables
+ *     cdef int i = 0
+ */
+  __pyx_t_1 = PyList_New(0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 229, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_v_decoded_match = ((PyObject*)__pyx_t_1);
+  __pyx_t_1 = 0;
+
+  /* "gmapache/integerization.pyx":231
+ *     decoded_match = []
+ *     # cython variables
+ *     cdef int i = 0             # <<<<<<<<<<<<<<
+ *     # local variables
+ *     node1 = None
+ */
+  __pyx_v_i = 0;
+
+  /* "gmapache/integerization.pyx":233
+ *     cdef int i = 0
+ *     # local variables
+ *     node1 = None             # <<<<<<<<<<<<<<
+ *     node2 = None
+ *     # decode match
+ */
+  __Pyx_INCREF(Py_None);
+  __pyx_v_node1 = Py_None;
+
+  /* "gmapache/integerization.pyx":234
+ *     # local variables
+ *     node1 = None
+ *     node2 = None             # <<<<<<<<<<<<<<
+ *     # decode match
+ *     for i in range(len(encoded_match)):
+ */
+  __Pyx_INCREF(Py_None);
+  __pyx_v_node2 = Py_None;
+
+  /* "gmapache/integerization.pyx":236
+ *     node2 = None
+ *     # decode match
+ *     for i in range(len(encoded_match)):             # <<<<<<<<<<<<<<
+ *         node1 = node_name_encoding[encoded_match[i][0]]
+ *         node2 = node_name_encoding[encoded_match[i][1]]
+ */
+  __pyx_t_2 = PyObject_Length(__pyx_v_encoded_match); if (unlikely(__pyx_t_2 == ((Py_ssize_t)-1))) __PYX_ERR(0, 236, __pyx_L1_error)
+  __pyx_t_3 = __pyx_t_2;
+  for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_3; __pyx_t_4+=1) {
+    __pyx_v_i = __pyx_t_4;
+
+    /* "gmapache/integerization.pyx":237
+ *     # decode match
+ *     for i in range(len(encoded_match)):
+ *         node1 = node_name_encoding[encoded_match[i][0]]             # <<<<<<<<<<<<<<
+ *         node2 = node_name_encoding[encoded_match[i][1]]
+ *         decoded_match.append((deepcopy(node1), deepcopy(node2)))
+ */
+    __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_encoded_match, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_5 = __Pyx_GetItemInt(__pyx_t_1, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_v_node_name_encoding, __pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    __Pyx_DECREF_SET(__pyx_v_node1, __pyx_t_1);
+    __pyx_t_1 = 0;
+
+    /* "gmapache/integerization.pyx":238
+ *     for i in range(len(encoded_match)):
+ *         node1 = node_name_encoding[encoded_match[i][0]]
+ *         node2 = node_name_encoding[encoded_match[i][1]]             # <<<<<<<<<<<<<<
+ *         decoded_match.append((deepcopy(node1), deepcopy(node2)))
+ *     # end of function
+ */
+    __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_encoded_match, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 1, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 238, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __pyx_t_5 = __Pyx_GetItemInt(__pyx_t_1, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 238, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+    __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_v_node_name_encoding, __pyx_t_5); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 238, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_1);
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    __Pyx_DECREF_SET(__pyx_v_node2, __pyx_t_1);
+    __pyx_t_1 = 0;
+
+    /* "gmapache/integerization.pyx":239
+ *         node1 = node_name_encoding[encoded_match[i][0]]
+ *         node2 = node_name_encoding[encoded_match[i][1]]
+ *         decoded_match.append((deepcopy(node1), deepcopy(node2)))             # <<<<<<<<<<<<<<
+ *     # end of function
+ *     return(decoded_match)
+ */
+    __Pyx_GetModuleGlobalName(__pyx_t_5, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 239, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_5);
+    __pyx_t_6 = NULL;
+    __pyx_t_7 = 0;
+    #if CYTHON_UNPACK_METHODS
+    if (unlikely(PyMethod_Check(__pyx_t_5))) {
+      __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_5);
+      if (likely(__pyx_t_6)) {
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_5);
+        __Pyx_INCREF(__pyx_t_6);
+        __Pyx_INCREF(function);
+        __Pyx_DECREF_SET(__pyx_t_5, function);
+        __pyx_t_7 = 1;
+      }
+    }
+    #endif
+    {
+      PyObject *__pyx_callargs[2] = {__pyx_t_6, __pyx_v_node1};
+      __pyx_t_1 = __Pyx_PyObject_FastCall(__pyx_t_5, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
+      __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
+      if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 239, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_1);
+      __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    }
+    __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_deepcopy); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 239, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_6);
+    __pyx_t_8 = NULL;
+    __pyx_t_7 = 0;
+    #if CYTHON_UNPACK_METHODS
+    if (unlikely(PyMethod_Check(__pyx_t_6))) {
+      __pyx_t_8 = PyMethod_GET_SELF(__pyx_t_6);
+      if (likely(__pyx_t_8)) {
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_6);
+        __Pyx_INCREF(__pyx_t_8);
+        __Pyx_INCREF(function);
+        __Pyx_DECREF_SET(__pyx_t_6, function);
+        __pyx_t_7 = 1;
+      }
+    }
+    #endif
+    {
+      PyObject *__pyx_callargs[2] = {__pyx_t_8, __pyx_v_node2};
+      __pyx_t_5 = __Pyx_PyObject_FastCall(__pyx_t_6, __pyx_callargs+1-__pyx_t_7, 1+__pyx_t_7);
+      __Pyx_XDECREF(__pyx_t_8); __pyx_t_8 = 0;
+      if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 239, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_5);
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+    }
+    __pyx_t_6 = PyTuple_New(2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 239, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_6);
+    __Pyx_GIVEREF(__pyx_t_1);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_1)) __PYX_ERR(0, 239, __pyx_L1_error);
+    __Pyx_GIVEREF(__pyx_t_5);
+    if (__Pyx_PyTuple_SET_ITEM(__pyx_t_6, 1, __pyx_t_5)) __PYX_ERR(0, 239, __pyx_L1_error);
+    __pyx_t_1 = 0;
+    __pyx_t_5 = 0;
+    __pyx_t_9 = __Pyx_PyList_Append(__pyx_v_decoded_match, __pyx_t_6); if (unlikely(__pyx_t_9 == ((int)-1))) __PYX_ERR(0, 239, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+  }
+
+  /* "gmapache/integerization.pyx":241
+ *         decoded_match.append((deepcopy(node1), deepcopy(node2)))
+ *     # end of function
+ *     return(decoded_match)             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __Pyx_INCREF(__pyx_v_decoded_match);
+  __pyx_r = __pyx_v_decoded_match;
+  goto __pyx_L0;
+
+  /* "gmapache/integerization.pyx":214
+ * 
+ * # function: decode match given an encoding of node names -----------------------
+ * def decode_match(encoded_match = [],             # <<<<<<<<<<<<<<
+ *                  node_name_encoding = dict()):
+ *     # description
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_XDECREF(__pyx_t_5);
+  __Pyx_XDECREF(__pyx_t_6);
+  __Pyx_XDECREF(__pyx_t_8);
+  __Pyx_AddTraceback("gmapache.integerization.decode_match", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XDECREF(__pyx_v_decoded_match);
+  __Pyx_XDECREF(__pyx_v_node1);
+  __Pyx_XDECREF(__pyx_v_node2);
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
@@ -5286,8 +6237,8 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_n_s_GMEL, __pyx_k_GMEL, sizeof(__pyx_k_GMEL), 0, 0, 1, 1},
     {&__pyx_n_s_GMNL, __pyx_k_GMNL, sizeof(__pyx_k_GMNL), 0, 0, 1, 1},
     {&__pyx_n_s_Graph, __pyx_k_Graph, sizeof(__pyx_k_Graph), 0, 0, 1, 1},
+    {&__pyx_n_s__11, __pyx_k__11, sizeof(__pyx_k__11), 0, 0, 1, 1},
     {&__pyx_n_s__2, __pyx_k__2, sizeof(__pyx_k__2), 0, 0, 1, 1},
-    {&__pyx_n_s__7, __pyx_k__7, sizeof(__pyx_k__7), 0, 0, 1, 1},
     {&__pyx_n_s_add_edge, __pyx_k_add_edge, sizeof(__pyx_k_add_edge), 0, 0, 1, 1},
     {&__pyx_n_s_add_edges_from, __pyx_k_add_edges_from, sizeof(__pyx_k_add_edges_from), 0, 0, 1, 1},
     {&__pyx_n_s_add_node, __pyx_k_add_node, sizeof(__pyx_k_add_node), 0, 0, 1, 1},
@@ -5302,8 +6253,10 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_n_s_data, __pyx_k_data, sizeof(__pyx_k_data), 0, 0, 1, 1},
     {&__pyx_n_s_dec_graph, __pyx_k_dec_graph, sizeof(__pyx_k_dec_graph), 0, 0, 1, 1},
     {&__pyx_n_s_decode_graphs, __pyx_k_decode_graphs, sizeof(__pyx_k_decode_graphs), 0, 0, 1, 1},
+    {&__pyx_n_s_decode_match, __pyx_k_decode_match, sizeof(__pyx_k_decode_match), 0, 0, 1, 1},
     {&__pyx_n_s_decoded_graphs, __pyx_k_decoded_graphs, sizeof(__pyx_k_decoded_graphs), 0, 0, 1, 1},
     {&__pyx_n_s_decoded_label, __pyx_k_decoded_label, sizeof(__pyx_k_decoded_label), 0, 0, 1, 1},
+    {&__pyx_n_s_decoded_match, __pyx_k_decoded_match, sizeof(__pyx_k_decoded_match), 0, 0, 1, 1},
     {&__pyx_n_s_decoded_node, __pyx_k_decoded_node, sizeof(__pyx_k_decoded_node), 0, 0, 1, 1},
     {&__pyx_n_s_decoded_node_a, __pyx_k_decoded_node_a, sizeof(__pyx_k_decoded_node_a), 0, 0, 1, 1},
     {&__pyx_n_s_decoded_node_b, __pyx_k_decoded_node_b, sizeof(__pyx_k_decoded_node_b), 0, 0, 1, 1},
@@ -5313,18 +6266,24 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_n_s_edge_label_encoding_inv, __pyx_k_edge_label_encoding_inv, sizeof(__pyx_k_edge_label_encoding_inv), 0, 0, 1, 1},
     {&__pyx_n_s_edges, __pyx_k_edges, sizeof(__pyx_k_edges), 0, 0, 1, 1},
     {&__pyx_n_s_encode_graphs, __pyx_k_encode_graphs, sizeof(__pyx_k_encode_graphs), 0, 0, 1, 1},
+    {&__pyx_n_s_encode_match, __pyx_k_encode_match, sizeof(__pyx_k_encode_match), 0, 0, 1, 1},
     {&__pyx_n_s_encoded_graphs, __pyx_k_encoded_graphs, sizeof(__pyx_k_encoded_graphs), 0, 0, 1, 1},
     {&__pyx_n_s_encoded_label, __pyx_k_encoded_label, sizeof(__pyx_k_encoded_label), 0, 0, 1, 1},
+    {&__pyx_n_s_encoded_match, __pyx_k_encoded_match, sizeof(__pyx_k_encoded_match), 0, 0, 1, 1},
     {&__pyx_n_s_encoded_node, __pyx_k_encoded_node, sizeof(__pyx_k_encoded_node), 0, 0, 1, 1},
     {&__pyx_n_s_encoded_node_a, __pyx_k_encoded_node_a, sizeof(__pyx_k_encoded_node_a), 0, 0, 1, 1},
     {&__pyx_n_s_encoded_node_b, __pyx_k_encoded_node_b, sizeof(__pyx_k_encoded_node_b), 0, 0, 1, 1},
+    {&__pyx_n_s_encoding_as_array, __pyx_k_encoding_as_array, sizeof(__pyx_k_encoding_as_array), 0, 0, 1, 1},
     {&__pyx_n_s_gmapache_integerization, __pyx_k_gmapache_integerization, sizeof(__pyx_k_gmapache_integerization), 0, 0, 1, 1},
     {&__pyx_kp_s_gmapache_integerization_pyx, __pyx_k_gmapache_integerization_pyx, sizeof(__pyx_k_gmapache_integerization_pyx), 0, 0, 1, 0},
     {&__pyx_n_s_i, __pyx_k_i, sizeof(__pyx_k_i), 0, 0, 1, 1},
     {&__pyx_n_s_import, __pyx_k_import, sizeof(__pyx_k_import), 0, 0, 1, 1},
     {&__pyx_n_s_index, __pyx_k_index, sizeof(__pyx_k_index), 0, 0, 1, 1},
+    {&__pyx_n_s_index1, __pyx_k_index1, sizeof(__pyx_k_index1), 0, 0, 1, 1},
+    {&__pyx_n_s_index2, __pyx_k_index2, sizeof(__pyx_k_index2), 0, 0, 1, 1},
     {&__pyx_n_s_initializing, __pyx_k_initializing, sizeof(__pyx_k_initializing), 0, 0, 1, 1},
     {&__pyx_n_s_input_graphs, __pyx_k_input_graphs, sizeof(__pyx_k_input_graphs), 0, 0, 1, 1},
+    {&__pyx_n_s_input_match, __pyx_k_input_match, sizeof(__pyx_k_input_match), 0, 0, 1, 1},
     {&__pyx_n_s_int_graph, __pyx_k_int_graph, sizeof(__pyx_k_int_graph), 0, 0, 1, 1},
     {&__pyx_n_s_is_coroutine, __pyx_k_is_coroutine, sizeof(__pyx_k_is_coroutine), 0, 0, 1, 1},
     {&__pyx_n_s_is_directed, __pyx_k_is_directed, sizeof(__pyx_k_is_directed), 0, 0, 1, 1},
@@ -5333,6 +6292,8 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
     {&__pyx_n_s_networkx, __pyx_k_networkx, sizeof(__pyx_k_networkx), 0, 0, 1, 1},
     {&__pyx_n_s_new_edge_label, __pyx_k_new_edge_label, sizeof(__pyx_k_new_edge_label), 0, 0, 1, 1},
     {&__pyx_n_s_new_node_label, __pyx_k_new_node_label, sizeof(__pyx_k_new_node_label), 0, 0, 1, 1},
+    {&__pyx_n_s_node1, __pyx_k_node1, sizeof(__pyx_k_node1), 0, 0, 1, 1},
+    {&__pyx_n_s_node2, __pyx_k_node2, sizeof(__pyx_k_node2), 0, 0, 1, 1},
     {&__pyx_n_s_nodeInfo, __pyx_k_nodeInfo, sizeof(__pyx_k_nodeInfo), 0, 0, 1, 1},
     {&__pyx_n_s_node_label_encoding, __pyx_k_node_label_encoding, sizeof(__pyx_k_node_label_encoding), 0, 0, 1, 1},
     {&__pyx_n_s_node_label_encoding_inv, __pyx_k_node_label_encoding_inv, sizeof(__pyx_k_node_label_encoding_inv), 0, 0, 1, 1},
@@ -5351,7 +6312,7 @@ static int __Pyx_CreateStringTabAndInitStrings(void) {
 }
 /* #### Code section: cached_builtins ### */
 static CYTHON_SMALL_CODE int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 71, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 75, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -5369,22 +6330,46 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
  *     # description
  *     """
  */
-  __pyx_tuple__3 = PyTuple_Pack(23, __pyx_n_s_input_graphs, __pyx_n_s_encoded_graphs, __pyx_n_s_node_name_encoding, __pyx_n_s_node_label_encoding, __pyx_n_s_edge_label_encoding, __pyx_n_s_i, __pyx_n_s_encoded_node, __pyx_n_s_encoded_node_a, __pyx_n_s_encoded_node_b, __pyx_n_s_encoded_label, __pyx_n_s_new_node_label, __pyx_n_s_new_edge_label, __pyx_n_s_all_nodes, __pyx_n_s_all_node_labels, __pyx_n_s_all_edge_labels, __pyx_n_s_node_name_encoding_inv, __pyx_n_s_node_label_encoding_inv, __pyx_n_s_edge_label_encoding_inv, __pyx_n_s_int_graph, __pyx_n_s_v, __pyx_n_s_nodeInfo, __pyx_n_s_u, __pyx_n_s_edgeInfo); if (unlikely(!__pyx_tuple__3)) __PYX_ERR(0, 30, __pyx_L1_error)
+  __pyx_tuple__3 = PyTuple_Pack(23, __pyx_n_s_input_graphs, __pyx_n_s_encoded_graphs, __pyx_n_s_node_name_encoding, __pyx_n_s_node_label_encoding, __pyx_n_s_edge_label_encoding, __pyx_n_s_i, __pyx_n_s_encoded_node, __pyx_n_s_encoded_node_a, __pyx_n_s_encoded_node_b, __pyx_n_s_encoded_label, __pyx_n_s_new_node_label, __pyx_n_s_new_edge_label, __pyx_n_s_all_nodes, __pyx_n_s_all_node_labels, __pyx_n_s_all_edge_labels, __pyx_n_s_nodeInfo, __pyx_n_s_edgeInfo, __pyx_n_s_node_name_encoding_inv, __pyx_n_s_node_label_encoding_inv, __pyx_n_s_edge_label_encoding_inv, __pyx_n_s_u, __pyx_n_s_v, __pyx_n_s_int_graph); if (unlikely(!__pyx_tuple__3)) __PYX_ERR(0, 30, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__3);
   __Pyx_GIVEREF(__pyx_tuple__3);
   __pyx_codeobj__4 = (PyObject*)__Pyx_PyCode_New(1, 0, 0, 23, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__3, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_gmapache_integerization_pyx, __pyx_n_s_encode_graphs, 30, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__4)) __PYX_ERR(0, 30, __pyx_L1_error)
 
-  /* "gmapache/integerization.pyx":117
+  /* "gmapache/integerization.pyx":121
  * 
  * # function: decode graphs in list recovering original input graphs -------------
  * def decode_graphs(encoded_graphs = [],             # <<<<<<<<<<<<<<
  *                   node_name_encoding = dict(),
  *                   node_label_encoding = dict(),
  */
-  __pyx_tuple__5 = PyTuple_Pack(15, __pyx_n_s_encoded_graphs, __pyx_n_s_node_name_encoding, __pyx_n_s_node_label_encoding, __pyx_n_s_edge_label_encoding, __pyx_n_s_decoded_graphs, __pyx_n_s_i, __pyx_n_s_decoded_node, __pyx_n_s_decoded_node_a, __pyx_n_s_decoded_node_b, __pyx_n_s_decoded_label, __pyx_n_s_dec_graph, __pyx_n_s_v, __pyx_n_s_nodeInfo, __pyx_n_s_u, __pyx_n_s_edgeInfo); if (unlikely(!__pyx_tuple__5)) __PYX_ERR(0, 117, __pyx_L1_error)
+  __pyx_tuple__5 = PyTuple_Pack(15, __pyx_n_s_encoded_graphs, __pyx_n_s_node_name_encoding, __pyx_n_s_node_label_encoding, __pyx_n_s_edge_label_encoding, __pyx_n_s_decoded_graphs, __pyx_n_s_i, __pyx_n_s_u, __pyx_n_s_v, __pyx_n_s_decoded_node, __pyx_n_s_decoded_node_a, __pyx_n_s_decoded_node_b, __pyx_n_s_decoded_label, __pyx_n_s_nodeInfo, __pyx_n_s_edgeInfo, __pyx_n_s_dec_graph); if (unlikely(!__pyx_tuple__5)) __PYX_ERR(0, 121, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_tuple__5);
   __Pyx_GIVEREF(__pyx_tuple__5);
-  __pyx_codeobj__6 = (PyObject*)__Pyx_PyCode_New(4, 0, 0, 15, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__5, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_gmapache_integerization_pyx, __pyx_n_s_decode_graphs, 117, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__6)) __PYX_ERR(0, 117, __pyx_L1_error)
+  __pyx_codeobj__6 = (PyObject*)__Pyx_PyCode_New(4, 0, 0, 15, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__5, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_gmapache_integerization_pyx, __pyx_n_s_decode_graphs, 121, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__6)) __PYX_ERR(0, 121, __pyx_L1_error)
+
+  /* "gmapache/integerization.pyx":179
+ * 
+ * # function: encode match given an encoding of node names -----------------------
+ * def encode_match(input_match = [],             # <<<<<<<<<<<<<<
+ *                  node_name_encoding = dict()):
+ *     # description
+ */
+  __pyx_tuple__7 = PyTuple_Pack(7, __pyx_n_s_input_match, __pyx_n_s_node_name_encoding, __pyx_n_s_encoded_match, __pyx_n_s_i, __pyx_n_s_index1, __pyx_n_s_index2, __pyx_n_s_encoding_as_array); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 179, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__7);
+  __Pyx_GIVEREF(__pyx_tuple__7);
+  __pyx_codeobj__8 = (PyObject*)__Pyx_PyCode_New(2, 0, 0, 7, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__7, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_gmapache_integerization_pyx, __pyx_n_s_encode_match, 179, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__8)) __PYX_ERR(0, 179, __pyx_L1_error)
+
+  /* "gmapache/integerization.pyx":214
+ * 
+ * # function: decode match given an encoding of node names -----------------------
+ * def decode_match(encoded_match = [],             # <<<<<<<<<<<<<<
+ *                  node_name_encoding = dict()):
+ *     # description
+ */
+  __pyx_tuple__9 = PyTuple_Pack(6, __pyx_n_s_encoded_match, __pyx_n_s_node_name_encoding, __pyx_n_s_decoded_match, __pyx_n_s_i, __pyx_n_s_node1, __pyx_n_s_node2); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(0, 214, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__9);
+  __Pyx_GIVEREF(__pyx_tuple__9);
+  __pyx_codeobj__10 = (PyObject*)__Pyx_PyCode_New(2, 0, 0, 6, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__9, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_gmapache_integerization_pyx, __pyx_n_s_decode_match, 214, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__10)) __PYX_ERR(0, 214, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -5801,66 +6786,130 @@ if (!__Pyx_RefNanny) {
   __Pyx_CyFunction_Defaults(__pyx_defaults, __pyx_t_3)->__pyx_arg_input_graphs = __pyx_t_2;
   __Pyx_GIVEREF(__pyx_t_2);
   __pyx_t_2 = 0;
-  __Pyx_CyFunction_SetDefaultsGetter(__pyx_t_3, __pyx_pf_8gmapache_14integerization_4__defaults__);
+  __Pyx_CyFunction_SetDefaultsGetter(__pyx_t_3, __pyx_pf_8gmapache_14integerization_8__defaults__);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_encode_graphs, __pyx_t_3) < 0) __PYX_ERR(0, 30, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
-  /* "gmapache/integerization.pyx":117
+  /* "gmapache/integerization.pyx":121
  * 
  * # function: decode graphs in list recovering original input graphs -------------
  * def decode_graphs(encoded_graphs = [],             # <<<<<<<<<<<<<<
  *                   node_name_encoding = dict(),
  *                   node_label_encoding = dict(),
  */
-  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_8gmapache_14integerization_3decode_graphs, 0, __pyx_n_s_decode_graphs, NULL, __pyx_n_s_gmapache_integerization, __pyx_d, ((PyObject *)__pyx_codeobj__6)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 117, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_8gmapache_14integerization_3decode_graphs, 0, __pyx_n_s_decode_graphs, NULL, __pyx_n_s_gmapache_integerization, __pyx_d, ((PyObject *)__pyx_codeobj__6)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 121, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  if (!__Pyx_CyFunction_InitDefaults(__pyx_t_3, sizeof(__pyx_defaults1), 4)) __PYX_ERR(0, 117, __pyx_L1_error)
-  __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 117, __pyx_L1_error)
+  if (!__Pyx_CyFunction_InitDefaults(__pyx_t_3, sizeof(__pyx_defaults1), 4)) __PYX_ERR(0, 121, __pyx_L1_error)
+  __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 121, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_CyFunction_Defaults(__pyx_defaults1, __pyx_t_3)->__pyx_arg_encoded_graphs = __pyx_t_2;
   __Pyx_GIVEREF(__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "gmapache/integerization.pyx":118
+  /* "gmapache/integerization.pyx":122
  * # function: decode graphs in list recovering original input graphs -------------
  * def decode_graphs(encoded_graphs = [],
  *                   node_name_encoding = dict(),             # <<<<<<<<<<<<<<
  *                   node_label_encoding = dict(),
  *                   edge_label_encoding = dict()):
  */
-  __pyx_t_2 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 118, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 122, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_CyFunction_Defaults(__pyx_defaults1, __pyx_t_3)->__pyx_arg_node_name_encoding = __pyx_t_2;
   __Pyx_GIVEREF(__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "gmapache/integerization.pyx":119
+  /* "gmapache/integerization.pyx":123
  * def decode_graphs(encoded_graphs = [],
  *                   node_name_encoding = dict(),
  *                   node_label_encoding = dict(),             # <<<<<<<<<<<<<<
  *                   edge_label_encoding = dict()):
  *     # description
  */
-  __pyx_t_2 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 119, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 123, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_CyFunction_Defaults(__pyx_defaults1, __pyx_t_3)->__pyx_arg_node_label_encoding = __pyx_t_2;
   __Pyx_GIVEREF(__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "gmapache/integerization.pyx":120
+  /* "gmapache/integerization.pyx":124
  *                   node_name_encoding = dict(),
  *                   node_label_encoding = dict(),
  *                   edge_label_encoding = dict()):             # <<<<<<<<<<<<<<
  *     # description
  *     """
  */
-  __pyx_t_2 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 120, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 124, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_CyFunction_Defaults(__pyx_defaults1, __pyx_t_3)->__pyx_arg_edge_label_encoding = __pyx_t_2;
   __Pyx_GIVEREF(__pyx_t_2);
   __pyx_t_2 = 0;
-  __Pyx_CyFunction_SetDefaultsGetter(__pyx_t_3, __pyx_pf_8gmapache_14integerization_6__defaults__);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_decode_graphs, __pyx_t_3) < 0) __PYX_ERR(0, 117, __pyx_L1_error)
+  __Pyx_CyFunction_SetDefaultsGetter(__pyx_t_3, __pyx_pf_8gmapache_14integerization_10__defaults__);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_decode_graphs, __pyx_t_3) < 0) __PYX_ERR(0, 121, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+
+  /* "gmapache/integerization.pyx":179
+ * 
+ * # function: encode match given an encoding of node names -----------------------
+ * def encode_match(input_match = [],             # <<<<<<<<<<<<<<
+ *                  node_name_encoding = dict()):
+ *     # description
+ */
+  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_8gmapache_14integerization_5encode_match, 0, __pyx_n_s_encode_match, NULL, __pyx_n_s_gmapache_integerization, __pyx_d, ((PyObject *)__pyx_codeobj__8)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 179, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (!__Pyx_CyFunction_InitDefaults(__pyx_t_3, sizeof(__pyx_defaults2), 2)) __PYX_ERR(0, 179, __pyx_L1_error)
+  __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 179, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_CyFunction_Defaults(__pyx_defaults2, __pyx_t_3)->__pyx_arg_input_match = __pyx_t_2;
+  __Pyx_GIVEREF(__pyx_t_2);
+  __pyx_t_2 = 0;
+
+  /* "gmapache/integerization.pyx":180
+ * # function: encode match given an encoding of node names -----------------------
+ * def encode_match(input_match = [],
+ *                  node_name_encoding = dict()):             # <<<<<<<<<<<<<<
+ *     # description
+ *     """
+ */
+  __pyx_t_2 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 180, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_CyFunction_Defaults(__pyx_defaults2, __pyx_t_3)->__pyx_arg_node_name_encoding = __pyx_t_2;
+  __Pyx_GIVEREF(__pyx_t_2);
+  __pyx_t_2 = 0;
+  __Pyx_CyFunction_SetDefaultsGetter(__pyx_t_3, __pyx_pf_8gmapache_14integerization_12__defaults__);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_encode_match, __pyx_t_3) < 0) __PYX_ERR(0, 179, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+
+  /* "gmapache/integerization.pyx":214
+ * 
+ * # function: decode match given an encoding of node names -----------------------
+ * def decode_match(encoded_match = [],             # <<<<<<<<<<<<<<
+ *                  node_name_encoding = dict()):
+ *     # description
+ */
+  __pyx_t_3 = __Pyx_CyFunction_New(&__pyx_mdef_8gmapache_14integerization_7decode_match, 0, __pyx_n_s_decode_match, NULL, __pyx_n_s_gmapache_integerization, __pyx_d, ((PyObject *)__pyx_codeobj__10)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 214, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_3);
+  if (!__Pyx_CyFunction_InitDefaults(__pyx_t_3, sizeof(__pyx_defaults3), 2)) __PYX_ERR(0, 214, __pyx_L1_error)
+  __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 214, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_CyFunction_Defaults(__pyx_defaults3, __pyx_t_3)->__pyx_arg_encoded_match = __pyx_t_2;
+  __Pyx_GIVEREF(__pyx_t_2);
+  __pyx_t_2 = 0;
+
+  /* "gmapache/integerization.pyx":215
+ * # function: decode match given an encoding of node names -----------------------
+ * def decode_match(encoded_match = [],
+ *                  node_name_encoding = dict()):             # <<<<<<<<<<<<<<
+ *     # description
+ *     """
+ */
+  __pyx_t_2 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 215, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_CyFunction_Defaults(__pyx_defaults3, __pyx_t_3)->__pyx_arg_node_name_encoding = __pyx_t_2;
+  __Pyx_GIVEREF(__pyx_t_2);
+  __pyx_t_2 = 0;
+  __Pyx_CyFunction_SetDefaultsGetter(__pyx_t_3, __pyx_pf_8gmapache_14integerization_14__defaults__);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_decode_match, __pyx_t_3) < 0) __PYX_ERR(0, 214, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
 
   /* "gmapache/integerization.pyx":1
@@ -9542,7 +10591,7 @@ __Pyx_PyType_GetName(PyTypeObject* tp)
     if (unlikely(name == NULL) || unlikely(!PyUnicode_Check(name))) {
         PyErr_Clear();
         Py_XDECREF(name);
-        name = __Pyx_NewRef(__pyx_n_s__7);
+        name = __Pyx_NewRef(__pyx_n_s__11);
     }
     return name;
 }
