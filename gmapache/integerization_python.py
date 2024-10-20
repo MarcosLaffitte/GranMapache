@@ -39,12 +39,12 @@ import networkx as nx
 def encode_graphs(input_graphs = []):
     # description
     """
-    > description: receives a list of inputs networkx (di)graphs, of the same type directed
-    or undirected, and turns each  dictionary of node_labels and edge_labels into integers,
-    considering their repetitions across the list. Nodes are also renamed into integers
-    starting from 1. The function returns a list with the copies of the input_graph
-    preserving  their order, together with dictionaries from integers into the original
-    node_labels, edge_labels, and node_names.
+    > description: receives a list of inputs networkx (di)graphs, of the same type
+    directed or undirected, and turns each  dictionary of node_labels and edge_labels
+    into integers, considering their repetitions across the list. Nodes are also
+    renamed into integers starting from 1. The function returns a list with the copies
+    of the input_graph preserving  their order, together with dictionaries from
+    integers into the original node_labels, edge_labels, and node_names.
 
     > input:
     * input_graphs - list of networkx graph or digraph objects (default to empty list).
@@ -134,9 +134,10 @@ def decode_graphs(encoded_graphs = [],
                   edge_label_encoding = dict()):
     # description
     """
-    > description: recieves encoded list of graphs and the dicts necessary for
-    decodeding them. Returns the original graphs according to the decoding.
-    This is basically the inverse operation of the function encode_graphs.
+    > description: recieves encoded list of networkx (di)graphs, of the same type
+    directed or undirected, and the dicts necessary for decodeding them. Returns
+    the original graphs according to the decoding. This is basically the inverse
+    operation of the function encode_graphs.
 
     > input:
     * encoded_graphs - list of transformed graphs.
