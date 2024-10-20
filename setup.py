@@ -18,6 +18,8 @@
 
 # Builing cython code in place if dependencies are already satisfied
 # python setup.py build_ext --inplace
+# Note - about Numpy Api Warning see:
+# https://stackoverflow.com/questions/52749662/using-deprecated-numpy-api
 
 # Running the main inside the module
 # python -m gmapache
