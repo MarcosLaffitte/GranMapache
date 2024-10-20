@@ -1,4 +1,5 @@
 ## specific files
+ToDo.txt
 clean_repo.sh
 gmapache/__pycache__/*
 build/*
