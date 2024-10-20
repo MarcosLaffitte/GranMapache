@@ -6,7 +6,7 @@
 # - Description: suite for the analysis of bijections, morphisms, alignments   #
 #                and other maps between graphs.                                #
 #                                                                              #
-# - project.toml for gmapache package including cython                         #
+# - project.toml for gmapache package including cython and other dependencies  #
 #                                                                              #
 ################################################################################
 
