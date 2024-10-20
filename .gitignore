@@ -1,5 +1,8 @@
 ## specific files
 gmapache/reduce.sh
+gmapache/__pycache__/*
+build/*
+gmapache.egg-info/*
 
 ## python and cython produced files
 *.c
