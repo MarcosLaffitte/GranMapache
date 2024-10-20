@@ -11,11 +11,14 @@
 ################################################################################
 
 
+
 # dependencies #################################################################
+
 
 
 # already in python ------------------------------------------------------------
 from copy import deepcopy
+
 
 
 # not in python ----------------------------------------------------------------
@@ -23,18 +26,23 @@ import cython
 import networkx as nx
 
 
+
 # numpy in cython --------------------------------------------------------------
 cimport numpy as cnp
+
 
 
 # custom dependencies ----------------------------------------------------------
 from .integerization import encode_graphs, decode_graphs, encode_match, decode_match
 
 
+
 # algorithms ###################################################################
 
 
+
 # functions - maximum connected extension  #####################################
+
 
 
 # function: callable wrapper for the maximum connected extension ---------------
@@ -70,6 +78,7 @@ def maximum_connected_extension():
     # decode match
     # end of function
     return(0)
+
 
 
 ################################################################################

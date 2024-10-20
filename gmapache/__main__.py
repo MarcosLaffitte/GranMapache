@@ -102,7 +102,7 @@ if __name__ == "__main__":
 
 
     # testing maximum connected extension
-    maximum_connected_extension()
+    print(maximum_connected_extension())
 
 
 ################################################################################

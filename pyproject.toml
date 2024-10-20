@@ -10,7 +10,6 @@
 #                                                                              #
 ################################################################################
 
-
 ################################################################################
 [build-system]
 requires = [
@@ -22,7 +21,6 @@ requires = [
     "matplotlib>=3.9.2"
 ]
 build-backend = "setuptools.build_meta"
-
 
 ################################################################################
 [project]
@@ -53,7 +51,6 @@ keywords = [
     "progressive multiple graph alignment"
 ]
 
-
 ################################################################################
 [project.urls]
 Repository = "https://github.com/MarcosLaffitte/GranMapache.git"
@@ -61,7 +58,6 @@ Repository = "https://github.com/MarcosLaffitte/GranMapache.git"
 # Documentation = "https://readthedocs.org"
 # Issues = "https://github.com/me/spam/issues"
 # Changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
-
 
 ################################################################################
 ################################################################################

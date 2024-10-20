@@ -40,7 +40,8 @@ Cython.Compiler.Options.annotate = True
 # Specify modules made with cython
 setup(
     ext_modules = cythonize(
-        ["gmapache/integerization.pyx"]
+        ["gmapache/integerization.pyx",
+         "gmapache/partial_maps.pyx"]
     ),
     include_dirs = [numpy.get_include()]
 )
