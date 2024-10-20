@@ -63,14 +63,15 @@ def maximum_connected_extension():
     > output:
     * extension - list of 2-tuples (x, y) of nodes x from G and y from H representing
     the maximum connected extension of the anchor.
-    * good_extension - boolean indicating if the extension covers now all nodes, i.e.,
-    it is a bijection, between G and H.
+    * good_extension - boolean indicating if the extension covers now all nodes of G
+    and H, i.e., if it is a bijection between G and H.
 
     > calls:
     * .integerization.encode_graphs
     * .integerization.decode_graphs
     * .integerization.encode_match
     * .integerization.decode_match
+    *
     """
     # output holders
     # cython variables
