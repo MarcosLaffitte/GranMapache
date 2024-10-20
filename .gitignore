@@ -1,5 +1,5 @@
 ## specific files
-gmapache/reduce.sh
+clean_repo.sh
 gmapache/__pycache__/*
 build/*
 gmapache.egg-info/*
