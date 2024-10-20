@@ -11,11 +11,14 @@
 ################################################################################
 
 
+
 # dependencies #################################################################
+
 
 
 # already in python ------------------------------------------------------------
 from copy import deepcopy
+
 
 
 # not in python ----------------------------------------------------------------
@@ -23,7 +26,9 @@ import cython
 import networkx as nx
 
 
+
 # functions ####################################################################
+
 
 
 # function: homogenizes nodes, node labels, and edgelabels of list of graphs ---
@@ -117,6 +122,7 @@ def encode_graphs(input_graphs = []):
     return(encoded_graphs, node_name_encoding, node_label_encoding, edge_label_encoding)
 
 
+
 # function: decode graphs in list recovering original input graphs -------------
 def decode_graphs(encoded_graphs = [],
                   node_name_encoding = dict(),
@@ -175,6 +181,7 @@ def decode_graphs(encoded_graphs = [],
     return(decoded_graphs)
 
 
+
 # function: encode match given an encoding of node names -----------------------
 def encode_match(input_match = [],
                  node_name_encoding = dict()):
@@ -210,6 +217,7 @@ def encode_match(input_match = [],
     return(encoded_match)
 
 
+
 # function: decode match given an encoding of node names -----------------------
 def decode_match(encoded_match = [],
                  node_name_encoding = dict()):
@@ -239,6 +247,7 @@ def decode_match(encoded_match = [],
         decoded_match.append((deepcopy(node1), deepcopy(node2)))
     # end of function
     return(decoded_match)
+
 
 
 ################################################################################
