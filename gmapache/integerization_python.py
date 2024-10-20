@@ -27,7 +27,11 @@ import networkx as nx
 
 
 
-# functions ####################################################################
+# algorithms ###################################################################
+
+
+
+# functions - encoding and decoding of graphs ##################################
 
 
 
@@ -179,6 +183,10 @@ def decode_graphs(encoded_graphs = [],
         decoded_graphs.append(deepcopy(dec_graph))
     # end of function
     return(decoded_graphs)
+
+
+
+# functions - encoding and decoding of matches #################################
 
 
 
