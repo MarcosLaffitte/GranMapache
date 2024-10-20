@@ -1,0 +1,38 @@
+################################################################################
+#                                                                              #
+# - GranMapache: GRAphs-and-Networks MAPping Applications                      #
+#   with Cython and HEuristics                                                 #
+#                                                                              #
+# - Module: ToDo: modules, exception_handling, verbosity and others.           #
+#                                                                              #
+################################################################################
+
+
+# ToDo #########################################################################
+
+
+# > partial_maps
+# - implement connected VF2 for maximum connected extension
+
+
+# > integerization.encode_graphs
+# - check same type of input graphs
+
+
+# > integerization.decode_graphs
+# - check same type of encoded input graphs
+# - check all nodes and lables to be encoded by the dictionaries
+
+
+# > integerization.encode_match
+# - check input list to have 2-tuples
+# - check all 2-tuples of nodes to be encoded by the dictionary
+
+
+# > integerization.decode_match
+# - check input list to have 2-tuples of integers
+# - check all 2-tuples of integers to be keys of the dictionary
+
+
+################################################################################
+################################################################################
