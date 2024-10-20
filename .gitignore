@@ -1,5 +1,5 @@
 ## specific files
-./gmapache/reduce.sh
+/gmapache/reduce.sh
 
 ## python and cython produced files
 *.c
