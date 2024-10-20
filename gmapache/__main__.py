@@ -31,7 +31,7 @@ import numpy
 
 # custom dependencies ----------------------------------------------------------
 from .integerization import encode_graphs, decode_graphs, encode_match, decode_match
-from .partial_maps import *
+from .partial_maps import maximum_connected_extension
 # from .common_subgraphs import *
 # from .verbosity import *
 
