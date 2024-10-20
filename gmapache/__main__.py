@@ -101,5 +101,9 @@ if __name__ == "__main__":
     recovered_match = decode_match(match_encoding, encoded_node_name)
 
 
+    # testing maximum connected extension
+    maximum_connected_extension()
+
+
 ################################################################################
 ################################################################################
