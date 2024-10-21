@@ -23,6 +23,7 @@ from copy import deepcopy
 
 # not in python ----------------------------------------------------------------
 import cython
+import numpy as np
 import networkx as nx
 
 
@@ -48,7 +49,7 @@ from .integerization import encode_graphs, decode_graphs, encode_match, decode_m
 # function: callable wrapper for the maximum connected extensions --------------
 def maximum_connected_extensions(G = nx.Graph(),          # can still receive DiGraph
                                  H = nx.Graph(),          # can still receive DiGraph
-                                 anchor = []):            # function will terminate if anchor is empty
+                                 input_anchor = []):      # should be non-empty list
     # description
     """
     > description: receives two graphs G and H, and a match between them (here called
@@ -60,8 +61,8 @@ def maximum_connected_extensions(G = nx.Graph(),          # can still receive Di
     > input:
     * G - first networkx (di)graph being matched.
     * H - second networkx (di)graph being matched.
-    * anchor - inyective map as a non-empty list of 2-tuples (x, y) of nodes x from G
-    and y from H. An exception is raised if the anchor is empty.
+    * input_anchor - inyective map as a non-empty list of 2-tuples (x, y) of nodes x
+    from G and y from H. An exception is raised if the anchor is empty.
 
     > output:
     * extensions - list of injective maps each as a list of 2-tuples (x, y) of nodes x
@@ -70,8 +71,8 @@ def maximum_connected_extensions(G = nx.Graph(),          # can still receive Di
     * good_extensions - boolean value indicating if the extensions cover all nodes of
     G and H, i.e., if they are bijections between G and H. If so, the anchor is what we
     have refered to as a "good partial atom map", and equivalenteĺy the match obtained
-    by removing the anchhor from any extension is a graph-isomorphism between the "remainder"
-    graphs it induces from G and H.
+    when removing the anchhor from any extension is a graph-isomorphism between the
+    "remainder" graphs it induces from G and H.
 
     > calls:
     * .integerization.encode_graphs
@@ -81,26 +82,37 @@ def maximum_connected_extensions(G = nx.Graph(),          # can still receive Di
     *
     """
     # exception handling and input correctness
-    if(len(anchor) == 0):
-        raise(ValueError("anchor must be non-empty list of node pairs."))
+    if(len(input_anchor) == 0):
+        raise(ValueError("input_anchor must be non-empty list of node pairs."))
     # output holders
     extensions = []
     good_extensions = False
     # cython variables
+    cdef cnp.ndarray[int, ndim = 2] nodes_G
+    cdef cnp.ndarray[int, ndim = 2] edges_G
+    cdef cnp.ndarray[int, ndim = 2] nodes_H
+    cdef cnp.ndarray[int, ndim = 2] edges_H
+    cdef cnp.ndarray[int, ndim = 2] anchor
     # local variables
+    node = 0
+    node1 = 0
+    node2 = 0
     encoded_graphs = []
     encoded_anchor = []
+    info = dict()
     encoded_node_names = dict()
     encoded_node_label = dict()
     encoded_edge_label = dict()
     # encode graphs
-    encoded_graphs, encoded_node_names, encoded_node_label, encoded_edge_label = encode_graphs([G, H])    
+    encoded_graphs, encoded_node_names, encoded_node_label, encoded_edge_label = encode_graphs([G, H])
     # encode match
-    encoded_anchor = encode_match(anchor, encoded_node_names)
-    # get cython-numpy structures for analysis
-    # print(list(G.nodes)[0])
-    # - nodes and labels [(v, lv)]
-    # - edges and labels [(u, v, luv)]
+    encoded_anchor = encode_match(input_anchor, encoded_node_names)
+    # convert into cython-numpy structures for analysis
+    nodes_G = np.array([[node, info["GMNL"]] for (node, info) in encoded_graphs[0].nodes(data = True)], dtype = np.int32)
+    edges_G = np.array([[node1, node2, info["GMEL"]] for (node1, node2, info) in encoded_graphs[0].edges(data = True)], dtype = np.int32)
+    nodes_H = np.array([[node, info["GMNL"]] for (node, info) in encoded_graphs[1].nodes(data = True)], dtype = np.int32)
+    edges_H = np.array([[node1, node2, info["GMEL"]] for (node1, node2, info) in encoded_graphs[1].edges(data = True)], dtype = np.int32)
+    anchor = np.array([[node1, node2] for (node1, node2) in encoded_anchor], dtype = np.int32)
     # get total order for VF2-like analysis
     # - total order for the anchor
     # - total order for the rest of nodes
@@ -108,7 +120,25 @@ def maximum_connected_extensions(G = nx.Graph(),          # can still receive Di
     # get maximum extension
     # decode maximum extension
     # end of function
-    return(anchor)
+    return(input_anchor)
+
+
+
+# Note: proper iterations
+# cdef cnp.ndarray[int, ndim = 2] nodes_G
+# cdef int i = 0
+# cdef int j = 0
+# cdef int bla = 0
+# for i in range(nodes_G.shape[0]):
+#     for j in range(nodes_G.shape[1]):
+#         if(nodes_G[i, 1] == 10):
+#             bla = 0
+#     cdef int i = 0
+#     cdef int j = 0
+#     for i in range(edges_G.shape[0]):
+#         for j in range(edges_H.shape[0]):
+#             print(edges_G[i], edges_H[j])
+#             print(edges_G[i, 2], edges_H[j, 2])
 
 
 
