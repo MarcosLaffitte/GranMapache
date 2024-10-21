@@ -94,7 +94,7 @@ def maximum_connected_extensions(G = nx.Graph(),          # can still receive Di
     encoded_node_label = dict()
     encoded_edge_label = dict()
     # encode graphs
-    encoded_graphs, encoded_node_names, encoded_node_label, encoded_edge_label = encode_graphs([G, H])
+    encoded_graphs, encoded_node_names, encoded_node_label, encoded_edge_label = encode_graphs([G, H])    
     # encode match
     encoded_anchor = encode_match(anchor, encoded_node_names)
     # get cython-numpy structures for analysis
