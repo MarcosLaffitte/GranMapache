@@ -31,7 +31,7 @@ import numpy
 
 # custom dependencies ----------------------------------------------------------
 from .integerization import encode_graphs, decode_graphs, encode_match, decode_match
-from .partial_maps import maximum_connected_extension
+from .partial_maps import maximum_connected_extensions
 # from .common_subgraphs import *
 # from .verbosity import *
 
@@ -97,12 +97,21 @@ if __name__ == "__main__":
     match_encoding = encode_match(match, encoded_node_names)
 
 
+    # buid first test graph for maximum connected extension
+
+
+    # buid second test graph for maximum connected extension
+
+
+    # buid test anchor for maximum connected extension
+
+
     # decode a match
     recovered_match = decode_match(match_encoding, encoded_node_names)
 
 
     # testing maximum connected extension
-    print(maximum_connected_extension())
+    print(maximum_connected_extensions())
 
 
 

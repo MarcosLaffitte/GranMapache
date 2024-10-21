@@ -41,36 +41,37 @@ from .integerization import encode_graphs, decode_graphs, encode_match, decode_m
 
 
 
-# functions - maximum connected extension - wrapper ############################
+# functions - maximum connected extensions - wrapper ###########################
 
 
 
-# function: callable wrapper for the maximum connected extension ---------------
-def maximum_connected_extension(G = nx.Graph(),   # can still receive DiGraph
-                                H = nx.Graph(),   # can still receive DiGraph
-                                anchor = []):
+# function: callable wrapper for the maximum connected extensions --------------
+def maximum_connected_extensions(G = nx.Graph(),          # can still receive DiGraph
+                                 H = nx.Graph(),          # can still receive DiGraph
+                                 anchor = []):            # function will terminate if anchor is empty
     # description
     """
     > description: receives two graphs G and H, and a match between them (here called
-    anchor), and uses a VF2-like approach to obtain a maximum extension of the anchor
-    producing a connected common subgraph (not necessarily maximum itslef). The anchor
+    anchor), and uses a VF2-like approach to obtain the maximum extensions of the anchor
+    producing connected common subgraphs (not necessarily maximum themselves). The anchor
     alone also produces a subgraph, which may not be an induced common subgraph, but
-    the subgraph produced by the extension after removing the achor is always induced.
+    the subgraph produced by any extension after removing the achor is always induced.
 
     > input:
     * G - first networkx (di)graph being matched.
     * H - second networkx (di)graph being matched.
-    * anchor - inyective map as list of 2-tuples (x, y) of nodes x from G and y from H.
+    * anchor - inyective map as a non-empty list of 2-tuples (x, y) of nodes x from G
+    and y from H. An exception is raised if the anchor is empty.
 
     > output:
-    * extension - injective map as a list of 2-tuples (x, y) of nodes x from G and y
-    from H representing the maximum connected extension of the anchor (contains the
-    anchor as a sublist).
-    * good_extension - boolean value indicating if the extension covers all nodes of
-    G and H, i.e., if it is a bijection between G and H. If so, the anchor is what we
+    * extensions - list of injective maps each as a list of 2-tuples (x, y) of nodes x
+    from G and y from H representing the maximum connected extensions of the anchor (each
+    extension contains the anchor as a sublist).
+    * good_extensions - boolean value indicating if the extensions cover all nodes of
+    G and H, i.e., if they are bijections between G and H. If so, the anchor is what we
     have refered to as a "good partial atom map", and equivalenteĺy the match obtained
-    by removing the anchhor from the extension is a graph-isomorphism between the graphs
-    it induces from G and H.
+    by removing the anchhor from any extension is a graph-isomorphism between the "remainder"
+    graphs it induces from G and H.
 
     > calls:
     * .integerization.encode_graphs
@@ -79,12 +80,16 @@ def maximum_connected_extension(G = nx.Graph(),   # can still receive DiGraph
     * .integerization.decode_match
     *
     """
+    # exception handling and input correctness
+    if(len(anchor) == 0):
+        raise(ValueError("anchor must be non-empty list of node pairs."))
     # output holders
-    extension = []
-    good_extension = False
+    extensions = []
+    good_extensions = False
     # cython variables
     # local variables
     encoded_graphs = []
+    encoded_anchor = []
     encoded_node_names = dict()
     encoded_node_label = dict()
     encoded_edge_label = dict()
@@ -94,13 +99,12 @@ def maximum_connected_extension(G = nx.Graph(),   # can still receive DiGraph
     encoded_anchor = encode_match(anchor, encoded_node_names)
     # get cython-numpy structures for analysis
     # print(list(G.nodes)[0])
-    # - nodes
-    # - edges
-    # - node labels
-    # - edge labels
+    # - nodes and labels [(v, lv)]
+    # - edges and labels [(u, v, luv)]
     # get total order for VF2-like analysis
     # - total order for the anchor
-    # - total order for the rest of nodes    
+    # - total order for the rest of nodes
+    # - add total order together [v0, v1, v2, ...]
     # get maximum extension
     # decode maximum extension
     # end of function
