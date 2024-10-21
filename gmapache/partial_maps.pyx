@@ -93,6 +93,7 @@ def maximum_connected_extensions(G = nx.Graph(),          # can still receive Di
     cdef cnp.ndarray[int, ndim = 2] nodes_H
     cdef cnp.ndarray[int, ndim = 2] edges_H
     cdef cnp.ndarray[int, ndim = 2] anchor
+    cdef cnp.ndarray[int, ndim = 1] total_order
     # local variables
     node = 0
     node1 = 0
