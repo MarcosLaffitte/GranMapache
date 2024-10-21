@@ -93,11 +93,14 @@ def maximum_connected_extension(G = nx.Graph(),   # can still receive DiGraph
     # encode match
     encoded_anchor = encode_match(anchor, encoded_node_names)
     # get cython-numpy structures for analysis
+    # print(list(G.nodes)[0])
     # - nodes
     # - edges
     # - node labels
     # - edge labels
     # get total order for VF2-like analysis
+    # - total order for the anchor
+    # - total order for the rest of nodes    
     # get maximum extension
     # decode maximum extension
     # end of function

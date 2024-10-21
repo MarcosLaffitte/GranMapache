@@ -40,11 +40,13 @@ def encode_graphs(input_graphs = []):
     # description
     """
     > description: receives a list of inputs networkx (di)graphs, of the same type
-    directed or undirected, and turns each  dictionary of node_labels and edge_labels
-    into integers, considering their repetitions across the list. Nodes are also
-    renamed into integers starting from 1. The function returns a list with the copies
-    of the input_graph preserving  their order, together with dictionaries from
-    integers into the original node_labels, edge_labels, and node_names.
+    directed or undirected, and turns node names, node labels and edge labels into
+    integers, considering their repetitions across the input list. All names and
+    labels are encoded by integers starting from 0. The function returns a list with
+    the copies of the input graphs preserving their order, together with dictionaries
+    mapping integers into the original node_labels, edge_labels, and node_names. There
+    are functions in networkx with similar behavior, but they are made for a given graph,
+    while here we want to take into account all repetitions across the input list.
 
     > input:
     * input_graphs - list of networkx graph or digraph objects (default to empty list).
@@ -57,9 +59,9 @@ def encode_graphs(input_graphs = []):
     """
     # output holders
     encoded_graphs = []
-    node_name_encoding = dict()        # from ints to node names
-    node_label_encoding = dict()       # from ints to node label-dicts
-    edge_label_encoding = dict()       # from ints to edge label-dicts
+    node_name_encoding = dict()  # from ints to node names
+    node_label_encoding = dict() # from ints to node label-dicts
+    edge_label_encoding = dict() # from ints to edge label-dicts
     # cython variables
     cdef int i = 0
     # local variables
@@ -67,16 +69,16 @@ def encode_graphs(input_graphs = []):
     encoded_node_a = 0
     encoded_node_b = 0
     encoded_label = 0
-    new_node_label = 1
-    new_edge_label = 1
+    new_node_label = 0
+    new_edge_label = 0
     all_nodes = []
     all_node_labels = []
     all_edge_labels = []
     nodeInfo = dict()
     edgeInfo = dict()
-    node_name_encoding_inv = dict()    # from node names to ints
-    node_label_encoding_inv = [None]   # from node label-dicts to ints (indices)
-    edge_label_encoding_inv = [None]   # from edge label-dicts to ints (indices)
+    node_name_encoding_inv = dict()  # from node names to ints
+    node_label_encoding_inv = []     # from node label-dicts to ints (indices)
+    edge_label_encoding_inv = []     # from edge label-dicts to ints (indices)
     u = None
     v = None
     int_graph = None
@@ -84,21 +86,21 @@ def encode_graphs(input_graphs = []):
     for i in range(len(input_graphs)):
         all_nodes = list(set(all_nodes + list(input_graphs[i].nodes())))
     for i in range(len(all_nodes)):
-        node_name_encoding[i+1] = deepcopy(all_nodes[i])
-        node_name_encoding_inv[deepcopy(all_nodes[i])] = i+1
+        node_name_encoding[i] = deepcopy(all_nodes[i])
+        node_name_encoding_inv[deepcopy(all_nodes[i])] = i # nodes are hashable objects
     # homogenize node labels across input graphs
     for i in range(len(input_graphs)):
         for (v, nodeInfo) in list(input_graphs[i].nodes(data = True)):
             if(nodeInfo not in node_label_encoding_inv):
-                node_label_encoding[new_node_label] = deepcopy(nodeInfo)
-                node_label_encoding_inv.append(deepcopy(nodeInfo))
+                node_label_encoding[new_node_label] = deepcopy(nodeInfo) # starting from 0
+                node_label_encoding_inv.append(deepcopy(nodeInfo)) # labels are dictionaries
                 new_node_label = new_node_label + 1
     # homogenize edge labels across input graphs
     for i in range(len(input_graphs)):
         for (u, v, edgeInfo) in list(input_graphs[i].edges(data = True)):
             if(edgeInfo not in edge_label_encoding_inv):
-                edge_label_encoding[new_edge_label] = deepcopy(edgeInfo)
-                edge_label_encoding_inv.append(deepcopy(edgeInfo))
+                edge_label_encoding[new_edge_label] = deepcopy(edgeInfo) # starting from 0
+                edge_label_encoding_inv.append(deepcopy(edgeInfo)) # labels are dictionaries
                 new_edge_label = new_edge_label + 1
     # create integerized copies of input graphs
     for i in range(len(input_graphs)):
@@ -112,14 +114,14 @@ def encode_graphs(input_graphs = []):
             encoded_node = node_name_encoding_inv[v]
             encoded_label = node_label_encoding_inv.index(nodeInfo)
             int_graph.add_node(encoded_node,
-                               GMNL = encoded_label)   # gran_mapache_node_label
+                               GMNL = encoded_label) # gran_mapache_node_label
         # add encoded edges with encoded edge labels
         for (u, v, edgeInfo) in list(input_graphs[i].edges(data = True)):
             encoded_node_a = node_name_encoding_inv[u]
             encoded_node_b = node_name_encoding_inv[v]
             encoded_label = edge_label_encoding_inv.index(edgeInfo)
             int_graph.add_edge(encoded_node_a, encoded_node_b,
-                               GMEL = encoded_label)   # gran_mapache_edge_label
+                               GMEL = encoded_label) # gran_mapache_edge_label
         # save graph in list
         encoded_graphs.append(deepcopy(int_graph))
     # end of function
@@ -213,14 +215,13 @@ def encode_match(input_match = [],
     cdef int index1 = 0
     cdef int index2 = 0
     # local variables
-    encoding_as_array = [None]
+    node_name_encoding_inv = dict()
     # get encoding as array
-    for i in range(1, len(node_name_encoding)+1):
-        encoding_as_array.append(deepcopy(node_name_encoding[i]))
+    node_name_encoding_inv = {node_name_encoding[i]:i for i in range(len(node_name_encoding))}
     # encode match
     for i in range(len(input_match)):
-        index1 = encoding_as_array.index(input_match[i][0])
-        index2 = encoding_as_array.index(input_match[i][1])
+        index1 = node_name_encoding_inv[input_match[i][0]]
+        index2 = node_name_encoding_inv[input_match[i][1]]
         encoded_match.append((index1, index2))
     # end of function
     return(encoded_match)

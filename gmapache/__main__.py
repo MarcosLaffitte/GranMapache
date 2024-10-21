@@ -81,7 +81,7 @@ if __name__ == "__main__":
     encoded_node_names = graph_encoding[1]
     encoded_node_label = graph_encoding[2]
     encoded_edge_label = graph_encoding[3]
-    
+
 
     # testing decoding
     recovered_graphs = decode_graphs(encoded_graph_list,
@@ -106,7 +106,7 @@ if __name__ == "__main__":
 
 
 
-    
+
 
 ################################################################################
 ################################################################################
