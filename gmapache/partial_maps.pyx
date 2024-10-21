@@ -51,8 +51,8 @@ def maximum_connected_extension(G = nx.Graph(),   # can still receive DiGraph
                                 anchor = []):
     # description
     """
-    > description: receives two graphs G, and H, and a match between them (here called
-    anchor) and uses a VF2-like approach to obtain a maximum extension of the anchor
+    > description: receives two graphs G and H, and a match between them (here called
+    anchor), and uses a VF2-like approach to obtain a maximum extension of the anchor
     producing a connected common subgraph (not necessarily maximum itslef). The anchor
     alone also produces a subgraph, which may not be an induced common subgraph, but
     the subgraph produced by the extension after removing the achor is always induced.
@@ -60,15 +60,16 @@ def maximum_connected_extension(G = nx.Graph(),   # can still receive DiGraph
     > input:
     * G - first networkx (di)graph being matched.
     * H - second networkx (di)graph being matched.
-    * anchor - list of 2-tuples (x, y) of nodes x from G and y from H.
+    * anchor - inyective map as list of 2-tuples (x, y) of nodes x from G and y from H.
 
     > output:
-    * extension - list of 2-tuples (x, y) of nodes x from G and y from H representing
-    the maximum connected extension of the anchor (contains the anchor as a sublist).
-    * good_extension - boolean value indicating if the extension covers now all nodes
-    of G and H, i.e., if it is a bijection between G and H. If so, the anchor is what
-    we refer to as a "good partial atom map", and equivalenteĺy the match obtained by
-    removing the anchhor from the extension is a graph-isomorphism between the graphs
+    * extension - injective map as a list of 2-tuples (x, y) of nodes x from G and y
+    from H representing the maximum connected extension of the anchor (contains the
+    anchor as a sublist).
+    * good_extension - boolean value indicating if the extension covers all nodes of
+    G and H, i.e., if it is a bijection between G and H. If so, the anchor is what we
+    have refered to as a "good partial atom map", and equivalenteĺy the match obtained
+    by removing the anchhor from the extension is a graph-isomorphism between the graphs
     it induces from G and H.
 
     > calls:
@@ -79,11 +80,28 @@ def maximum_connected_extension(G = nx.Graph(),   # can still receive DiGraph
     *
     """
     # output holders
+    extension = []
+    good_extension = False
     # cython variables
     # local variables
-    # decode match
+    encoded_graphs = []
+    encoded_node_names = dict()
+    encoded_node_label = dict()
+    encoded_edge_label = dict()
+    # encode graphs
+    encoded_graphs, encoded_node_names, encoded_node_label, encoded_edge_label = encode_graphs([G, H])
+    # encode match
+    encoded_anchor = encode_match(anchor, encoded_node_names)
+    # get cython-numpy structures for analysis
+    # - nodes
+    # - edges
+    # - node labels
+    # - edge labels
+    # get total order for VF2-like analysis
+    # get maximum extension
+    # decode maximum extension
     # end of function
-    return(0)
+    return(anchor)
 
 
 

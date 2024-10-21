@@ -78,14 +78,14 @@ if __name__ == "__main__":
     # testing encoding
     graph_encoding = encode_graphs(input_list)
     encoded_graph_list = graph_encoding[0]
-    encoded_node_name = graph_encoding[1]
+    encoded_node_names = graph_encoding[1]
     encoded_node_label = graph_encoding[2]
     encoded_edge_label = graph_encoding[3]
-
+    
 
     # testing decoding
     recovered_graphs = decode_graphs(encoded_graph_list,
-                                     encoded_node_name,
+                                     encoded_node_names,
                                      encoded_node_label,
                                      encoded_edge_label)
 
@@ -94,11 +94,11 @@ if __name__ == "__main__":
              ("hola2", "hola6"),
              ("hola3", "hola7"),
              ("hola4", "hola8")]
-    match_encoding = encode_match(match, encoded_node_name)
+    match_encoding = encode_match(match, encoded_node_names)
 
 
     # decode a match
-    recovered_match = decode_match(match_encoding, encoded_node_name)
+    recovered_match = decode_match(match_encoding, encoded_node_names)
 
 
     # testing maximum connected extension
