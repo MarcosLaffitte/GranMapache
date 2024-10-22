@@ -8,9 +8,6 @@
 #                                                                              #
 # - Example of usage                                                           #
 #                                                                              #
-# - Observations and ToDos:                                                    #
-#   * for a large number of graphs, integerization with cython is kinda faster #
-#                                                                              #
 ################################################################################
 
 
