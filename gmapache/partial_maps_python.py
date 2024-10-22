@@ -8,6 +8,9 @@
 # - Description: analysis of properties of partial maps, like maximum          #
 #   connected extensions, overlaps, consistency, and others.                   #
 #                                                                              #
+# - Note: currently broadly using numpy and cnumpy, in the future we might     #
+#   migrate into pure C and C++ structures and objects.                        #
+#                                                                              #
 ################################################################################
 
 
@@ -108,12 +111,27 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     encoded_graphs, encoded_node_names, encoded_node_label, encoded_edge_label = encode_graphs([G, H])
     # encode match
     encoded_anchor = encode_match(input_anchor, encoded_node_names)
-    # convert into cython-numpy structures for analysis
+
+
+    # prepare nodes
     nodes_G = np.array([[node, info["GMNL"]] for (node, info) in encoded_graphs[0].nodes(data = True)], dtype = np.int32)
-    edges_G = np.array([[node1, node2, info["GMEL"]] for (node1, node2, info) in encoded_graphs[0].edges(data = True)], dtype = np.int32)
     nodes_H = np.array([[node, info["GMNL"]] for (node, info) in encoded_graphs[1].nodes(data = True)], dtype = np.int32)
+
+
+    # prepare edges
     edges_H = np.array([[node1, node2, info["GMEL"]] for (node1, node2, info) in encoded_graphs[1].edges(data = True)], dtype = np.int32)
+    edges_G = np.array([[node1, node2, info["GMEL"]] for (node1, node2, info) in encoded_graphs[0].edges(data = True)], dtype = np.int32)
+    # prepare neighbors
+
+
+    # prepare match and anchor
     anchor = np.array([[node1, node2] for (node1, node2) in encoded_anchor], dtype = np.int32)
+
+
+    # bla = np.zeros((nodes_G.shape[0], nodes_H.shape[0]), dtype = np.int32)
+    # cdef int[:, :] bla_view = bla
+
+
     # get total order for VF2-like analysis
     # - total order for the anchor
     # - total order for the rest of nodes
@@ -288,6 +306,7 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
 #                         break
 #     # end of function
 #     return(allMatches, foundSubIso, foundMaxColoredMatch)
+
 
 
 # # function: get candidate pairs for undir MCS search ---------------------------
