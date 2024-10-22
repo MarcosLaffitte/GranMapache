@@ -87,6 +87,10 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     # exception handling and input correctness
     if(len(input_anchor) == 0):
         raise(ValueError("input_anchor must be non-empty list of node pairs."))
+    if((nx.is_directed(G)) and (not nx.is_directed(H))):
+        raise(ValueError("input graphs must be both directed or both undirected."))
+    if((not nx.is_directed(G)) and (nx.is_directed(H))):
+        raise(ValueError("input graphs must be both directed or both undirected."))
     # output holders
     extensions = []
     good_extensions = False
@@ -95,8 +99,6 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     cdef cnp.ndarray[int, ndim = 2] edges_G
     cdef cnp.ndarray[int, ndim = 2] nodes_H
     cdef cnp.ndarray[int, ndim = 2] edges_H
-    cdef cnp.ndarray[int, ndim = 2] anchor
-    cdef cnp.ndarray[int, ndim = 1] total_order
     # local variables
     node = 0
     node1 = 0
@@ -107,6 +109,14 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     encoded_node_names = dict()
     encoded_node_label = dict()
     encoded_edge_label = dict()
+    if(nx.is_directed(G)):
+        in_neigh_G = dict()
+        in_neigh_H = dict()
+        out_neigh_G = dict()
+        out_neigh_H = dict()
+    else:
+        neigh_G = dict()
+        neigh_H = dict()
     # encode graphs
     encoded_graphs, encoded_node_names, encoded_node_label, encoded_edge_label = encode_graphs([G, H])
     # encode match
@@ -116,27 +126,31 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     nodes_H = np.array([[node, info["GMNL"]] for (node, info) in encoded_graphs[1].nodes(data = True)], dtype = np.int32)
     # prepare edges
     if(nx.is_directed(G)):
-        bla = 0
+        edges_G = np.array([[node1, node2, info["GMEL"]] for (node1, node2, info) in encoded_graphs[0].edges(data = True)], dtype = np.int32)
+        edges_H = np.array([[node1, node2, info["GMEL"]] for (node1, node2, info) in encoded_graphs[1].edges(data = True)], dtype = np.int32)
     else:
         edges_G = np.array([sorted([node1, node2]) + [info["GMEL"]] for (node1, node2, info) in encoded_graphs[0].edges(data = True)], dtype = np.int32)
         edges_H = np.array([sorted([node1, node2]) + [info["GMEL"]] for (node1, node2, info) in encoded_graphs[1].edges(data = True)], dtype = np.int32)
     # prepare neighbors
-
-
+    if(nx.is_directed(G)):
+        in_neigh_G = {node:np.array(list(encoded_graphs[0].predecessors(node)), dtype = np.int32) for node in list(encoded_graphs[0].nodes())}
+        in_neigh_H = {node:np.array(list(encoded_graphs[1].predecessors(node)), dtype = np.int32) for node in list(encoded_graphs[1].nodes())}
+        out_neigh_G = {node:np.array(list(encoded_graphs[0].neighbors(node)), dtype = np.int32) for node in list(encoded_graphs[0].nodes())}
+        out_neigh_H = {node:np.array(list(encoded_graphs[1].neighbors(node)), dtype = np.int32) for node in list(encoded_graphs[1].nodes())}
+    else:
+        neigh_G = {node:np.array(list(encoded_graphs[0].neighbors(node)), dtype = np.int32) for node in list(encoded_graphs[0].nodes())}
+        neigh_H = {node:np.array(list(encoded_graphs[1].neighbors(node)), dtype = np.int32) for node in list(encoded_graphs[1].nodes())}
     # prepare match and anchor
-    # anchor = np.array([[node1, node2] for (node1, node2) in encoded_anchor], dtype = np.int32)
-
-
-    # bla = np.zeros((nodes_G.shape[0], nodes_H.shape[0]), dtype = np.int32)
-    # cdef int[:, :] bla_view = bla
-
 
     # get total order for VF2-like analysis
     # - total order for the anchor
     # - total order for the rest of nodes
     # - add total order together [v0, v1, v2, ...]
-    # get maximum extension
-    # decode maximum extension
+
+    # get maximum extensions
+
+    # decode maximum extensions
+
     # end of function
     return(input_anchor)
 
