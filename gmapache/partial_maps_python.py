@@ -47,9 +47,9 @@ from .integerization import encode_graphs, decode_graphs, encode_match, decode_m
 
 
 # function: callable wrapper for the maximum connected extensions --------------
-def maximum_connected_extensions(G = nx.Graph(),          # can still receive DiGraph
-                                 H = nx.Graph(),          # can still receive DiGraph
-                                 input_anchor = []):      # should be non-empty list
+def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGraph
+                                 H = nx.Graph(),       # can also receive a DiGraph
+                                 input_anchor = []):   # should be non-empty list
     # description
     """
     > description: receives two graphs G and H, and a match between them (here called
