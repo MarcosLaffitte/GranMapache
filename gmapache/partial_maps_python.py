@@ -8,9 +8,9 @@
 # - Description: analysis of properties of partial maps, like maximum          #
 #   connected extensions, overlaps, consistency, and others.                   #
 #                                                                              #
-# - Note: currently broadly using python lists since we need the dynamic       #
-#   allocation, but in the future we might migrate into pure C and C++         #
-#   structures and objects.                                                    #
+# - Note: currently broadly using python lists and dictionaries since we need  #
+#   the dynamic allocation, but in the future we might migrate into pure C     #
+#   and C++ structures and objects.                                            #
 #                                                                              #
 ################################################################################
 
@@ -23,6 +23,7 @@
 # already in python ------------------------------------------------------------
 import time
 from copy import deepcopy
+from itertools import product
 
 
 
@@ -78,7 +79,8 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     * .integerization.decode_graphs
     * .integerization.encode_match
     * .integerization.decode_match
-    *
+    * undirected_maximum_connected_extensions
+    * directed_maximum_connected_extensions
     """
     # exception handling and input correctness
     if(len(input_anchor) == 0):
@@ -95,16 +97,17 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     node1 = 0
     node2 = 0
     counter = 0
-    nodes_G = []
-    edges_G = []
-    nodes_H = []
-    edges_H = []
+    expected_order = 0
     encoded_graphs = []
     encoded_anchor = []
     inside_anchor_H = []
     outside_anchor_H = []
     encoded_extensions = []
     info = dict()
+    nodes_G = dict()
+    edges_G = dict()
+    nodes_H = dict()
+    edges_H = dict()
     encoded_node_names = dict()
     encoded_node_label = dict()
     encoded_edge_label = dict()
@@ -122,15 +125,15 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     # encode match
     encoded_anchor = encode_match(input_anchor, encoded_node_names)
     # prepare nodes
-    nodes_G = [(node, info["GMNL"]) for (node, info) in encoded_graphs[0].nodes(data = True)]
-    nodes_H = [(node, info["GMNL"]) for (node, info) in encoded_graphs[1].nodes(data = True)]
+    nodes_G = {node:info["GMNL"] for (node, info) in encoded_graphs[0].nodes(data = True)}
+    nodes_H = {node:info["GMNL"] for (node, info) in encoded_graphs[1].nodes(data = True)}
     # prepare edges
     if(nx.is_directed(G)):
-        edges_G = [(node1, node2, info["GMEL"]) for (node1, node2, info) in encoded_graphs[0].edges(data = True)]
-        edges_H = [(node1, node2, info["GMEL"]) for (node1, node2, info) in encoded_graphs[1].edges(data = True)]
+        edges_G = {(node1, node2):info["GMEL"] for (node1, node2, info) in encoded_graphs[0].edges(data = True)}
+        edges_H = {(node1, node2):info["GMEL"] for (node1, node2, info) in encoded_graphs[1].edges(data = True)}
     else:
-        edges_G = [tuple(sorted([node1, node2]) + [info["GMEL"]]) for (node1, node2, info) in encoded_graphs[0].edges(data = True)]
-        edges_H = [tuple(sorted([node1, node2]) + [info["GMEL"]]) for (node1, node2, info) in encoded_graphs[1].edges(data = True)]
+        edges_G = {tuple(sorted([node1, node2])):info["GMEL"] for (node1, node2, info) in encoded_graphs[0].edges(data = True)}
+        edges_H = {tuple(sorted([node1, node2])):info["GMEL"] for (node1, node2, info) in encoded_graphs[1].edges(data = True)}
     # prepare neighbors
     if(nx.is_directed(G)):
         in_neigh_G = {node:list(encoded_graphs[0].predecessors(node)) for node in list(encoded_graphs[0].nodes())}
@@ -149,17 +152,27 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     for node in outside_anchor_H:
         counter = counter + 1
         total_order[node] = counter
+    # get expected order
+    expected_order = min([len(nodes_G), len(nodes_H)])
+    # set recursion limit
     # get maximum extensions
     if(nx.is_directed(G)):
-        encoded_extensions =
+        encoded_extensions = []
     else:
-        encoded_extensions =
+        encoded_extensions = undirected_maximum_connected_extensions(nodes_G, edges_G, neigh_G,
+                                                                     nodes_H, edges_H, neigh_H,
+                                                                     expected_order,
+                                                                     encoded_anchor,
+                                                                     [],
+                                                                     total_order)
     # decode maximum extensions
-
-
-
+    for each_extension in encoded_extensions:
+        extensions.append(decode_match(each_extension, encoded_node_names))
+    # get answer good extensions
+    if((len(extensions[0]) == len(nodes_G)) and (len(extensions[0]) == len(nodes_H))):
+        good_extensions = True
     # end of function
-    return(input_anchor)
+    return(extensions, good_extensions)
 
 
 
@@ -168,8 +181,8 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
 
 
 # function: core routine of VF2-like approach ----------------------------------
-def undirected_maximum_connected_extensions(nodes_G = [], edges_G = [], neigh_G = [],
-                                            nodes_H = [], edges_H = [], neigh_H = [],
+def undirected_maximum_connected_extensions(nodes_G = dict(), edges_G = dict(), neigh_G = dict(),
+                                            nodes_H = dict(), edges_H = dict(), neigh_H = dict(),
                                             expected_order = 0,
                                             current_match = [],
                                             all_matches = [],
@@ -208,29 +221,26 @@ def undirected_maximum_connected_extensions(nodes_G = [], edges_G = [], neigh_G 
         current_match_H = [node2 for (node1, node2) in current_match]
         forward_match = {node1:node2 for (node1, node2) in current_match}
         inverse_match = {node2:node1 for (node1, node2) in current_match}
-
-
         # get candidate pairs
-        candidates = undirCandidatesMCS(someMatch, currMatch1, currMatch2, someG1, someG2, totOrder)
-
-
-        # evaluate candidate pairs
+        candidates = undirected_candidates(current_match_G, current_match_H,
+                                           neigh_G, neigh_H,
+                                           total_order)
+        # evaluate candidates
         for (node1, node2) in candidates:
-
-
             # evaluate sintactic feasibility
-            syntactic_feasibility = undirSintacticFeasabilityMCS(n1, n2, currMatch1, currMatch2, forMatch, invMatch, someG1, someG2,
-                                                   ambiguousPairsCheck, ambiguous1, ambiguous2)
-
-
+            syntactic_feasibility = undirected_syntactic_feasibility(node1, node2,
+                                                                     current_match_G, current_match_H,
+                                                                     forward_match, inverse_match,
+                                                                     neigh_G, neigh_H)
             if(syntactic_feasibility):
                 # evaluate semantic feasibility
-                semantic_feasibility = undirSemanticFeasabilityMCS(n1, n2, currMatch1, currMatch2, forMatch, someG1, someG2,
-                                                      vLabels = vLabels, eLabels = eLabels)
-
-
+                semantic_feasibility = undirected_semantic_feasibility(node1, node2,
+                                                                       current_match_G,
+                                                                       forward_match,
+                                                                       nodes_G, edges_G, neigh_G,
+                                                                       nodes_H, edges_H)
                 if(semantic_feasibility):
-                    # DFS over feasible pairs
+                    # extend match
                     new_match = current_match + [(node1, node2)]
                     all_matches = undirected_maximum_connected_extensions(nodes_G, edges_G, neigh_G,
                                                                           nodes_H, edges_H, neigh_H,
@@ -243,95 +253,98 @@ def undirected_maximum_connected_extensions(nodes_G = [], edges_G = [], neigh_G 
 
 
 
-# # function: get candidate pairs for undir MCS search ---------------------------
-# def undirCandidatesMCS(someMatch, currMatch1, currMatch2, someG1, someG2, totOrder):
-#     # local variables
-#     maxMatchedIndex = 0
-#     P = []
-#     valid1 = []
-#     valid2 = []
-#     # get candidates preserving order (if no previous match just take everything)
-#     if(len(someMatch) > 0):
-#         maxMatchedIndex = max([totOrder[n2] for (n1, n2) in someMatch])
-#     # get candidate pairs
-#     valid1 = [x for x in list(someG1.nodes()) if(not x in currMatch1)]
-#     valid2 = [y for y in list(someG2.nodes()) if((not y in currMatch2) and (totOrder[y] > maxMatchedIndex))]
-#     P = list(product(valid1, valid2))
-#     # end of function
-#     return(P)
+# function: get candidate pairs for undir extension search ---------------------
+def undirected_candidates(current_match_G, current_match_H,
+                          neigh_G, neigh_H,
+                          total_order):
+    # local variables
+    node = 0
+    node1 = 0
+    node2 = 0
+    reference_maximum = 0
+    valid_G = []
+    valid_H = []
+    candidate_pairs = []
+    # get maximum value of total order in match
+    reference_maximum = max([total_order[node] for node in current_match_H])
+    # get valid sets
+    for node1 in current_match_G:
+        for node2 in neigh_G[node1]:
+            if(node2 not in valid_G):
+                if(node2 not in current_match_G):
+                    valid_G.append(node2)
+    for node1 in current_match_H:
+        for node2 in neigh_H[node1]:
+            if(node2 not in valid_H):
+                if(node2 not in current_match_H):
+                    if(total_order[node2] > reference_maximum):
+                        valid_H.append(node2)
+    # get candidates
+    candidate_pairs = list(product(valid_G, valid_H))
+    # end of function
+    return(candidate_pairs)
 
 
 
-# # function: evaluate the sintactic feasability of mapping n1 to n2 -------------
-# def undirSintacticFeasabilityMCS(n1, n2, currMatch1, currMatch2, forMatch, invMatch, someG1, someG2,
-#                                  ambiguousCheck, ambiguousG1, ambiguousG2):
-#     # local variables
-#     neigh1 = []
-#     neigh2 = []
-#     ambNeigh1 = []
-#     ambNeigh2 = []
-#     matchNeigh1 = []
-#     matchNeigh2 = []
-#     # get neighbors of n1 and n2
-#     neigh1 = list(someG1.neighbors(n1))
-#     neigh2 = list(someG2.neighbors(n2))
-#     # loop-consistency-test
-#     if((n1 in neigh1) and (not n2 in neigh2)):
-#         return(False)
-#     if((not n1 in neigh1) and (n2 in neigh2)):
-#         return(False)
-#     # look ahead 0: consistency of neighbors in match
-#     matchNeigh1 = [x for x in neigh1 if(x in currMatch1)]
-#     matchNeigh2 = [y for y in neigh2 if(y in currMatch2)]
-#     # get ambiguous neighbors if requested
-#     if(ambiguousCheck):
-#         ambNeigh1 = list(set([u for (u, v) in ambiguousG1 if(v == n1)] + [v for (u, v) in ambiguousG1 if(u == n1)]))
-#         ambNeigh2 = list(set([u for (u, v) in ambiguousG2 if(v == n2)] + [v for (u, v) in ambiguousG2 if(u == n2)]))
-#     # compare neighborhoods
-#     for v1 in matchNeigh1:
-#         # check if either true or ambiguous neighbor
-#         if(not forMatch[v1] in (matchNeigh2 + ambNeigh2)):
-#             return(False)
-#     for v2 in matchNeigh2:
-#         # check if either true or ambiguous neighbor
-#         if(not invMatch[v2] in (matchNeigh1 + ambNeigh1)):
-#             return(False)
-#     # end of function
-#     return(True)
+# function: evaluate syntactic feasability for undir extension -----------------
+def undirected_syntactic_feasibility(node1, node2,
+                                     current_match_G, current_match_H,
+                                     forward_match, inverse_match,
+                                     neigh_G, neigh_H):
+    # local variables
+    node = 0
+    neighbors_match_G = []
+    neighbors_match_H = []
+    # loop-consistency-test
+    if((node1 in neigh_G[node1]) and (node2 not in neigh_H[node2])):
+        return(False)
+    if((node1 not in neigh_G[node1]) and (node2 in neigh_H[node2])):
+        return(False)
+    # look ahead 0: consistency of neighbors in match
+    neighbors_match_G = [node for node in neigh_G[node1] if(node in current_match_G)]
+    neighbors_match_H = [node for node in neigh_H[node2] if(node in current_match_H)]
+    for node in neighbors_match_G:
+        if(forward_match[node] not in neighbors_match_H):
+            return(False)
+    for node in neighbors_match_H:
+        if(inverse_match[node] not in neighbors_match_G):
+            return(False)
+    # end of function
+    return(True)
 
 
 
-# # function: evaluate the semantic feasability of mapping n1 to n2 --------------
-# def undirSemanticFeasabilityMCS(n1, n2, currMatch1, currMatch2, forMatch, someG1, someG2,
-#                                 vLabels = True, eLabels = True):
-#     # local variables
-#     neigh1 = []
-#     neigh2 = []
-#     matchNeigh1 = []
-#     matchNeigh2 = []
-#     # compare vertex-labels
-#     if(vLabels):
-#         if(not someG1.nodes[n1]["nodeLabel"] == someG2.nodes[n2]["nodeLabel"]):
-#             return(False)
-#     # compare edge labels
-#     if(eLabels):
-#         # get neighborhoods
-#         neigh1 = list(someG1.neighbors(n1))
-#         # compare loop-label (if any)
-#         if(n1 in neigh1):
-#             if(not someG1[n1][n1]["edgeLabel"] == someG2[n2][n2]["edgeLabel"]):
-#                 return(False)
-#         # compare edge-labels of true-edges and ignore ambiguous neighbors
-#         neigh2 = list(someG2.neighbors(n2))
-#         matchNeigh1 = [v for v in neigh1 if(v in currMatch1)]
-#         matchNeigh2 = [v for v in neigh2 if(v in currMatch2)]
-#         for v in matchNeigh1:
-#             # only true or ambiguous neighbors at this point (this is the intersection)
-#             if(forMatch[v] in matchNeigh2):
-#                 if(not someG1[n1][v]["edgeLabel"] == someG2[n2][forMatch[v]]["edgeLabel"]):
-#                     return(False)
-#     # end of function
-#     return(True)
+# function: evaluate semantic feasability for undir extension ------------------
+def undirected_semantic_feasibility(node1, node2,
+                                    current_match_G,
+                                    forward_match,
+                                    nodes_G, edges_G, neigh_G,
+                                    nodes_H, edges_H):
+    # local variables
+    a1 = 0
+    a2 = 0
+    b1 = 0
+    b2 = 0
+    node = 0
+    neighbors_match_G = []
+    # compare vertex-labels
+    if(not nodes_G[node1] == nodes_H[node2]):
+        return(False)
+    # compare loop-labels
+    if(node1 in neigh_G[node1]):
+        if(not edges_G[(node1, node1)] == edges_H[(node2, node2)]):
+            return(False)
+    # compare non-loop edge-labels
+    neighbors_match_G = [node for node in neigh_G[node1] if(node in current_match_G)]
+    for node in neighbors_match_G:
+        a1 = min([node1, node])
+        b1 = max([node1, node])
+        a2 = min([node2, forward_match[node]])
+        b2 = max([node2, forward_match[node]])
+        if(not edges_G[(a1, b1)] == edges_H[(a2, b2)]):
+            return(False)
+    # end of function
+    return(True)
 
 
 

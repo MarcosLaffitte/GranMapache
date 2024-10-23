@@ -118,7 +118,7 @@ if __name__ == "__main__":
     G.add_edge("g1", "g7", bond = "double", strength = "strong")
     G.add_edge("g7", "g8", bond = "double", strength = "strong")
     G.add_edge("g7", "g9", bond = "double", strength = "strong")
-    G.add_edge("g9", "g10", bond = "triple", strength = "weak")
+    G.add_edge("g4", "g10", bond = "triple", strength = "weak")
     G.add_edge("g10", "g11", bond = "triple", strength = "weak")
     G.add_edge("g11", "g12", bond = "triple", strength = "weak")
 
@@ -146,6 +146,7 @@ if __name__ == "__main__":
     H.add_edge("h4", "h7", bond = "triple", strength = "weak")
     H.add_edge("h7", "h8", bond = "triple", strength = "weak")
     H.add_edge("h8", "h9", bond = "triple", strength = "weak")
+    # H.add_edge("h9", "h9", bond = "triple", strength = "weak")
 
 
     # buid test anchor for maximum connected extension
@@ -158,7 +159,10 @@ if __name__ == "__main__":
 
 
     # testing maximum connected extension
-    print(maximum_connected_extensions(G, H, reaction_center))
+    initial_time = time.time()
+    results = maximum_connected_extensions(G, H, reaction_center)
+    final_time = time.time()
+    print(final_time - initial_time)
 
 
 
