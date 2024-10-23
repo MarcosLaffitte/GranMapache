@@ -94,12 +94,15 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     node = 0
     node1 = 0
     node2 = 0
+    counter = 0
     nodes_G = []
     edges_G = []
     nodes_H = []
     edges_H = []
     encoded_graphs = []
     encoded_anchor = []
+    inside_anchor_H = []
+    outside_anchor_H = []
     info = dict()
     encoded_node_names = dict()
     encoded_node_label = dict()
@@ -112,6 +115,7 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     else:
         neigh_G = dict()
         neigh_H = dict()
+    total_order = dict()
     # encode graphs
     encoded_graphs, encoded_node_names, encoded_node_label, encoded_edge_label = encode_graphs([G, H])
     # encode match
@@ -135,19 +139,23 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     else:
         neigh_G = {node:list(encoded_graphs[0].neighbors(node)) for node in list(encoded_graphs[0].nodes())}
         neigh_H = {node:list(encoded_graphs[1].neighbors(node)) for node in list(encoded_graphs[1].nodes())}
-    # prepare match and anchor
-
-
     # get total order for VF2-like analysis
-    # - total order for the anchor
-    # - total order for the rest of nodes
-    # - add total order together [v0, v1, v2, ...]
-
-
+    inside_anchor_H = [node2 for (node1, node2) in encoded_anchor]
+    outside_anchor_H = [node for node in list(encoded_graphs[1].nodes()) if(node not in inside_anchor_H)]
+    for node in inside_anchor_H:
+        counter = counter + 1
+        total_order[node] = counter
+    for node in outside_anchor_H:
+        counter = counter + 1
+        total_order[node] = counter
     # get maximum extensions
 
 
+
+
     # decode maximum extensions
+
+
 
 
     # end of function
