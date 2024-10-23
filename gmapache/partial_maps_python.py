@@ -103,6 +103,7 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     encoded_anchor = []
     inside_anchor_H = []
     outside_anchor_H = []
+    encoded_extensions = []
     info = dict()
     encoded_node_names = dict()
     encoded_node_label = dict()
@@ -149,18 +150,16 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
         counter = counter + 1
         total_order[node] = counter
     # get maximum extensions
-
-
-
-
+    if(nx.is_directed(G)):
+        encoded_extensions =
+    else:
+        encoded_extensions =
     # decode maximum extensions
-
 
 
 
     # end of function
     return(input_anchor)
-
 
 
 
