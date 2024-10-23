@@ -163,151 +163,83 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
 
 
 
-# functions - maximum connected extension - undirected #########################
+# functions - maximum connected extensions - undirected ########################
 
 
 
-# # function: recursive MATCH for undir MCS search -------------------------------
-# def undirRecursiveExpansionMCS(someG1, someG2,
-#                                existenceG1, existenceG2,
-#                                containedG1, containedG2,
-#                                someMatch = [], allMatches = [],
-#                                ambiguous1 = [], ambiguous2 = [],
-#                                score = "order",
-#                                vLabels = True,
-#                                eLabels = True,
-#                                printProgressMCS = True,
-#                                ambiguousPairsCheck = False,
-#                                totOrder = dict()):
-#     # local variables
-#     progress = 0
-#     expOrder = 0
-#     scoreNewMatch = 0
-#     scoreOldMatch = 0
-#     newMatch = []
-#     currMatch1 = []
-#     currMatch2 = []
-#     candidatePairs = []
-#     forMatch = dict()
-#     invMatch = dict()
-#     allMatchesSet = set()
-#     ansSiFy = False
-#     ansSeFy = False
-#     foundSubIso = False
-#     progressReport = False
-#     foundMaxColoredMatch = False
-#     # get expected order for decision making
-#     expOrder = min([someG1.order(), someG2.order()])
-#     # define total order if not yet defined
-#     if(len(totOrder) == 0):
-#         totOrder = {v: i for (i, v) in list(enumerate(list(someG2.nodes()), start = 1))}
-#         progressReport = True
-#     # test initial alignment and improvement in alignment
-#     if(len(allMatches) == 0):
-#         if(len(someMatch) > 0):
-#             # save match
-#             if(len(someMatch) < expOrder):
-#                 allMatches = [someMatch]
-#                 if(vLabels and eLabels):
-#                     if(isMaxColoredMatch(someG1, someG2, someMatch)):
-#                         foundMaxColoredMatch = True
-#                         return(allMatches, foundSubIso, foundMaxColoredMatch)
-#             else:
-#                 allMatches = [someMatch]
-#                 if(vLabels and eLabels):
-#                     if(ambiguousPairsCheck):
-#                         foundSubIso = isSubIso(someG1, someG2, someMatch)
-#                         if(foundSubIso):
-#                             foundMaxColoredMatch = True
-#                     else:
-#                         foundSubIso = True
-#                         foundMaxColoredMatch = True
-#     else:
-#         # pick score based on arguments
-#         scoreNewMatch = matchScore(someG1, someG2, someMatch, existenceG1, existenceG2, containedG1, containedG2, score = score)
-#         scoreOldMatch = matchScore(someG1, someG2, allMatches[0], existenceG1, existenceG2, containedG1, containedG2, score = score)
-#         # save to MCS list if gets the same score of alignment
-#         if(scoreNewMatch == scoreOldMatch):
-#             allMatchesSet = [set(eachMatch) for eachMatch in allMatches]
-#             if(not set(someMatch) in allMatchesSet):
-#                 # append match
-#                 if(len(someMatch) < expOrder):
-#                     allMatches = allMatches + [someMatch]
-#                     if(vLabels and eLabels):
-#                         if(isMaxColoredMatch(someG1, someG2, someMatch)):
-#                             foundMaxColoredMatch = True
-#                             return(allMatches, foundSubIso, foundMaxColoredMatch)
-#                 else:
-#                     allMatches = allMatches + [someMatch]
-#                     if(vLabels and eLabels):
-#                         if(ambiguousPairsCheck):
-#                             foundSubIso = isSubIso(someG1, someG2, someMatch)
-#                             if(foundSubIso):
-#                                 foundMaxColoredMatch = True
-#                         else:
-#                             foundSubIso = True
-#                             foundMaxColoredMatch = True
-#         # overwrite MCS list if there is inprovement in alignment
-#         if(scoreNewMatch > scoreOldMatch):
-#             if(len(someMatch) < expOrder):
-#                 allMatches = [someMatch]
-#                 if(vLabels and eLabels):
-#                     if(isMaxColoredMatch(someG1, someG2, someMatch)):
-#                         foundMaxColoredMatch = True
-#                         return(allMatches, foundSubIso, foundMaxColoredMatch)
-#             else:
-#                 allMatches = [someMatch]
-#                 if(vLabels and eLabels):
-#                     if(ambiguousPairsCheck):
-#                         foundSubIso = isSubIso(someG1, someG2, someMatch)
-#                         if(foundSubIso):
-#                             foundMaxColoredMatch = True
-#                     else:
-#                         foundSubIso = True
-#                         foundMaxColoredMatch = True
-#     # pre-evaluate available pairs
-#     if(len(someMatch) < expOrder):
-#         # generate auxiliary structures
-#         currMatch1 = [x for (x, y) in someMatch]
-#         currMatch2 = [y for (x, y) in someMatch]
-#         forMatch = {x:y for (x, y) in someMatch}
-#         invMatch = {y:x for (x, y) in someMatch}
-#         # get candidate pairs (if any)
-#         candidatePairs = undirCandidatesMCS(someMatch, currMatch1, currMatch2, someG1, someG2, totOrder)
-#         # evaluate candidate pairs
-#         for (n1, n2) in candidatePairs:
-#             # print progress only in first call
-#             if(progressReport and printProgressMCS):
-#                 progress = progress + 1
-#                 printProgress(round(progress*100/len(candidatePairs), 2), progressIn = "in case", reportCase = False)
-#             # evaluate sintactic feasibility
-#             ansSiFy = undirSintacticFeasabilityMCS(n1, n2, currMatch1, currMatch2, forMatch, invMatch, someG1, someG2,
-#                                                    ambiguousPairsCheck, ambiguous1, ambiguous2)
-#             if(ansSiFy):
-#                 # evaluate semantic feasibility
-#                 ansSeFy = undirSemanticFeasabilityMCS(n1, n2, currMatch1, currMatch2, forMatch, someG1, someG2,
-#                                                       vLabels = vLabels, eLabels = eLabels)
-#                 if(ansSeFy):
-#                     # DFS over feasible pairs
-#                     newMatch = someMatch + [(n1, n2)]
-#                     allMatches, foundSubIso, foundMaxColoredMatch = undirRecursiveExpansionMCS(someG1, someG2,
-#                                                                                                existenceG1, existenceG2,
-#                                                                                                containedG1, containedG2,
-#                                                                                                newMatch, allMatches,
-#                                                                                                ambiguous1 = ambiguous1, ambiguous2 = ambiguous2,
-#                                                                                                score = score,
-#                                                                                                vLabels = vLabels,
-#                                                                                                eLabels = eLabels,
-#                                                                                                ambiguousPairsCheck = ambiguousPairsCheck,
-#                                                                                                totOrder = totOrder)
-#                     # stop serach if one (sub)graph isomorphism was found (when preseving all labels)
-#                     if(vLabels and eLabels and foundSubIso):
-#                         break
-#                     # stop search if one maximal colored match was found (when preserving all labels)
-#                     if(vLabels and eLabels and foundMaxColoredMatch):
-#                         break
-#     # end of function
-#     return(allMatches, foundSubIso, foundMaxColoredMatch)
+# function: core routine of VF2-like approach ----------------------------------
+def undirected_maximum_connected_extensions(nodes_G = [], edges_G = [], neigh_G = [],
+                                            nodes_H = [], edges_H = [], neigh_H = [],
+                                            expected_order = 0,
+                                            current_match = [],
+                                            all_matches = [],
+                                            total_order = dict()):
+    # local variables
+    node1 = 0
+    node2 = 0
+    new_score = 0
+    old_score = 0
+    new_match = []
+    candidates = []
+    current_match_G = []
+    current_match_H = []
+    forward_match = dict()
+    inverse_match = dict()
+    syntactic_feasibility = False
+    semantic_feasibility = False
+    # test initial match and consecutive matches
+    if(len(all_matches) == 0):
+        if(len(current_match) > 0):
+            all_matches = [current_match]
+    else:
+        # test improvement in matches
+        new_score = len(current_match)
+        old_score = len(all_matches[0])
+        # save match if it has the same score
+        if(new_score == old_score):
+            all_matches.append(current_match)
+        # overwrite with new match if it improves score
+        if(new_score > old_score):
+            all_matches = [current_match]
+    # if not optimal yet then obtain available pairs
+    if(len(current_match) < expected_order):
+        # generate auxiliary structures
+        current_match_G = [node1 for (node1, node2) in current_match]
+        current_match_H = [node2 for (node1, node2) in current_match]
+        forward_match = {node1:node2 for (node1, node2) in current_match}
+        inverse_match = {node2:node1 for (node1, node2) in current_match}
+
+
+        # get candidate pairs
+        candidates = undirCandidatesMCS(someMatch, currMatch1, currMatch2, someG1, someG2, totOrder)
+
+
+        # evaluate candidate pairs
+        for (node1, node2) in candidates:
+
+
+            # evaluate sintactic feasibility
+            syntactic_feasibility = undirSintacticFeasabilityMCS(n1, n2, currMatch1, currMatch2, forMatch, invMatch, someG1, someG2,
+                                                   ambiguousPairsCheck, ambiguous1, ambiguous2)
+
+
+            if(syntactic_feasibility):
+                # evaluate semantic feasibility
+                semantic_feasibility = undirSemanticFeasabilityMCS(n1, n2, currMatch1, currMatch2, forMatch, someG1, someG2,
+                                                      vLabels = vLabels, eLabels = eLabels)
+
+
+                if(semantic_feasibility):
+                    # DFS over feasible pairs
+                    new_match = current_match + [(node1, node2)]
+                    all_matches = undirected_maximum_connected_extensions(nodes_G, edges_G, neigh_G,
+                                                                          nodes_H, edges_H, neigh_H,
+                                                                          expected_order,
+                                                                          new_match,
+                                                                          all_matches,
+                                                                          total_order)
+    # end of function
+    return(all_matches)
 
 
 
@@ -403,7 +335,7 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
 
 
 
-# # functions - maximum connected extension - directed ###########################
+# # functions - maximum connected extensions - directed ##########################
 
 
 
