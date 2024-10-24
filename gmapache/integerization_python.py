@@ -177,7 +177,7 @@ def decode_graphs(encoded_graphs = [],
     test_undir = nx.Graph()
     test_dir = nx.DiGraph()
     if(not type(encoded_graphs) in [type(test_list)]):
-        raise(ValueError("first argument must be a list of networkx graphs or digraphs."))
+        raise(ValueError("first argument must be a list of networkx graphs or digraphs encoded with granmapache."))
     if(not type(node_name_encoding) in [type(test_dict)]):
         raise(ValueError("second argument must be a dictionary."))
     if(not type(node_label_encoding) in [type(test_dict)]):
@@ -193,9 +193,13 @@ def decode_graphs(encoded_graphs = [],
                 for (test_node, test_info) in list(test_entry.nodes(data = True)):
                     if(test_node not in list(node_name_encoding.keys())):
                         raise(ValueError("all the nodes of the input (di)graphs must be encoded by the input dictionaries."))
+                    if("GMNL" not in list(test_info.keys())):
+                        raise(ValueError("one of the input (di)graphs is not encoded by granmapache."))
                     if(test_info["GMNL"] not in list(node_label_encoding.keys())):
                         raise(ValueError("all the node-labels of the input (di)graphs must be encoded by the input dictionaries."))
                 for (test_edge, test_info) in list(test_entry.edges(data = True)):
+                    if("GMEL" not in list(test_info.keys())):
+                        raise(ValueError("one of the input (di)graphs is not encoded by granmapache."))
                     if(test_info["GMEL"] not in list(edge_label_encoding.keys())):
                         raise(ValueError("all the edge-labels of the input (di)graphs must be encoded by the input dictionaries."))
         else:
@@ -203,9 +207,13 @@ def decode_graphs(encoded_graphs = [],
             for (test_node, test_info) in list(test_entry.nodes(data = True)):
                 if(test_node not in list(node_name_encoding.keys())):
                     raise(ValueError("all the nodes of the input (di)graphs must be encoded by the input dictionaries."))
+                if("GMNL" not in list(test_info.keys())):
+                    raise(ValueError("one of the input (di)graphs is not encoded by granmapache."))
                 if(test_info["GMNL"] not in list(node_label_encoding.keys())):
                     raise(ValueError("all the node-labels of the input (di)graphs must be encoded by the input dictionaries."))
             for (test_edge, test_info) in list(test_entry.edges(data = True)):
+                if("GMEL" not in list(test_info.keys())):
+                    raise(ValueError("one of the input (di)graphs is not encoded by granmapache."))
                 if(test_info["GMEL"] not in list(edge_label_encoding.keys())):
                     raise(ValueError("all the edge-labels of the input (di)graphs must be encoded by the input dictionaries."))
     if(not test_count_undir == len(encoded_graphs)):
@@ -269,6 +277,23 @@ def encode_match(input_match = [],
     > output:
     * encoded_match - list of 2-tuples of integers (i, j) encoding the nodes.
     """
+    # exception handling and input correctness
+    test_list = [0, 0]
+    test_tuple = (0, 0)
+    test_dict = dict()
+    if(not type(input_match) in [type(test_list)]):
+        raise(ValueError("first argument must be a list of 2-tuples."))
+    if(not type(node_name_encoding) in [type(test_dict)]):
+        raise(ValueError("second argument must be a dictionary."))
+    for test_entry in input_match:
+        if(not type(test_entry) in [type(test_tuple)]):
+            raise(ValueError("all elements in input list must be tuples."))
+        if(not len(test_entry) == 2):
+            raise(ValueError("all tuples in input list must be of lenght 2."))
+        if(test_entry[0] not in list(node_name_encoding.values())):
+            raise(ValueError("input dictionary must encode all elements being matched."))
+        if(test_entry[1] not in list(node_name_encoding.values())):
+            raise(ValueError("input dictionary must encode all elements being matched."))
     # output holders
     encoded_match = []
     # cython variables
@@ -304,6 +329,23 @@ def decode_match(encoded_match = [],
     > output:
     * decoded_match - list of 2-tuples (x, y) of nodes representing the match.
     """
+    # exception handling and input correctness
+    test_list = [0, 0]
+    test_tuple = (0, 0)
+    test_dict = dict()
+    if(not type(encoded_match) in [type(test_list)]):
+        raise(ValueError("first argument must be a list of 2-tuples."))
+    if(not type(node_name_encoding) in [type(test_dict)]):
+        raise(ValueError("second argument must be a dictionary."))
+    for test_entry in encoded_match:
+        if(not type(test_entry) in [type(test_tuple)]):
+            raise(ValueError("all elements in input list must be tuples."))
+        if(not len(test_entry) == 2):
+            raise(ValueError("all tuples in input list must be of lenght 2."))
+        if(test_entry[0] not in list(node_name_encoding.keys())):
+            raise(ValueError("input dictionary must encode all elements being matched."))
+        if(test_entry[1] not in list(node_name_encoding.keys())):
+            raise(ValueError("input dictionary must encode all elements being matched."))
     # output holders
     decoded_match = []
     # cython variables
