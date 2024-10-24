@@ -2,8 +2,10 @@
 
 # import modules ###########################################
 
-# integerization -------------------------------------------
+# partial maps ---------------------------------------------
 from gmapache.partial_maps import *
+
+# integerization -------------------------------------------
 from gmapache.integerization import *
 
 # import submodules ########################################

@@ -137,7 +137,7 @@ reaction_center = [("g1", "h1"),
 
 
 # testing maximum connected extension
-all_extensions, good_center = gm.partial_maps.maximum_connected_extensions(G, H, reaction_center)
+all_extensions, good_center = gm.maximum_connected_extensions(G, H, reaction_center)
 print("*** Given anchor:")
 print(reaction_center)
 print("*** Got extensions:")
