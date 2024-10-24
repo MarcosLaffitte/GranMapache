@@ -31,7 +31,7 @@
 # conda remove -n devdep --all
 
 # Using setuptools, cython and numpy
-from setuptools import setup
+from setuptools import Extension, setup
 from Cython.Build import cythonize
 import numpy
 
@@ -40,11 +40,16 @@ import Cython.Compiler.Options
 Cython.Compiler.Options.annotate = True
 
 # Specify modules made with cython
+# extensions = [Extension("gmapache.partial_maps",
+#                         ["gmapache/partial_maps.pyx",
+#                          "gmapache/integerization.pyx"])]
+extensions = [Extension("gmapache.partial_maps",
+                        ["gmapache/partial_maps.pyx"]),
+              Extension("gmapache.integerization",
+                        ["gmapache/integerization.pyx"])]
+
 setup(
-    ext_modules = cythonize(
-        ["gmapache/partial_maps.pyx",
-         "gmapache/integerization.pyx"]
-    ),
+    ext_modules = cythonize(extensions),
     include_dirs = [numpy.get_include()]
 )
 
