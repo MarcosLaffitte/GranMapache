@@ -99,7 +99,7 @@ if __name__ == "__main__":
 
 
     # buid first test graph for maximum connected extension
-    G = nx.Graph()
+    G = nx.DiGraph()
     G.add_node("g1", color = "blue", charge = "0")
     G.add_node("g2", color = "blue", charge = "0")
     G.add_node("g3", color = "blue", charge = "0")
@@ -124,7 +124,7 @@ if __name__ == "__main__":
 
 
     # buid second test graph for maximum connected extension
-    H = nx.Graph()
+    H = nx.DiGraph()
     H.add_node("h1", color = "blue", charge = "0")
     H.add_node("h2", color = "blue", charge = "0")
     H.add_node("h3", color = "blue", charge = "0")
@@ -163,6 +163,7 @@ if __name__ == "__main__":
     results = maximum_connected_extensions(G, H, reaction_center)
     final_time = time.time()
     print(final_time - initial_time)
+    print(results)
 
 
 
