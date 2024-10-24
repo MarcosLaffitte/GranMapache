@@ -49,7 +49,7 @@ def encode_graphs(input_graphs = []):
     while here we want to take into account all repetitions across the input list.
 
     > input:
-    * input_graphs - list of networkx graph or digraph objects (default to empty list).
+    * input_graphs - list of networkx graphs or digraphs, all of the same type.
 
     > output:
     * encoded_graphs - list of transformed graphs.
@@ -57,6 +57,25 @@ def encode_graphs(input_graphs = []):
     * node_label_encoding - dict from integers into original dicts of node labels.
     * edge_label_encoding - dict from integers into original dicts of edge labels.
     """
+    # exception handling and input correctness
+    test_list = [0, 0]
+    test_undir = nx.Graph()
+    test_dir = nx.DiGraph()
+    test_count_undir = 0
+    test_count_dir = 0
+    if(not type(input_graphs) in [type(test_list)]):
+        raise(ValueError("argument must be a list of networkx graphs or digraphs."))
+    for test_entry in input_graphs:
+        if(type(test_entry) not in [type(test_undir)]):
+            if(type(test_entry) not in [type(test_dir)]):
+                raise(ValueError("elements in list must be networkx graphs or digraphs."))
+            else:
+                test_count_dir = test_count_dir + 1
+        else:
+            test_count_undir = test_count_undir + 1
+    if(not test_count_undir == len(input_graphs)):
+        if(not test_count_dir == len(input_graphs)):
+            raise(ValueError("elements in list must be networkx graphs or digraphs of the same type."))
     # output holders
     encoded_graphs = []
     node_name_encoding = dict()  # from ints to node names

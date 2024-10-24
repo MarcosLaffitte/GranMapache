@@ -69,8 +69,8 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     * extensions - list of injective maps each as a list of 2-tuples (x, y) of nodes x
     from G and y from H representing the maximum connected extensions of the anchor (each
     extension contains the anchor as a sublist).
-    * good_extensions - boolean value indicating if the extensions cover all nodes of
-    G and H, i.e., if they are bijections between G and H. If so, the anchor is what we
+    * good_anchor - boolean value indicating if the extensions cover all nodes of G and
+    of H, i.e., if they are bijections between G and H. If so, the anchor is what we
     have refered to as a "good partial atom map", and equivalenteĺy the match obtained
     when removing the anchhor from any extension is a graph-isomorphism between the
     "remainder" graphs it induces from G and H.
@@ -84,15 +84,38 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     * directed_maximum_connected_extensions
     """
     # exception handling and input correctness
-    if(len(input_anchor) == 0):
-        raise(ValueError("input_anchor must be non-empty list of node pairs."))
+    test_list = [0, 0]
+    test_tuple = (0, 0)
+    test_undir = nx.Graph()
+    test_dir = nx.DiGraph()
+    if(type(G) not in [type(test_undir), type(test_dir)]):
+        raise(ValueError("first argument must be a networkx graph or digraph."))
+    if(type(H) not in [type(test_undir), type(test_dir)]):
+        raise(ValueError("second argument must be a networkx graph or digraph."))
     if((nx.is_directed(G)) and (not nx.is_directed(H))):
         raise(ValueError("input graphs must be both directed or both undirected."))
     if((not nx.is_directed(G)) and (nx.is_directed(H))):
         raise(ValueError("input graphs must be both directed or both undirected."))
+    if(not type(input_anchor) in [type(test_list)]):
+        raise(ValueError("third argument must be a non-empty list of 2-tuples."))
+    if(len(input_anchor) == 0):
+        raise(ValueError("third argument must be a non-empty list of 2-tuples."))
+    for test_entry in input_anchor:
+        if(not type(test_entry) in [type(test_tuple)]):
+            raise(ValueError("all elements in input list must be tuples."))
+        if(not len(test_entry) == 2):
+            raise(ValueError("all tuples in input list must be of lenght 2."))
+        if(test_entry[0] not in list(G.nodes())):
+            raise(ValueError("the input list is matching a vertex not present in the first graph."))
+        if(test_entry[1] not in list(H.nodes())):
+            raise(ValueError("the input list is matching a vertex not present in the second graph."))
+    if(not len(list(set([x for (x, y) in input_anchor]))) == len(input_anchor)):
+        raise(ValueError("the input list must be an injective map and without repeated elements."))
+    if(not len(list(set([y for (x, y) in input_anchor]))) == len(input_anchor)):
+        raise(ValueError("the input list must be an injective map and without repeated elements."))
     # output holders
     extensions = []
-    good_extensions = False
+    good_anchor = False
     # local variables
     node = 0
     node1 = 0
@@ -182,11 +205,11 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     # decode maximum extensions
     for each_extension in encoded_extensions:
         extensions.append(decode_match(each_extension, encoded_node_names))
-    # get answer good extensions
+    # check if the anchor was a good partial map
     if((len(extensions[0]) == len(nodes_G)) and (len(extensions[0]) == len(nodes_H))):
-        good_extensions = True
+        good_anchor = True
     # end of function
-    return(extensions, good_extensions)
+    return(extensions, good_anchor)
 
 
 
