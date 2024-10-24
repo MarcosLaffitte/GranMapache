@@ -169,6 +169,48 @@ def decode_graphs(encoded_graphs = [],
     > output:
     * decoded_graphs - list of networkx graph or digraph objects.
     """
+    # exception handling and input correctness
+    test_list = [0, 0]
+    test_dict = dict()
+    test_count_undir = 0
+    test_count_dir = 0
+    test_undir = nx.Graph()
+    test_dir = nx.DiGraph()
+    if(not type(encoded_graphs) in [type(test_list)]):
+        raise(ValueError("first argument must be a list of networkx graphs or digraphs."))
+    if(not type(node_name_encoding) in [type(test_dict)]):
+        raise(ValueError("second argument must be a dictionary."))
+    if(not type(node_label_encoding) in [type(test_dict)]):
+        raise(ValueError("third argument must be a dictionary."))
+    if(not type(edge_label_encoding) in [type(test_dict)]):
+        raise(ValueError("fourth argument must be a dictionary."))
+    for test_entry in encoded_graphs:
+        if(type(test_entry) not in [type(test_undir)]):
+            if(type(test_entry) not in [type(test_dir)]):
+                raise(ValueError("elements in list must be networkx graphs or digraphs."))
+            else:
+                test_count_dir = test_count_dir + 1
+                for (test_node, test_info) in list(test_entry.nodes(data = True)):
+                    if(test_node not in list(node_name_encoding.keys())):
+                        raise(ValueError("all the nodes of the input (di)graphs must be encoded by the input dictionaries."))
+                    if(test_info["GMNL"] not in list(node_label_encoding.keys())):
+                        raise(ValueError("all the node-labels of the input (di)graphs must be encoded by the input dictionaries."))
+                for (test_edge, test_info) in list(test_entry.edges(data = True)):
+                    if(test_info["GMEL"] not in list(edge_label_encoding.keys())):
+                        raise(ValueError("all the edge-labels of the input (di)graphs must be encoded by the input dictionaries."))
+        else:
+            test_count_undir = test_count_undir + 1
+            for (test_node, test_info) in list(test_entry.nodes(data = True)):
+                if(test_node not in list(node_name_encoding.keys())):
+                    raise(ValueError("all the nodes of the input (di)graphs must be encoded by the input dictionaries."))
+                if(test_info["GMNL"] not in list(node_label_encoding.keys())):
+                    raise(ValueError("all the node-labels of the input (di)graphs must be encoded by the input dictionaries."))
+            for (test_edge, test_info) in list(test_entry.edges(data = True)):
+                if(test_info["GMEL"] not in list(edge_label_encoding.keys())):
+                    raise(ValueError("all the edge-labels of the input (di)graphs must be encoded by the input dictionaries."))
+    if(not test_count_undir == len(encoded_graphs)):
+        if(not test_count_dir == len(encoded_graphs)):
+            raise(ValueError("elements in list must be networkx graphs or digraphs of the same type."))
     # output holders
     decoded_graphs = []
     # cython variables
