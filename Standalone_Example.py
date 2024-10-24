@@ -21,7 +21,7 @@
 #   * running main of the module if it was built in place                      #
 #     python -m gmapache                                                       #
 #                                                                              #
-#   * installing the package and dependencies inside anaconda environment      #
+#   * installing the package and dependencies INSIDE anaconda environment,     #
 #     got to the folder where setup.py is located and run                      #
 #     pip install .                                                            #
 #                                                                              #
