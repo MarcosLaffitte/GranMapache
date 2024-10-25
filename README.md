@@ -14,11 +14,9 @@ Alignments and other Maps between Graphs
 
 > done: integerization
 
--> good-bad map with maximum extension
+> done: good-bad map with maximum extension
 
-- add wheel for packages
-
-- cython-python deployment with linux and windows.
+> done: add wheel for packages
 
 - modules: integerization, partial_maps, common_subgraphs, alignment, isomorphism, rebalancing, verbosity, visualization, (maybe) classes, (maybe) tests.
 
