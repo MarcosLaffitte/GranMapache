@@ -15,11 +15,14 @@
 #   * installing required python version into anaconda environment             #
 #     conda create -n [env_name] python=3.11.10                                #
 #                                                                              #
+#   * for all the following, activate anaconda environment with                #
+#     conda activate [env_name]                                                #
+#                                                                              #
 #   * installing the package and dependencies INSIDE anaconda environment,     #
 #     got to the folder where setup.py is located and run                      #
 #     pip install .                                                            #
 #                                                                              #
-#   * running Standalone_Example.py if the package was installed in anaconda   #
+#   * running Standalone_Example.py (make sure to "activate conda [env_name]") #
 #     python Standalone_Example.py                                             #
 #                                                                              #
 #   * uninstalling gmapache from anaconda environment                          #
