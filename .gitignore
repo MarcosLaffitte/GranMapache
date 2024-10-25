@@ -2,7 +2,6 @@
 ToDo.txt
 clean_repo.sh
 gmapache/__pycache__/*
-gmapache/__main__.py
 tests/*
 build/*
 gmapache.egg-info/*
