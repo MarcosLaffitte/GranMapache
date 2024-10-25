@@ -3,10 +3,10 @@
 # import modules ###########################################
 
 # partial maps ---------------------------------------------
-from .partial_maps import *
+from gmapache.partial_maps import *
 
 # integerization -------------------------------------------
-from .integerization import *
+from gmapache.integerization import *
 
 # import submodules ########################################
 # submodule: common subgraphs ------------------------------
