@@ -60,4 +60,12 @@ Repository = "https://github.com/MarcosLaffitte/GranMapache.git"
 # Changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
 
 ################################################################################
+[options]
+packages =
+    myprimes
+    myprimes.mysubmodule
+include_package_data = True
+
+
+################################################################################
 ################################################################################

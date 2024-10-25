@@ -29,7 +29,6 @@ from sys import getrecursionlimit, setrecursionlimit
 
 
 # not in python ----------------------------------------------------------------
-import cython
 import networkx as nx
 
 

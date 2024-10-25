@@ -2,11 +2,11 @@
 
 # import modules ###########################################
 
-# partial maps ---------------------------------------------
-from gmapache.partial_maps import *
-
 # integerization -------------------------------------------
 from gmapache.integerization import *
+
+# partial maps ---------------------------------------------
+from gmapache.partial_maps import *
 
 # import submodules ########################################
 # submodule: common subgraphs ------------------------------

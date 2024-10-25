@@ -22,7 +22,6 @@ from copy import deepcopy
 
 
 # not in python ----------------------------------------------------------------
-import cython
 import networkx as nx
 
 
