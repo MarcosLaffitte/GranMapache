@@ -82,7 +82,7 @@ conda activate [env_name]
 ```
 pip install .
 ```
-###### 4) running Standalone_Example.py (make sure to "activate conda [env_name]")
+###### 4) there is a python script with an example on how to call the functions in the packages, called Standalone_Example.py inside the standalone directory. To run this use (make sure to "activate conda [env_name]")
 ```
 python Standalone_Example.py
 ```
