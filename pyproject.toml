@@ -23,6 +23,13 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 ################################################################################
+[tool.setuptools.packages.find]
+exclude = [
+    "tests*",
+    "standalone*"
+]
+
+################################################################################
 [project]
 name = "gmapache"
 version = "1.0"
@@ -58,14 +65,6 @@ Repository = "https://github.com/MarcosLaffitte/GranMapache.git"
 # Documentation = "https://readthedocs.org"
 # Issues = "https://github.com/me/spam/issues"
 # Changelog = "https://github.com/me/spam/blob/master/CHANGELOG.md"
-
-################################################################################
-[options]
-packages =
-    myprimes
-    myprimes.mysubmodule
-include_package_data = True
-
 
 ################################################################################
 ################################################################################

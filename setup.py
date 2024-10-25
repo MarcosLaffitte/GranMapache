@@ -49,7 +49,10 @@ extensions = [
     #           include_dirs = [numpy.get_include()])
 ]
 
-setup(ext_modules = cythonize(extensions))
+setup(
+    name = "gmapache",
+    ext_modules = cythonize(extensions)
+)
 
 ################################################################################
 ################################################################################

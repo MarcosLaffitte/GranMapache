@@ -15,12 +15,6 @@
 #   * installing required python version into anaconda environment             #
 #     conda create -n [env_name] python=3.11.10                                #
 #                                                                              #
-#   * builing cython code in place (if dependencies are already satisfied)     #
-#     python setup.py build_ext --inplace                                      #
-#                                                                              #
-#   * running main of the module if it was built in place                      #
-#     python -m gmapache                                                       #
-#                                                                              #
 #   * installing the package and dependencies INSIDE anaconda environment,     #
 #     got to the folder where setup.py is located and run                      #
 #     pip install .                                                            #
@@ -137,13 +131,19 @@ reaction_center = [("g1", "h1"),
 
 
 # testing maximum connected extension
+initial_time = time.time()
 all_extensions, good_center = gm.maximum_connected_extensions(G, H, reaction_center)
-print("*** Given anchor:")
+final_time = time.time()
+print("\n")
+print("***** Given anchor:")
 print(reaction_center)
-print("*** Got extensions:")
+print("***** Got extensions:")
 print(all_extensions)
-print("*** Was anchor a good reaction center?")
+print("***** Was anchor a good reaction center?")
 print(good_center)
+print("***** Running time [s]")
+print(final_time - initial_time)
+print("\n")
 
 
 ################################################################################
