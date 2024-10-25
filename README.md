@@ -70,7 +70,32 @@ There you can find detailed information on the algorithms implemented here. This
 
 ## Instructions
 
-Some instructions
+###### 1) installing required python version into anaconda environment
+```
+conda create -n [env_name] python=3.11.10
+```
+###### 2) for all the following, activate anaconda environment with
+```
+conda activate [env_name]
+```
+###### 3) installing the package and dependencies INSIDE anaconda environment, got to the folder where setup.py is located and run
+```
+pip install .
+```
+###### 4) running Standalone_Example.py (make sure to "activate conda [env_name]")
+```
+python Standalone_Example.py
+```
+###### For uninstalling gmapache from anaconda environment
+```
+pip uninstall gmapache
+```
+###### For removing anaconda environmnet completely
+```
+conda remove -n [env_name] --all
+```
+
+
 
 ## Additional Information
 
