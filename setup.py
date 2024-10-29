@@ -17,7 +17,8 @@
 # pip install .
 
 # Builing cython code in place if dependencies are already satisfied
-# python setup.py build_ext --inplace
+# LINUX:   python setup.py build_ext --inplace
+# WINDOWS: python setup.py build_ext -i --compiler=mingw32 -DMS_WIN64
 # Note - about Numpy Api Warning see:
 # https://stackoverflow.com/questions/52749662/using-deprecated-numpy-api
 
