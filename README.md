@@ -20,6 +20,8 @@ Alignments and other Maps between Graphs
 
 - statically type python objects
 
+- statically type counters and bounds in for loops
+
 - slowly but surely migrate into C++ objects
 
 - modules: integerization, partial_maps, common_subgraphs, alignment, isomorphism, rebalancing, verbosity, visualization, (maybe) classes, (maybe) tests.
