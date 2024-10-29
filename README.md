@@ -18,6 +18,10 @@ Alignments and other Maps between Graphs
 
 > done: add wheel for packages
 
+- statically type python objects
+
+- slowly but surely migrate into C++ objects
+
 - modules: integerization, partial_maps, common_subgraphs, alignment, isomorphism, rebalancing, verbosity, visualization, (maybe) classes, (maybe) tests.
 
 - versions: pip for linux, pip for windows, stand-alone.
