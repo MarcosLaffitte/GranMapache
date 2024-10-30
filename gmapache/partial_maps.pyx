@@ -8,9 +8,9 @@
 # - Description: analysis of properties of partial maps, like maximum          #
 #   connected extensions, overlaps, consistency, and others.                   #
 #                                                                              #
-# - Note: currently broadly using python lists and dictionaries since we       #
-#   need the dynamic allocation, but in the future we might migrate into       #
-#   pure C and C++ structures and objects.                                     #
+# - Note: currently broadly using (typed) python lists and dictionaries since  #
+#   we need the dynamic allocation, but we want to slowly but surely migrate   #
+#   into pure C and C++ structures and objects.                                #
 #                                                                              #
 ################################################################################
 
@@ -113,7 +113,7 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     if(not len(list(set([y for (x, y) in input_anchor]))) == len(input_anchor)):
         raise(ValueError("the input list must be an injective map and without repeated elements."))
     # output holders
-    extensions = []
+    cdef list extensions = []
     good_anchor = False
     # local variables
     node = 0
@@ -124,19 +124,20 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     expected_order = 0
     required_limit = 0
     scalation_value = 0
-    encoded_graphs = []
-    encoded_anchor = []
-    inside_anchor_H = []
-    outside_anchor_H = []
-    encoded_extensions = []
-    info = dict()
-    nodes_G = dict()
-    edges_G = dict()
-    nodes_H = dict()
-    edges_H = dict()
-    encoded_node_names = dict()
-    encoded_node_label = dict()
-    encoded_edge_label = dict()
+    cdef list encoded_graphs = []
+    cdef list encoded_anchor = []
+    cdef list inside_anchor_H = []
+    cdef list outside_anchor_H = []
+    cdef list encoded_extensions = []
+    cdef dict info = dict()
+    cdef dict nodes_G = dict()
+    cdef dict edges_G = dict()
+    cdef dict nodes_H = dict()
+    cdef dict edges_H = dict()
+    cdef dict total_order = dict()
+    cdef dict encoded_node_names = dict()
+    cdef dict encoded_node_label = dict()
+    cdef dict encoded_edge_label = dict()
     if(nx.is_directed(G)):
         in_neigh_G = dict()
         in_neigh_H = dict()
@@ -145,7 +146,6 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     else:
         neigh_G = dict()
         neigh_H = dict()
-    total_order = dict()
     # encode graphs
     encoded_graphs, encoded_node_names, encoded_node_label, encoded_edge_label = encode_graphs([G, H])
     # encode match
@@ -228,12 +228,12 @@ def undirected_maximum_connected_extensions(nodes_G = dict(), edges_G = dict(), 
     node2 = 0
     new_score = 0
     old_score = 0
-    new_match = []
-    candidates = []
-    current_match_G = []
-    current_match_H = []
-    forward_match = dict()
-    inverse_match = dict()
+    cdef list new_match = []
+    cdef list candidates = []
+    cdef list current_match_G = []
+    cdef list current_match_H = []
+    cdef dict forward_match = dict()
+    cdef dict inverse_match = dict()
     syntactic_feasibility = False
     semantic_feasibility = False
     # test initial match and consecutive matches
@@ -298,9 +298,9 @@ def undirected_candidates(current_match_G, current_match_H,
     node1 = 0
     node2 = 0
     reference_maximum = 0
-    valid_G = []
-    valid_H = []
-    candidate_pairs = []
+    cdef list valid_G = []
+    cdef list valid_H = []
+    cdef list candidate_pairs = []
     # get maximum value of total order in match
     reference_maximum = max([total_order[node] for node in current_match_H])
     # get valid sets
@@ -329,8 +329,8 @@ def undirected_syntactic_feasibility(node1, node2,
                                      neigh_G, neigh_H):
     # local variables
     node = 0
-    neighbors_match_G = []
-    neighbors_match_H = []
+    cdef list neighbors_match_G = []
+    cdef list neighbors_match_H = []
     # loop-consistency-test
     if((node1 in neigh_G[node1]) and (node2 not in neigh_H[node2])):
         return(False)
@@ -362,7 +362,7 @@ def undirected_semantic_feasibility(node1, node2,
     b1 = 0
     b2 = 0
     node = 0
-    neighbors_match_G = []
+    cdef list neighbors_match_G = []
     # compare vertex-labels
     if(not nodes_G[node1] == nodes_H[node2]):
         return(False)
@@ -400,12 +400,12 @@ def directed_maximum_connected_extensions(nodes_G = dict(), edges_G = dict(), in
     node2 = 0
     new_score = 0
     old_score = 0
-    new_match = []
-    candidates = []
-    current_match_G = []
-    current_match_H = []
-    forward_match = dict()
-    inverse_match = dict()
+    cdef list new_match = []
+    cdef list candidates = []
+    cdef list current_match_G = []
+    cdef list current_match_H = []
+    cdef dict forward_match = dict()
+    cdef dict inverse_match = dict()
     syntactic_feasibility = False
     semantic_feasibility = False
     # test initial match and consecutive matches
@@ -473,9 +473,9 @@ def directed_candidates(current_match_G, current_match_H,
     node1 = 0
     node2 = 0
     reference_maximum = 0
-    valid_G = []
-    valid_H = []
-    candidate_pairs = []
+    cdef list valid_G = []
+    cdef list valid_H = []
+    cdef list candidate_pairs = []
     # get maximum value of total order in match
     reference_maximum = max([total_order[node] for node in current_match_H])
     # get valid sets
@@ -505,10 +505,10 @@ def directed_syntactic_feasibility(node1, node2,
                                    in_neigh_H, out_neigh_H):
     # local variables
     node = 0
-    in_neighbors_match_G = []
-    in_neighbors_match_H = []
-    out_neighbors_match_G = []
-    out_neighbors_match_H = []
+    cdef list in_neighbors_match_G = []
+    cdef list in_neighbors_match_H = []
+    cdef list out_neighbors_match_G = []
+    cdef list out_neighbors_match_H = []
     # loop-consistency-test
     if((node1 in in_neigh_G[node1]) and (node2 not in in_neigh_H[node2])):
         return(False)
@@ -548,8 +548,8 @@ def directed_semantic_feasibility(node1, node2,
     b1 = 0
     b2 = 0
     node = 0
-    in_neighbors_match_G = []
-    out_neighbors_match_G = []
+    cdef list in_neighbors_match_G = []
+    cdef list out_neighbors_match_G = []
     # compare vertex-labels
     if(not nodes_G[node1] == nodes_H[node2]):
         return(False)

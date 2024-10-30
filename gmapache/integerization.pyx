@@ -8,9 +8,11 @@
 # - Description: convert node "names", node attributes and edge attributes     #
 #   into integers to simplify their comparison in the other rutines            #
 #                                                                              #
+# - Note: currently broadly using (typed) python lists and dictionaries since  #
+#   we need the dynamic allocation, but we want to slowly but surely migrate   #
+#   into pure C and C++ structures and objects.                                #
+#                                                                              #
 ################################################################################
-
-
 
 # dependencies #################################################################
 
@@ -76,27 +78,26 @@ def encode_graphs(input_graphs = []):
         if(not test_count_dir == len(input_graphs)):
             raise(ValueError("elements in list must be networkx graphs or digraphs of the same type."))
     # output holders
-    encoded_graphs = []
-    node_name_encoding = dict()  # from ints to node names
-    node_label_encoding = dict() # from ints to node label-dicts
-    edge_label_encoding = dict() # from ints to edge label-dicts
-    # cython variables
-    cdef int i = 0
+    cdef list encoded_graphs = []
+    cdef dict node_name_encoding = dict()  # from ints to node names
+    cdef dict node_label_encoding = dict() # from ints to node label-dicts
+    cdef dict edge_label_encoding = dict() # from ints to edge label-dicts
     # local variables
+    cdef int i = 0
     encoded_node = 0
     encoded_node_a = 0
     encoded_node_b = 0
     encoded_label = 0
     new_node_label = 0
     new_edge_label = 0
-    all_nodes = []
-    all_node_labels = []
-    all_edge_labels = []
-    nodeInfo = dict()
-    edgeInfo = dict()
-    node_name_encoding_inv = dict()  # from node names to ints
-    node_label_encoding_inv = []     # from node label-dicts to ints (indices)
-    edge_label_encoding_inv = []     # from edge label-dicts to ints (indices)
+    cdef list all_nodes = []
+    cdef list all_node_labels = []
+    cdef list all_edge_labels = []
+    cdef list node_label_encoding_inv = []     # from node label-dicts to ints (indices)
+    cdef list edge_label_encoding_inv = []     # from edge label-dicts to ints (indices)
+    cdef dict nodeInfo = dict()
+    cdef dict edgeInfo = dict()
+    cdef dict node_name_encoding_inv = dict()   # from node names to ints
     u = None
     v = None
     int_graph = None
@@ -219,18 +220,17 @@ def decode_graphs(encoded_graphs = [],
         if(not test_count_dir == len(encoded_graphs)):
             raise(ValueError("elements in list must be networkx graphs or digraphs of the same type."))
     # output holders
-    decoded_graphs = []
-    # cython variables
+    cdef list decoded_graphs = []
+    # local variables
     cdef int i = 0
     cdef int u = 0
     cdef int v = 0
-    # local variables
     decoded_node = 0
     decoded_node_a = 0
     decoded_node_b = 0
     decoded_label = 0
-    nodeInfo = dict()
-    edgeInfo = dict()
+    cdef dict nodeInfo = dict()
+    cdef dict  edgeInfo = dict()
     dec_graph = None
     # iterate decoding graphs
     for i in range(len(encoded_graphs)):
@@ -294,13 +294,12 @@ def encode_match(input_match = [],
         if(test_entry[1] not in list(node_name_encoding.values())):
             raise(ValueError("input dictionary must encode all elements being matched."))
     # output holders
-    encoded_match = []
-    # cython variables
+    cdef list encoded_match = []
+    # local variables
     cdef int i = 0
     cdef int index1 = 0
     cdef int index2 = 0
-    # local variables
-    node_name_encoding_inv = dict()
+    cdef dict node_name_encoding_inv = dict()
     # get encoding as array
     node_name_encoding_inv = {node_name_encoding[i]:i for i in range(len(node_name_encoding))}
     # encode match
@@ -346,10 +345,9 @@ def decode_match(encoded_match = [],
         if(test_entry[1] not in list(node_name_encoding.keys())):
             raise(ValueError("input dictionary must encode all elements being matched."))
     # output holders
-    decoded_match = []
-    # cython variables
-    cdef int i = 0
+    cdef list decoded_match = []
     # local variables
+    cdef int i = 0
     node1 = None
     node2 = None
     # decode match
