@@ -18,9 +18,9 @@ Alignments and other Maps between Graphs
 
 > done: add wheel for packages
 
-- statically type python objects
+> done: statically type python objects
 
-- statically type counters and bounds in for loops
+> done: statically type counters and bounds in for loops
 
 - slowly but surely migrate into C++ objects
 
