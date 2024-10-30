@@ -84,7 +84,7 @@ conda create -n [env_name] python=3.11.10
 ```
 conda activate [env_name]
 ```
-###### 3) installing the package and dependencies INSIDE anaconda environment, got to the folder where setup.py is located and run
+###### 3) installing the package and dependencies INSIDE anaconda environment, go to the folder where setup.py is located and run
 ```
 pip install .
 ```
