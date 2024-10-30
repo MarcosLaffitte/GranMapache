@@ -215,12 +215,12 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
 
 
 # function: core routine of VF2-like approach ----------------------------------
-def undirected_maximum_connected_extensions(nodes_G = dict(), edges_G = dict(), neigh_G = dict(),
-                                            nodes_H = dict(), edges_H = dict(), neigh_H = dict(),
-                                            expected_order = 0,
-                                            current_match = [],
-                                            all_matches = [],
-                                            total_order = dict()):
+cdef undirected_maximum_connected_extensions(nodes_G = dict(), edges_G = dict(), neigh_G = dict(),
+                                             nodes_H = dict(), edges_H = dict(), neigh_H = dict(),
+                                             expected_order = 0,
+                                             current_match = [],
+                                             all_matches = [],
+                                             total_order = dict()):
     # local variables
     cdef int node1 = 0
     cdef int node2 = 0
@@ -288,9 +288,9 @@ def undirected_maximum_connected_extensions(nodes_G = dict(), edges_G = dict(), 
 
 
 # function: get candidate pairs for undir extension search ---------------------
-def undirected_candidates(current_match_G, current_match_H,
-                          neigh_G, neigh_H,
-                          total_order):
+cdef undirected_candidates(current_match_G, current_match_H,
+                           neigh_G, neigh_H,
+                           total_order):
     # local variables
     cdef int node = 0
     cdef int node1 = 0
@@ -321,10 +321,10 @@ def undirected_candidates(current_match_G, current_match_H,
 
 
 # function: evaluate syntactic feasability for undir extension -----------------
-def undirected_syntactic_feasibility(node1, node2,
-                                     current_match_G, current_match_H,
-                                     forward_match, inverse_match,
-                                     neigh_G, neigh_H):
+cdef undirected_syntactic_feasibility(node1, node2,
+                                      current_match_G, current_match_H,
+                                      forward_match, inverse_match,
+                                      neigh_G, neigh_H):
     # local variables
     cdef int node = 0
     cdef list neighbors_match_G = []
@@ -349,11 +349,11 @@ def undirected_syntactic_feasibility(node1, node2,
 
 
 # function: evaluate semantic feasability for undir extension ------------------
-def undirected_semantic_feasibility(node1, node2,
-                                    current_match_G,
-                                    forward_match,
-                                    nodes_G, edges_G, neigh_G,
-                                    nodes_H, edges_H):
+cdef undirected_semantic_feasibility(node1, node2,
+                                     current_match_G,
+                                     forward_match,
+                                     nodes_G, edges_G, neigh_G,
+                                     nodes_H, edges_H):
     # local variables
     cdef int a1 = 0
     cdef int a2 = 0
@@ -387,12 +387,12 @@ def undirected_semantic_feasibility(node1, node2,
 
 
 # function: core routine of VF2-like approach ----------------------------------
-def directed_maximum_connected_extensions(nodes_G = dict(), edges_G = dict(), in_neigh_G = dict(), out_neigh_G = dict(),
-                                          nodes_H = dict(), edges_H = dict(), in_neigh_H = dict(), out_neigh_H = dict(),
-                                          expected_order = 0,
-                                          current_match = [],
-                                          all_matches = [],
-                                          total_order = dict()):
+cdef directed_maximum_connected_extensions(nodes_G = dict(), edges_G = dict(), in_neigh_G = dict(), out_neigh_G = dict(),
+                                           nodes_H = dict(), edges_H = dict(), in_neigh_H = dict(), out_neigh_H = dict(),
+                                           expected_order = 0,
+                                           current_match = [],
+                                           all_matches = [],
+                                           total_order = dict()):
     # local variables
     cdef int node1 = 0
     cdef int node2 = 0
@@ -462,10 +462,10 @@ def directed_maximum_connected_extensions(nodes_G = dict(), edges_G = dict(), in
 
 
 # function: get candidate pairs for undir extension search ---------------------
-def directed_candidates(current_match_G, current_match_H,
-                        in_neigh_G, out_neigh_G,
-                        in_neigh_H, out_neigh_H,
-                        total_order):
+cdef directed_candidates(current_match_G, current_match_H,
+                         in_neigh_G, out_neigh_G,
+                         in_neigh_H, out_neigh_H,
+                         total_order):
     # local variables
     cdef int node = 0
     cdef int node1 = 0
@@ -496,11 +496,11 @@ def directed_candidates(current_match_G, current_match_H,
 
 
 # function: evaluate syntactic feasability for undir extension -----------------
-def directed_syntactic_feasibility(node1, node2,
-                                   current_match_G, current_match_H,
-                                   forward_match, inverse_match,
-                                   in_neigh_G, out_neigh_G,
-                                   in_neigh_H, out_neigh_H):
+cdef directed_syntactic_feasibility(node1, node2,
+                                    current_match_G, current_match_H,
+                                    forward_match, inverse_match,
+                                    in_neigh_G, out_neigh_G,
+                                    in_neigh_H, out_neigh_H):
     # local variables
     cdef int node = 0
     cdef list in_neighbors_match_G = []
@@ -535,11 +535,11 @@ def directed_syntactic_feasibility(node1, node2,
 
 
 # function: evaluate semantic feasability for undir extension ------------------
-def directed_semantic_feasibility(node1, node2,
-                                  current_match_G,
-                                  forward_match,
-                                  nodes_G, edges_G, in_neigh_G, out_neigh_G,
-                                  nodes_H, edges_H):
+cdef directed_semantic_feasibility(node1, node2,
+                                   current_match_G,
+                                   forward_match,
+                                   nodes_G, edges_G, in_neigh_G, out_neigh_G,
+                                   nodes_H, edges_H):
     # local variables
     cdef int a1 = 0
     cdef int a2 = 0
