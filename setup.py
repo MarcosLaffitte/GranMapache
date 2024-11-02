@@ -41,13 +41,17 @@ import Cython.Compiler.Options
 Cython.Compiler.Options.annotate = True
 
 extensions = [
-    Extension("gmapache.partial_maps",
-              ["gmapache/partial_maps.pyx"]),
     Extension("gmapache.integerization",
-              ["gmapache/integerization.pyx"])
+              sources = ["gmapache/integerization.pyx"]),
+    Extension("gmapache.partial_maps",
+              sources = ["gmapache/partial_maps.pyx"],
+              language = "c++",
+              extra_compile_args=["-std=c++20"])
     # Extension("package.module",
-    #           ["package/module.pyx"],
-    #           include_dirs = [numpy.get_include()])
+    #           sources = ["package/module.pyx"],
+    #           include_dirs = [numpy.get_include()],
+    #           language = "c++",
+    #           extra_compile_args=["-std=c++20"])
 ]
 
 setup(
