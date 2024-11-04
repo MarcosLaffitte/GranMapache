@@ -197,6 +197,8 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     if(nx.is_directed(G)):
         work_in_progress = True
         encoded_extensions = [encoded_anchor]
+        print("\n")
+        print("*** WARNING: making modifications to routine for directed graphs!!!")
         # encoded_extensions = directed_maximum_connected_extensions(expected_order,
         #                                                            nodes_G,
         #                                                            nodes_H,
