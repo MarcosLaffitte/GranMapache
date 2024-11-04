@@ -8,10 +8,6 @@
 # - Description: convert node "names", node attributes and edge attributes     #
 #   into integers to simplify their comparison in the other rutines            #
 #                                                                              #
-# - Note: currently broadly using (typed) python lists and dictionaries since  #
-#   we need the dynamic allocation, but we want to slowly but surely migrate   #
-#   into pure C and C++ structures and objects.                                #
-#                                                                              #
 ################################################################################
 
 # dependencies #################################################################
@@ -25,6 +21,11 @@ from copy import deepcopy
 
 # not in python ----------------------------------------------------------------
 import networkx as nx
+
+
+
+# cython specifics -------------------------------------------------------------
+import cython
 
 
 
@@ -79,10 +80,10 @@ def encode_graphs(input_graphs = []):
             raise(ValueError("elements in list must be networkx graphs or digraphs of the same type."))
     # output holders
     cdef list encoded_graphs = []
-    cdef dict node_name_encoding = dict()  # from ints to node names
-    cdef dict node_label_encoding = dict() # from ints to node label-dicts
-    cdef dict edge_label_encoding = dict() # from ints to edge label-dicts
-    # local variables
+    cdef dict node_name_encoding = dict()    # from ints to node names
+    cdef dict node_label_encoding = dict()   # from ints to node label-dicts
+    cdef dict edge_label_encoding = dict()   # from ints to edge label-dicts
+    # local variables (cython)
     cdef int i = 0
     cdef int N1 = 0
     cdef int N2 = 0
@@ -92,11 +93,12 @@ def encode_graphs(input_graphs = []):
     cdef int encoded_label = 0
     cdef int new_node_label = 0
     cdef int new_edge_label = 0
+    # local variables (python)
     cdef list all_nodes = []
     cdef list all_node_labels = []
     cdef list all_edge_labels = []
-    cdef list node_label_encoding_inv = []     # from node label-dicts to ints (indices)
-    cdef list edge_label_encoding_inv = []     # from edge label-dicts to ints (indices)
+    cdef list node_label_encoding_inv = []   # from node label-dicts to ints (indices)
+    cdef list edge_label_encoding_inv = []   # from edge label-dicts to ints (indices)
     cdef dict nodeInfo = dict()
     cdef dict edgeInfo = dict()
     cdef dict node_name_encoding_inv = dict()   # from node names to ints
@@ -225,7 +227,7 @@ def decode_graphs(encoded_graphs = [],
             raise(ValueError("elements in list must be networkx graphs or digraphs of the same type."))
     # output holders
     cdef list decoded_graphs = []
-    # local variables
+    # local variables (cython)
     cdef int i = 0
     cdef int u = 0
     cdef int v = 0
@@ -234,8 +236,9 @@ def decode_graphs(encoded_graphs = [],
     cdef int decoded_node_a = 0
     cdef int decoded_node_b = 0
     cdef int decoded_label = 0
+    # local variables (python)
     cdef dict nodeInfo = dict()
-    cdef dict  edgeInfo = dict()
+    cdef dict edgeInfo = dict()
     dec_graph = None
     # iterate decoding graphs
     N1 = len(encoded_graphs)
@@ -301,11 +304,12 @@ def encode_match(input_match = [],
             raise(ValueError("input dictionary must encode all elements being matched."))
     # output holders
     cdef list encoded_match = []
-    # local variables
+    # local variables (cython)
     cdef int i = 0
     cdef int N1 = 0
     cdef int index1 = 0
     cdef int index2 = 0
+    # local variables (python)
     cdef dict node_name_encoding_inv = dict()
     # get encoding as array
     node_name_encoding_inv = {node_name_encoding[i]:i for i in range(len(node_name_encoding))}
@@ -354,9 +358,10 @@ def decode_match(encoded_match = [],
             raise(ValueError("input dictionary must encode all elements being matched."))
     # output holders
     cdef list decoded_match = []
-    # local variables
+    # local variables (cython)
     cdef int i = 0
     cdef int N1 = 0
+    # local variables (python)
     node1 = None
     node2 = None
     # decode match

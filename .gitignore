@@ -8,7 +8,9 @@ gmapache.egg-info/*
 
 ## python and cython produced files
 *.c
+*.cpp
 *.so
+*.pyd
 *.html
 
 ## linux text editor intermediates

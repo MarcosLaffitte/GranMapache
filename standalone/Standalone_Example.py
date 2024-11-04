@@ -19,7 +19,7 @@
 #     conda activate [env_name]                                                #
 #                                                                              #
 #   * installing the package and dependencies INSIDE anaconda environment,     #
-#     got to the folder where setup.py is located and run                      #
+#     go to the folder where setup.py is located and run                       #
 #     pip install .                                                            #
 #                                                                              #
 #   * running Standalone_Example.py (make sure to "activate conda [env_name]") #
@@ -68,10 +68,10 @@ import gmapache as gm
 # We build two networkx graphs G and H with arbitrary vertex labels and edge labels, and define
 # a "reaction center" as an injective match between the graphs, also refered to as "anchor", given
 # as a list of unrepeated 2-tuples (x, y) of vertices x in G and y in H. This data is passed to the
-# method gm.partial_maps.maximum_connected_extensions(G, H, reaction_center), which extends the
-# reaction center and returns two results: (1) a list of all the possible maximum extensions of the
-# reaction center also expressed as matches, and (2) a boolean value indicating if the extension for
-# a bijection and equivalentely if the "anchor" was a good partial map.
+# method gm.maximum_connected_extensions(G, H, reaction_center), which extends the reaction center
+# and returns two results: (1) a list of all the possible maximum extensions of the reaction center
+# also expressed as matches, and (2) a boolean value indicating if the extension for a bijection
+# and equivalentely if the "anchor" was a good partial map.
 
 
 # buid first test graph for maximum connected extension
