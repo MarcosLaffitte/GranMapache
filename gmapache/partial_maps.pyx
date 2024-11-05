@@ -17,9 +17,6 @@
 
 
 # already in python ------------------------------------------------------------
-import time
-from copy import deepcopy
-from itertools import product
 from sys import getrecursionlimit, setrecursionlimit
 
 
@@ -137,12 +134,12 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     cdef cpp_map[int, int] total_order
     cdef cpp_map[int, int] nodes_G
     cdef cpp_map[int, int] nodes_H
-    cdef cpp_map[int, cpp_vector[int]] neigh_G
-    cdef cpp_map[int, cpp_vector[int]] neigh_H
-    cdef cpp_map[int, cpp_vector[int]] in_neigh_G
-    cdef cpp_map[int, cpp_vector[int]] in_neigh_H
-    cdef cpp_map[int, cpp_vector[int]] out_neigh_G
-    cdef cpp_map[int, cpp_vector[int]] out_neigh_H
+    cdef cpp_map[int, cpp_vector[int]] neigh_G        # only used if undirected
+    cdef cpp_map[int, cpp_vector[int]] neigh_H        # only used if undirected
+    cdef cpp_map[int, cpp_vector[int]] in_neigh_G     # only used if directed
+    cdef cpp_map[int, cpp_vector[int]] in_neigh_H     # only used if directed
+    cdef cpp_map[int, cpp_vector[int]] out_neigh_G    # only used if directed
+    cdef cpp_map[int, cpp_vector[int]] out_neigh_H    # only used if directed
     cdef cpp_map[cpp_pair[int, int], int] edges_G
     cdef cpp_map[cpp_pair[int, int], int] edges_H
     # local variables (python)
@@ -195,22 +192,18 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
         setrecursionlimit(int(scalation_value * required_limit))
     # get maximum extensions
     if(nx.is_directed(G)):
-        work_in_progress = True
-        encoded_extensions = [encoded_anchor]
-        print("\n")
-        print("*** WARNING: making modifications to routine for directed graphs!!!")
-        # encoded_extensions = directed_maximum_connected_extensions(expected_order,
-        #                                                            nodes_G,
-        #                                                            nodes_H,
-        #                                                            in_neigh_G,
-        #                                                            in_neigh_H,
-        #                                                            out_neigh_G,
-        #                                                            out_neigh_H,
-        #                                                            edges_G,
-        #                                                            edges_H,
-        #                                                            encoded_anchor,
-        #                                                            encoded_extensions,
-        #                                                            total_order)
+        directed_maximum_connected_extensions(nodes_G,
+                                              nodes_H,
+                                              in_neigh_G,
+                                              in_neigh_H,
+                                              out_neigh_G,
+                                              out_neigh_H,
+                                              edges_G,
+                                              edges_H,
+                                              total_order,
+                                              expected_order,
+                                              encoded_anchor,
+                                              encoded_extensions)
     else:
         undirected_maximum_connected_extensions(nodes_G,
                                                 nodes_H,
@@ -237,7 +230,7 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
 
 
 
-# function: core routine of VF2-like approach ----------------------------------
+# function: core routine of VF2-like undirected approach -----------------------
 cdef void undirected_maximum_connected_extensions(cpp_map[int, int] & nodes_G,
                                                   cpp_map[int, int] & nodes_H,
                                                   cpp_map[int, cpp_vector[int]] & neigh_G,
@@ -254,7 +247,6 @@ cdef void undirected_maximum_connected_extensions(cpp_map[int, int] & nodes_G,
     cdef cpp_bool semantic_feasibility = False
     cdef cpp_bool syntactic_feasibility = False
     cdef cpp_pair[int, int] each_pair
-    cdef cpp_pair[int, int] each_match
     cdef cpp_vector[int] current_match_G
     cdef cpp_vector[int] current_match_H
     cdef cpp_vector[cpp_pair[int, int]] new_match
@@ -328,7 +320,7 @@ cdef void undirected_maximum_connected_extensions(cpp_map[int, int] & nodes_G,
 
 
 
-# function: get candidate pairs for undir extension search ---------------------
+# function: get candidate pairs for undirected extension search ----------------
 cdef cpp_vector[cpp_pair[int, int]] undirected_candidates(cpp_vector[int] & current_match_G,
                                                           cpp_vector[int] & current_match_H,
                                                           cpp_map[int, cpp_vector[int]] & neigh_G,
@@ -376,7 +368,7 @@ cdef cpp_vector[cpp_pair[int, int]] undirected_candidates(cpp_vector[int] & curr
 
 
 
-# function: evaluate syntactic feasability for undir extension -----------------
+# function: evaluate syntactic feasability for undirected extension ------------
 cdef cpp_bool undirected_syntactic_feasibility(int & node1,
                                                int & node2,
                                                cpp_vector[int] & current_match_G,
@@ -419,7 +411,7 @@ cdef cpp_bool undirected_syntactic_feasibility(int & node1,
 
 
 
-# function: evaluate semantic feasability for undir extension ------------------
+# function: evaluate semantic feasability for undirected extension -------------
 cdef cpp_bool undirected_semantic_feasibility(int & node1,
                                               int & node2,
                                               cpp_vector[int] & current_match_G,
@@ -477,183 +469,279 @@ cdef cpp_bool undirected_semantic_feasibility(int & node1,
 
 
 
-# function: core routine of VF2-like approach ----------------------------------
-cdef directed_maximum_connected_extensions(nodes_G = dict(), edges_G = dict(), in_neigh_G = dict(), out_neigh_G = dict(),
-                                           nodes_H = dict(), edges_H = dict(), in_neigh_H = dict(), out_neigh_H = dict(),
-                                           expected_order = 0,
-                                           current_match = [],
-                                           all_matches = [],
-                                           total_order = dict()):
+# function: core routine of VF2-like directed approach -------------------------
+cdef void directed_maximum_connected_extensions(cpp_map[int, int] & nodes_G,
+                                                cpp_map[int, int] & nodes_H,
+                                                cpp_map[int, cpp_vector[int]] & in_neigh_G,
+                                                cpp_map[int, cpp_vector[int]] & in_neigh_H,
+                                                cpp_map[int, cpp_vector[int]] & out_neigh_G,
+                                                cpp_map[int, cpp_vector[int]] & out_neigh_H,
+                                                cpp_map[cpp_pair[int, int], int] & edges_G,
+                                                cpp_map[cpp_pair[int, int], int] & edges_H,
+                                                cpp_map[int, int] & total_order,
+                                                long unsigned int & expected_order,
+                                                cpp_vector[cpp_pair[int, int]] current_match,
+                                                cpp_vector[cpp_vector[cpp_pair[int, int]]] & all_matches) noexcept:
     # local variables
-    cdef int node1 = 0
-    cdef int node2 = 0
-    cdef int new_score = 0
-    cdef int old_score = 0
-    cdef list new_match = []
-    cdef list candidates = []
-    cdef list current_match_G = []
-    cdef list current_match_H = []
-    cdef dict forward_match = dict()
-    cdef dict inverse_match = dict()
-    syntactic_feasibility = False
-    semantic_feasibility = False
+    cdef long unsigned int new_score = 0
+    cdef long unsigned int old_score = 0
+    cdef cpp_bool semantic_feasibility = False
+    cdef cpp_bool syntactic_feasibility = False
+    cdef cpp_pair[int, int] each_pair
+    cdef cpp_vector[int] current_match_G
+    cdef cpp_vector[int] current_match_H
+    cdef cpp_vector[cpp_pair[int, int]] new_match
+    cdef cpp_vector[cpp_pair[int, int]] candidates
+    cdef cpp_map[int, int] forward_match
     # test initial match and consecutive matches
-    if(len(all_matches) == 0):
-        if(len(current_match) > 0):
-            all_matches = [current_match]
+    if(all_matches.empty()):
+        if(not current_match.empty()):
+            all_matches.push_back(current_match)
     else:
         # test improvement in matches
-        new_score = len(current_match)
-        old_score = len(all_matches[0])
+        new_score = current_match.size()
+        old_score = all_matches[0].size()
         # save match if it has the same score
         if(new_score == old_score):
-            all_matches.append(current_match)
+            all_matches.push_back(current_match)
         # overwrite with new match if it improves score
         if(new_score > old_score):
-            all_matches = [current_match]
+            all_matches.clear()
+            all_matches.push_back(current_match)
     # if not optimal yet then obtain available pairs
-    if(len(current_match) < expected_order):
+    if(current_match.size() < expected_order):
         # generate auxiliary structures
-        current_match_G = [node1 for (node1, node2) in current_match]
-        current_match_H = [node2 for (node1, node2) in current_match]
-        forward_match = {node1:node2 for (node1, node2) in current_match}
-        inverse_match = {node2:node1 for (node1, node2) in current_match}
+        for each_pair in current_match:
+            current_match_G.push_back(each_pair.first)
+            current_match_H.push_back(each_pair.second)
+            forward_match[each_pair.first] = each_pair.second
         # get candidate pairs
-        candidates = directed_candidates(current_match_G, current_match_H,
-                                         in_neigh_G, out_neigh_G,
-                                         in_neigh_H, out_neigh_H,
+        candidates = directed_candidates(current_match_G,
+                                         current_match_H,
+                                         in_neigh_G,
+                                         in_neigh_H,
+                                         out_neigh_G,
+                                         out_neigh_H,
                                          total_order)
         # evaluate candidates
-        for (node1, node2) in candidates:
+        for each_pair in candidates:
             # evaluate sintactic feasibility
-            syntactic_feasibility = directed_syntactic_feasibility(node1, node2,
-                                                                   current_match_G, current_match_H,
-                                                                   forward_match, inverse_match,
-                                                                   in_neigh_G, out_neigh_G,
-                                                                   in_neigh_H, out_neigh_H)
+            syntactic_feasibility = directed_syntactic_feasibility(each_pair.first,
+                                                                   each_pair.second,
+                                                                   current_match_G,
+                                                                   current_match_H,
+                                                                   forward_match,
+                                                                   in_neigh_G,
+                                                                   in_neigh_H,
+                                                                   out_neigh_G,
+                                                                   out_neigh_H)
             if(syntactic_feasibility):
                 # evaluate semantic feasibility
-                semantic_feasibility = directed_semantic_feasibility(node1, node2,
+                semantic_feasibility = directed_semantic_feasibility(each_pair.first,
+                                                                     each_pair.second,
                                                                      current_match_G,
                                                                      forward_match,
-                                                                     nodes_G, edges_G, in_neigh_G, out_neigh_G,
-                                                                     nodes_H, edges_H)
+                                                                     nodes_G,
+                                                                     nodes_H,
+                                                                     in_neigh_G,
+                                                                     out_neigh_G,
+                                                                     edges_G,
+                                                                     edges_H)
                 if(semantic_feasibility):
+                    # build new match
+                    new_match = current_match
+                    new_match.push_back(each_pair)
                     # extend match
-                    new_match = current_match + [(node1, node2)]
-                    all_matches = directed_maximum_connected_extensions(nodes_G, edges_G, in_neigh_G, out_neigh_G,
-                                                                        nodes_H, edges_H, in_neigh_H, out_neigh_H,
-                                                                        expected_order,
-                                                                        new_match,
-                                                                        all_matches,
-                                                                        total_order)
+                    directed_maximum_connected_extensions(nodes_G,
+                                                          nodes_H,
+                                                          in_neigh_G,
+                                                          in_neigh_H,
+                                                          out_neigh_G,
+                                                          out_neigh_H,
+                                                          edges_G,
+                                                          edges_H,
+                                                          total_order,
+                                                          expected_order,
+                                                          new_match,
+                                                          all_matches)
     # end of function
-    return(all_matches)
 
 
 
-# function: get candidate pairs for undir extension search ---------------------
-cdef directed_candidates(current_match_G, current_match_H,
-                         in_neigh_G, out_neigh_G,
-                         in_neigh_H, out_neigh_H,
-                         total_order):
+# function: get candidate pairs for directed extension search ------------------
+cdef cpp_vector[cpp_pair[int, int]] directed_candidates(cpp_vector[int] & current_match_G,
+                                                        cpp_vector[int] & current_match_H,
+                                                        cpp_map[int, cpp_vector[int]] & in_neigh_G,
+                                                        cpp_map[int, cpp_vector[int]] & in_neigh_H,
+                                                        cpp_map[int, cpp_vector[int]] & out_neigh_G,
+                                                        cpp_map[int, cpp_vector[int]] & out_neigh_H,
+                                                        cpp_map[int, int] & total_order) noexcept:
     # local variables
     cdef int node = 0
     cdef int node1 = 0
     cdef int node2 = 0
     cdef int reference_maximum = 0
-    cdef list valid_G = []
-    cdef list valid_H = []
-    cdef list candidate_pairs = []
+    cdef cpp_pair[int, int] temp_pair
+    cdef cpp_vector[int] valid_G
+    cdef cpp_vector[int] valid_H
+    cdef cpp_vector[int] temp_vector
+    cdef cpp_vector[int] all_neighbors_G
+    cdef cpp_vector[int] all_neighbors_H
+    cdef cpp_vector[cpp_pair[int, int]] candidate_pairs
     # get maximum value of total order in match
-    reference_maximum = max([total_order[node] for node in current_match_H])
+    for node in current_match_H:
+        if(total_order[node] > reference_maximum):
+            reference_maximum = total_order[node]
     # get valid sets
     for node1 in current_match_G:
-        for node2 in list(set(in_neigh_G[node1] + out_neigh_G[node1])):
-            if(node2 not in valid_G):
-                if(node2 not in current_match_G):
-                    valid_G.append(node2)
+        all_neighbors_G = in_neigh_G[node1]
+        temp_vector = out_neigh_G[node1]
+        all_neighbors_G.insert(all_neighbors_G.end(), temp_vector.begin(), temp_vector.end())
+        for node2 in all_neighbors_G:
+            # if not already valid in G
+            if(find(valid_G.begin(), valid_G.end(), node2) == valid_G.end()):
+                # if not yet in match
+                if(find(current_match_G.begin(), current_match_G.end(), node2) == current_match_G.end()):
+                    valid_G.push_back(node2)
     for node1 in current_match_H:
-        for node2 in list(set(in_neigh_H[node1] + out_neigh_H[node1])):
-            if(node2 not in valid_H):
-                if(node2 not in current_match_H):
+        all_neighbors_H = in_neigh_H[node1]
+        temp_vector = out_neigh_H[node1]
+        all_neighbors_H.insert(all_neighbors_H.end(), temp_vector.begin(), temp_vector.end())
+        for node2 in all_neighbors_H:
+            # if not already valid in H
+            if(find(valid_H.begin(), valid_H.end(), node2) == valid_H.end()):
+                # if not yet in match
+                if(find(current_match_H.begin(), current_match_H.end(), node2) == current_match_H.end()):
+                    # if total order greater than in match
                     if(total_order[node2] > reference_maximum):
-                        valid_H.append(node2)
+                        valid_H.push_back(node2)
     # get candidates
-    candidate_pairs = list(product(valid_G, valid_H))
+    if((not valid_G.empty()) and (not valid_H.empty())):
+        for node1 in valid_G:
+            for node2 in valid_H:
+                temp_pair.first = node1
+                temp_pair.second = node2
+                candidate_pairs.push_back(temp_pair)
     # end of function
     return(candidate_pairs)
 
 
 
-# function: evaluate syntactic feasability for undir extension -----------------
-cdef directed_syntactic_feasibility(node1, node2,
-                                    current_match_G, current_match_H,
-                                    forward_match, inverse_match,
-                                    in_neigh_G, out_neigh_G,
-                                    in_neigh_H, out_neigh_H):
+# function: evaluate syntactic feasability for directed extension --------------
+cdef cpp_bool directed_syntactic_feasibility(int & node1,
+                                             int & node2,
+                                             cpp_vector[int] & current_match_G,
+                                             cpp_vector[int] & current_match_H,
+                                             cpp_map[int, int] & forward_match,
+                                             cpp_map[int, cpp_vector[int]] & in_neigh_G,
+                                             cpp_map[int, cpp_vector[int]] & in_neigh_H,
+                                             cpp_map[int, cpp_vector[int]] & out_neigh_G,
+                                             cpp_map[int, cpp_vector[int]] & out_neigh_H) noexcept:
     # local variables
     cdef int node = 0
-    cdef list in_neighbors_match_G = []
-    cdef list in_neighbors_match_H = []
-    cdef list out_neighbors_match_G = []
-    cdef list out_neighbors_match_H = []
+    cdef int mapped = 0
+    cdef cpp_vector[int] in_neighbors_match_G
+    cdef cpp_vector[int] in_neighbors_match_H
+    cdef cpp_vector[int] out_neighbors_match_G
+    cdef cpp_vector[int] out_neighbors_match_H
     # loop-consistency-test
-    if((node1 in in_neigh_G[node1]) and (node2 not in in_neigh_H[node2])):
+    if(find(in_neigh_G[node1].begin(), in_neigh_G[node1].end(), node1) != in_neigh_G[node1].end()):
+        if(find(in_neigh_H[node2].begin(), in_neigh_H[node2].end(), node2) == in_neigh_H[node2].end()):
+            # node1 has a loop in G but node2 has no loop in H
+            return(False)
+    if(find(in_neigh_G[node1].begin(), in_neigh_G[node1].end(), node1) == in_neigh_G[node1].end()):
+        if(find(in_neigh_H[node2].begin(), in_neigh_H[node2].end(), node2) != in_neigh_H[node2].end()):
+            # node1 has no loop in G but node2 has a loop in H
+            return(False)
+    # look ahead 0: consistency of in-neighbors in match
+    for node in in_neigh_G[node1]:
+        if(find(current_match_G.begin(), current_match_G.end(), node) != current_match_G.end()):
+            mapped = forward_match[node]
+            in_neighbors_match_G.push_back(mapped)
+    for node in in_neigh_H[node2]:
+        if(find(current_match_H.begin(), current_match_H.end(), node) != current_match_H.end()):
+            in_neighbors_match_H.push_back(node)
+    if(in_neighbors_match_G.size() != in_neighbors_match_H.size()):
+        # one node has more in-neighbors in the match than the other
         return(False)
-    if((node1 not in in_neigh_G[node1]) and (node2 in in_neigh_H[node2])):
+    else:
+        for mapped in in_neighbors_match_G:
+            if(find(in_neighbors_match_H.begin(), in_neighbors_match_H.end(), mapped) == in_neighbors_match_H.end()):
+                # the in-neighbors dont respect the match
+                return(False)
+    # look ahead 0: consistency of out-neighbors in match
+    for node in out_neigh_G[node1]:
+        if(find(current_match_G.begin(), current_match_G.end(), node) != current_match_G.end()):
+            mapped = forward_match[node]
+            out_neighbors_match_G.push_back(mapped)
+    for node in out_neigh_H[node2]:
+        if(find(current_match_H.begin(), current_match_H.end(), node) != current_match_H.end()):
+            out_neighbors_match_H.push_back(node)
+    if(out_neighbors_match_G.size() != out_neighbors_match_H.size()):
+        # one node has more out-neighbors in the match than the other
         return(False)
-    # look ahead 0: consistency of neighbors in match
-    in_neighbors_match_G = [node for node in in_neigh_G[node1] if(node in current_match_G)]
-    in_neighbors_match_H = [node for node in in_neigh_H[node2] if(node in current_match_H)]
-    for node in in_neighbors_match_G:
-        if(forward_match[node] not in in_neighbors_match_H):
-            return(False)
-    for node in in_neighbors_match_H:
-        if(inverse_match[node] not in in_neighbors_match_G):
-            return(False)
-    out_neighbors_match_G = [node for node in out_neigh_G[node1] if(node in current_match_G)]
-    out_neighbors_match_H = [node for node in out_neigh_H[node2] if(node in current_match_H)]
-    for node in out_neighbors_match_G:
-        if(forward_match[node] not in out_neighbors_match_H):
-            return(False)
-    for node in out_neighbors_match_H:
-        if(inverse_match[node] not in out_neighbors_match_G):
-            return(False)
+    else:
+        for mapped in out_neighbors_match_G:
+            if(find(out_neighbors_match_H.begin(), out_neighbors_match_H.end(), mapped) == out_neighbors_match_H.end()):
+                # the out-neighbors dont respect the match
+                return(False)
     # end of function
     return(True)
 
 
 
-# function: evaluate semantic feasability for undir extension ------------------
-cdef directed_semantic_feasibility(node1, node2,
-                                   current_match_G,
-                                   forward_match,
-                                   nodes_G, edges_G, in_neigh_G, out_neigh_G,
-                                   nodes_H, edges_H):
+# function: evaluate semantic feasability for directed extension ---------------
+cdef cpp_bool directed_semantic_feasibility(int & node1,
+                                            int & node2,
+                                            cpp_vector[int] & current_match_G,
+                                            cpp_map[int, int] & forward_match,
+                                            cpp_map[int, int] & nodes_G,
+                                            cpp_map[int, int] & nodes_H,
+                                            cpp_map[int, cpp_vector[int]] & in_neigh_G,
+                                            cpp_map[int, cpp_vector[int]] & out_neigh_G,
+                                            cpp_map[cpp_pair[int, int], int] & edges_G,
+                                            cpp_map[cpp_pair[int, int], int] & edges_H) noexcept:
     # local variables
-    cdef int a1 = 0
-    cdef int a2 = 0
-    cdef int b1 = 0
-    cdef int b2 = 0
     cdef int node = 0
-    cdef list in_neighbors_match_G = []
-    cdef list out_neighbors_match_G = []
+    cdef int mapped = 0
+    cdef cpp_pair[int, int] labeled_edge_G
+    cdef cpp_pair[int, int] labeled_edge_H
+    cdef cpp_vector[int] in_neighbors_match_G
+    cdef cpp_vector[int] out_neighbors_match_G
     # compare vertex-labels
-    if(not nodes_G[node1] == nodes_H[node2]):
+    if(nodes_G[node1] != nodes_H[node2]):
         return(False)
     # compare loop-labels
-    if(node1 in in_neigh_G[node1]):
-        if(not edges_G[(node1, node1)] == edges_H[(node2, node2)]):
+    if(find(in_neigh_G[node1].begin(), in_neigh_G[node1].end(), node1) != in_neigh_G[node1].end()):
+        labeled_edge_G.first = node1
+        labeled_edge_G.second = node1
+        labeled_edge_H.first = node2
+        labeled_edge_H.second = node2
+        if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
             return(False)
-    # compare non-loop edge-labels
-    in_neighbors_match_G = [node for node in in_neigh_G[node1] if(node in current_match_G)]
+    # compare non-loop in-edge-labels
+    for node in in_neigh_G[node1]:
+        if(find(current_match_G.begin(), current_match_G.end(), node) != current_match_G.end()):
+            in_neighbors_match_G.push_back(node)
     for node in in_neighbors_match_G:
-        if(not edges_G[(node, node1)] == edges_H[(forward_match[node], node2)]):
+        # edge in G with only one end in match
+        labeled_edge_G.first = node
+        labeled_edge_G.second = node1
+        labeled_edge_H.first = forward_match[node]
+        labeled_edge_H.second = node2
+        if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
             return(False)
-    out_neighbors_match_G = [node for node in out_neigh_G[node1] if(node in current_match_G)]
+    # compare non-loop out-edge-labels
+    for node in out_neigh_G[node1]:
+        if(find(current_match_G.begin(), current_match_G.end(), node) != current_match_G.end()):
+            out_neighbors_match_G.push_back(node)
     for node in out_neighbors_match_G:
-        if(not edges_G[(node1, node)] == edges_H[(node2, forward_match[node])]):
+        # edge in G with only one end in match
+        labeled_edge_G.first = node1
+        labeled_edge_G.second = node
+        labeled_edge_H.first = node2
+        labeled_edge_H.second = forward_match[node]
+        if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
             return(False)
     # end of function
     return(True)
