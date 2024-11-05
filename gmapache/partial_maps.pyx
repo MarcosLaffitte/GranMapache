@@ -238,16 +238,16 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
 
 
 # function: core routine of VF2-like approach ----------------------------------
-cdef cpp_vector[cpp_vector[cpp_pair[int, int]]] undirected_maximum_connected_extensions(cpp_map[int, int] & nodes_G,
-                                                                                        cpp_map[int, int] & nodes_H,
-                                                                                        cpp_map[int, cpp_vector[int]] & neigh_G,
-                                                                                        cpp_map[int, cpp_vector[int]] & neigh_H,
-                                                                                        cpp_map[cpp_pair[int, int], int] & edges_G,
-                                                                                        cpp_map[cpp_pair[int, int], int] & edges_H,
-                                                                                        cpp_map[int, int] & total_order,
-                                                                                        long unsigned int & expected_order,
-                                                                                        cpp_vector[cpp_pair[int, int]] current_match,
-                                                                                        cpp_vector[cpp_vector[cpp_pair[int, int]]] & all_matches):
+cdef void undirected_maximum_connected_extensions(cpp_map[int, int] & nodes_G,
+                                                  cpp_map[int, int] & nodes_H,
+                                                  cpp_map[int, cpp_vector[int]] & neigh_G,
+                                                  cpp_map[int, cpp_vector[int]] & neigh_H,
+                                                  cpp_map[cpp_pair[int, int], int] & edges_G,
+                                                  cpp_map[cpp_pair[int, int], int] & edges_H,
+                                                  cpp_map[int, int] & total_order,
+                                                  long unsigned int & expected_order,
+                                                  cpp_vector[cpp_pair[int, int]] current_match,
+                                                  cpp_vector[cpp_vector[cpp_pair[int, int]]] & all_matches) noexcept:
     # local variables (cython)
     cdef long unsigned int new_score = 0
     cdef long unsigned int old_score = 0
@@ -325,7 +325,6 @@ cdef cpp_vector[cpp_vector[cpp_pair[int, int]]] undirected_maximum_connected_ext
                                                             new_match,
                                                             all_matches)
     # end of function
-    return(all_matches)
 
 
 
@@ -334,7 +333,7 @@ cdef cpp_vector[cpp_pair[int, int]] undirected_candidates(cpp_vector[int] & curr
                                                           cpp_vector[int] & current_match_H,
                                                           cpp_map[int, cpp_vector[int]] & neigh_G,
                                                           cpp_map[int, cpp_vector[int]] & neigh_H,
-                                                          cpp_map[int, int] & total_order):
+                                                          cpp_map[int, int] & total_order) noexcept:
     # local variables
     cdef int node = 0
     cdef int node1 = 0
@@ -384,7 +383,7 @@ cdef cpp_bool undirected_syntactic_feasibility(int & node1,
                                                cpp_vector[int] & current_match_H,
                                                cpp_map[int, int] & forward_match,
                                                cpp_map[int, cpp_vector[int]] & neigh_G,
-                                               cpp_map[int, cpp_vector[int]] & neigh_H):
+                                               cpp_map[int, cpp_vector[int]] & neigh_H) noexcept:
     # local variables
     cdef int node = 0
     cdef int mapped = 0
@@ -429,7 +428,7 @@ cdef cpp_bool undirected_semantic_feasibility(int & node1,
                                               cpp_map[int, int] & nodes_H,
                                               cpp_map[int, cpp_vector[int]] & neigh_G,
                                               cpp_map[cpp_pair[int, int], int] & edges_G,
-                                              cpp_map[cpp_pair[int, int], int] & edges_H):
+                                              cpp_map[cpp_pair[int, int], int] & edges_H) noexcept:
     # local variables
     cdef int node = 0
     cdef int mapped = 0
