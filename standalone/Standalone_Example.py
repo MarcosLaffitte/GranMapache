@@ -37,8 +37,9 @@
 #     is our intention for this package in the future.                         #
 #                                                                              #
 #   * not installing the package inside an anaconda enviornment or python      #
-#     environment may poduce dependency erros, both incompatibilities but      #
-#     also runtime errors.                                                     #
+#     environment may produce unexpected dependency erros, which my produce    #
+#     incompatibility warnings and also runtime errors, therefore our          #
+#     recommendation for installing this package inside an environment.        #
 #                                                                              #
 ################################################################################
 
@@ -48,7 +49,6 @@
 
 # already in python ------------------------------------------------------------
 import time
-from copy import deepcopy
 
 
 # not in python ----------------------------------------------------------------
@@ -66,12 +66,12 @@ import gmapache as gm
 
 
 # We build two networkx graphs G and H with arbitrary vertex labels and edge labels, and define
-# a "reaction center" as an injective match between the graphs, also refered to as "anchor", given
+# a "partial map" as an injective match between the graphs, also refered to as "anchor" given
 # as a list of unrepeated 2-tuples (x, y) of vertices x in G and y in H. This data is passed to the
-# method gm.maximum_connected_extensions(G, H, reaction_center), which extends the reaction center
+# method gm.maximum_connected_extensions(G, H, partial_map), which extends the partial map
 # and returns two results: (1) a list of all the possible maximum extensions of the reaction center
-# also expressed as matches, and (2) a boolean value indicating if the extension for a bijection
-# and equivalentely if the "anchor" was a good partial map.
+# also expressed as matches, and (2) a boolean value indicating if the extensions form bijections
+# and, equivalentely, if the "anchor" was a good partial map.
 
 
 # buid first test graph for maximum connected extension
@@ -125,25 +125,25 @@ H.add_edge("h8", "h9", bond = "triple", strength = "weak")
 
 
 # buid test anchor for maximum connected extension
-reaction_center = [("g1", "h1"),
-                   ("g2", "h2"),
-                   ("g3", "h3"),
-                   ("g4", "h4"),
-                   ("g5", "h5"),
-                   ("g6", "h6")]
+partial_map = [("g1", "h1"),
+               ("g2", "h2"),
+               ("g3", "h3"),
+               ("g4", "h4"),
+               ("g5", "h5"),
+               ("g6", "h6")]
 
 
 # testing maximum connected extension
 initial_time = time.time()
-all_extensions, good_center = gm.maximum_connected_extensions(G, H, reaction_center)
+all_extensions, good_map = gm.maximum_connected_extensions(G, H, partial_map)
 final_time = time.time()
 print("\n")
 print("***** Given anchor:")
-print(reaction_center)
+print(partial_map)
 print("***** Got extensions:")
 print(all_extensions)
-print("***** Was anchor a good reaction center?")
-print(good_center)
+print("***** Was anchor a good partial map?")
+print(good_map)
 print("***** Running time [s]")
 print(final_time - initial_time)
 print("\n")
