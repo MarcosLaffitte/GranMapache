@@ -130,6 +130,7 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     cdef float scalation_value = 0
     cdef long unsigned int expected_order = 0
     cdef cpp_vector[cpp_pair[int, int]] encoded_anchor
+    cdef cpp_vector[cpp_pair[int, int]] each_extension
     cdef cpp_vector[cpp_vector[cpp_pair[int, int]]] encoded_extensions
     cdef cpp_map[int, int] total_order
     cdef cpp_map[int, int] nodes_G
