@@ -276,7 +276,8 @@ cdef void undirected_maximum_connected_extensions(cpp_map[int, int] & nodes_G,
             current_match_H.push_back(each_pair.second)
             forward_match[each_pair.first] = each_pair.second
         # get candidate pairs
-        candidates = undirected_candidates(current_match_G,
+        candidates = undirected_candidates(current_match,
+                                           current_match_G,
                                            current_match_H,
                                            neigh_G,
                                            neigh_H,
@@ -322,7 +323,8 @@ cdef void undirected_maximum_connected_extensions(cpp_map[int, int] & nodes_G,
 
 
 # function: get candidate pairs for undirected extension search ----------------
-cdef cpp_vector[cpp_pair[int, int]] undirected_candidates(cpp_vector[int] & current_match_G,
+cdef cpp_vector[cpp_pair[int, int]] undirected_candidates(cpp_vector[cpp_pair[int, int]] & current_match,
+                                                          cpp_vector[int] & current_match_G,
                                                           cpp_vector[int] & current_match_H,
                                                           cpp_map[int, cpp_vector[int]] & neigh_G,
                                                           cpp_map[int, cpp_vector[int]] & neigh_H,
@@ -332,6 +334,7 @@ cdef cpp_vector[cpp_pair[int, int]] undirected_candidates(cpp_vector[int] & curr
     cdef int node1 = 0
     cdef int node2 = 0
     cdef int reference_maximum = 0
+    cdef cpp_pair[int, int] each_pair
     cdef cpp_pair[int, int] temp_pair
     cdef cpp_vector[int] valid_G
     cdef cpp_vector[int] valid_H
@@ -341,29 +344,30 @@ cdef cpp_vector[cpp_pair[int, int]] undirected_candidates(cpp_vector[int] & curr
         if(total_order[node] > reference_maximum):
             reference_maximum = total_order[node]
     # get valid sets
-    for node1 in current_match_G:
-        for node2 in neigh_G[node1]:
-            # if not already valid in G
-            if(find(valid_G.begin(), valid_G.end(), node2) == valid_G.end()):
-                # if not yet in match
-                if(find(current_match_G.begin(), current_match_G.end(), node2) == current_match_G.end()):
-                    valid_G.push_back(node2)
-    for node1 in current_match_H:
-        for node2 in neigh_H[node1]:
-            # if not already valid in H
-            if(find(valid_H.begin(), valid_H.end(), node2) == valid_H.end()):
-                # if not yet in match
-                if(find(current_match_H.begin(), current_match_H.end(), node2) == current_match_H.end()):
-                    # if total order greater than in match
-                    if(total_order[node2] > reference_maximum):
-                        valid_H.push_back(node2)
-    # get candidates
-    if((not valid_G.empty()) and (not valid_H.empty())):
-        for node1 in valid_G:
-            for node2 in valid_H:
-                temp_pair.first = node1
-                temp_pair.second = node2
-                candidate_pairs.push_back(temp_pair)
+    for each_pair in current_match:
+        # reinitialize valid neighbors
+        valid_G.clear()
+        valid_H.clear()
+        # get valid neighbors in G
+        for node in neigh_G[each_pair.first]:
+            # if not yet in match
+            if(find(current_match_G.begin(), current_match_G.end(), node) == current_match_G.end()):
+                valid_G.push_back(node)
+        # get valid neighbors in H
+        for node in neigh_H[each_pair.second]:
+            # if not yet in match
+            if(find(current_match_H.begin(), current_match_H.end(), node) == current_match_H.end()):
+                # if total order greater than in match
+                if(total_order[node] > reference_maximum):
+                    valid_H.push_back(node)
+        # make product of valid neighbors
+        if((not valid_G.empty()) and (not valid_H.empty())):
+            for node1 in valid_G:
+                for node2 in valid_H:
+                    temp_pair.first = node1
+                    temp_pair.second = node2
+                    if(find(candidate_pairs.begin(), candidate_pairs.end(), temp_pair) == candidate_pairs.end()):
+                        candidate_pairs.push_back(temp_pair)
     # end of function
     return(candidate_pairs)
 
@@ -517,7 +521,8 @@ cdef void directed_maximum_connected_extensions(cpp_map[int, int] & nodes_G,
             current_match_H.push_back(each_pair.second)
             forward_match[each_pair.first] = each_pair.second
         # get candidate pairs
-        candidates = directed_candidates(current_match_G,
+        candidates = directed_candidates(current_match,
+                                         current_match_G,
                                          current_match_H,
                                          in_neigh_G,
                                          in_neigh_H,
@@ -570,7 +575,8 @@ cdef void directed_maximum_connected_extensions(cpp_map[int, int] & nodes_G,
 
 
 # function: get candidate pairs for directed extension search ------------------
-cdef cpp_vector[cpp_pair[int, int]] directed_candidates(cpp_vector[int] & current_match_G,
+cdef cpp_vector[cpp_pair[int, int]] directed_candidates(cpp_vector[cpp_pair[int, int]] current_match,
+                                                        cpp_vector[int] & current_match_G,
                                                         cpp_vector[int] & current_match_H,
                                                         cpp_map[int, cpp_vector[int]] & in_neigh_G,
                                                         cpp_map[int, cpp_vector[int]] & in_neigh_H,
@@ -583,46 +589,62 @@ cdef cpp_vector[cpp_pair[int, int]] directed_candidates(cpp_vector[int] & curren
     cdef int node2 = 0
     cdef int reference_maximum = 0
     cdef cpp_pair[int, int] temp_pair
+    cdef cpp_pair[int, int] each_pair
     cdef cpp_vector[int] valid_G
     cdef cpp_vector[int] valid_H
-    cdef cpp_vector[int] temp_vector
-    cdef cpp_vector[int] all_neighbors_G
-    cdef cpp_vector[int] all_neighbors_H
     cdef cpp_vector[cpp_pair[int, int]] candidate_pairs
     # get maximum value of total order in match
     for node in current_match_H:
         if(total_order[node] > reference_maximum):
             reference_maximum = total_order[node]
     # get valid sets
-    for node1 in current_match_G:
-        all_neighbors_G = in_neigh_G[node1]
-        temp_vector = out_neigh_G[node1]
-        all_neighbors_G.insert(all_neighbors_G.end(), temp_vector.begin(), temp_vector.end())
-        for node2 in all_neighbors_G:
-            # if not already valid in G
-            if(find(valid_G.begin(), valid_G.end(), node2) == valid_G.end()):
-                # if not yet in match
-                if(find(current_match_G.begin(), current_match_G.end(), node2) == current_match_G.end()):
-                    valid_G.push_back(node2)
-    for node1 in current_match_H:
-        all_neighbors_H = in_neigh_H[node1]
-        temp_vector = out_neigh_H[node1]
-        all_neighbors_H.insert(all_neighbors_H.end(), temp_vector.begin(), temp_vector.end())
-        for node2 in all_neighbors_H:
-            # if not already valid in H
-            if(find(valid_H.begin(), valid_H.end(), node2) == valid_H.end()):
-                # if not yet in match
-                if(find(current_match_H.begin(), current_match_H.end(), node2) == current_match_H.end()):
-                    # if total order greater than in match
-                    if(total_order[node2] > reference_maximum):
-                        valid_H.push_back(node2)
-    # get candidates
-    if((not valid_G.empty()) and (not valid_H.empty())):
-        for node1 in valid_G:
-            for node2 in valid_H:
-                temp_pair.first = node1
-                temp_pair.second = node2
-                candidate_pairs.push_back(temp_pair)
+    for each_pair in current_match:
+        # reinitialize valid neighbors
+        valid_G.clear()
+        valid_H.clear()
+        # get valid in-neighbors in G
+        for node in in_neigh_G[each_pair.first]:
+            # if not yet in match
+            if(find(current_match_G.begin(), current_match_G.end(), node) == current_match_G.end()):
+                valid_G.push_back(node)
+        # get valid in-neighbors in H
+        for node in in_neigh_H[each_pair.second]:
+            # if not yet in match
+            if(find(current_match_H.begin(), current_match_H.end(), node) == current_match_H.end()):
+                # if total order greater than in match
+                if(total_order[node] > reference_maximum):
+                    valid_H.push_back(node)
+        # make product of valid in-neighbors
+        if((not valid_G.empty()) and (not valid_H.empty())):
+            for node1 in valid_G:
+                for node2 in valid_H:
+                    temp_pair.first = node1
+                    temp_pair.second = node2
+                    if(find(candidate_pairs.begin(), candidate_pairs.end(), temp_pair) == candidate_pairs.end()):
+                        candidate_pairs.push_back(temp_pair)
+        # reinitialize valid neighbors
+        valid_G.clear()
+        valid_H.clear()
+        # get valid out-neighbors in G
+        for node in out_neigh_G[each_pair.first]:
+            # if not yet in match
+            if(find(current_match_G.begin(), current_match_G.end(), node) == current_match_G.end()):
+                valid_G.push_back(node)
+        # get valid out-neighbors in H
+        for node in out_neigh_H[each_pair.second]:
+            # if not yet in match
+            if(find(current_match_H.begin(), current_match_H.end(), node) == current_match_H.end()):
+                # if total order greater than in match
+                if(total_order[node] > reference_maximum):
+                    valid_H.push_back(node)
+        # make product of valid out-neighbors
+        if((not valid_G.empty()) and (not valid_H.empty())):
+            for node1 in valid_G:
+                for node2 in valid_H:
+                    temp_pair.first = node1
+                    temp_pair.second = node2
+                    if(find(candidate_pairs.begin(), candidate_pairs.end(), temp_pair) == candidate_pairs.end()):
+                        candidate_pairs.push_back(temp_pair)
     # end of function
     return(candidate_pairs)
 
