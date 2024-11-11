@@ -13,16 +13,13 @@ Alignments and other Maps between Graphs
 ## ToDo / Working
 
 > done: integerization
-
 > done: good-bad map with maximum extension
-
 > done: add wheel for packages
-
 > done: statically type python objects
-
 > done: statically type counters and bounds in for loops
-
 > done: migrating partial_maps into C++ objects
+
+- working: making isomorphism routines for unidrected and directed labeled graphs.
 
 - modules: integerization, partial_maps, common_subgraphs, alignment, isomorphism, rebalancing, verbosity, visualization, (maybe) classes, (maybe) tests.
 
