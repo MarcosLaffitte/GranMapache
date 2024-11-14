@@ -24,7 +24,7 @@ Alignments and other Maps between Graphs
 
 > done: migrating partial_maps into C++ objects
 
-- working: simplifying code with C++ structs
+> done: simplifying code with C++ structs
 
 - working: making isomorphism routines for unidrected and directed labeled graphs.
 
