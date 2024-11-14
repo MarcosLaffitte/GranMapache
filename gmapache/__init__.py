@@ -8,6 +8,12 @@ from gmapache.integerization import *
 # partial maps ---------------------------------------------
 from gmapache.partial_maps import *
 
+
+# WORKING:
+# isomorphisms ---------------------------------------------
+# from gmapache.isomorphisms import *
+
+
 # import submodules ########################################
 # submodule: common subgraphs ------------------------------
 # from gmapache import submodule
