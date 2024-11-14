@@ -43,6 +43,27 @@ from .integerization import encode_graphs, decode_graphs, encode_match, decode_m
 
 
 
+# C/C++ structs ################################################################
+
+
+
+# struct: undirected graph ---------------------------------------------------
+cdef struct partial_maps_undirected_graph:
+    cpp_map[int, int] nodes
+    cpp_map[cpp_pair[int, int], int] edges
+    cpp_map[int, cpp_vector[int]] neighbors
+
+
+
+# struct: directed graph -------------------------------------------------------
+cdef struct partial_maps_directed_graph:
+    cpp_map[int, int] nodes
+    cpp_map[cpp_pair[int, int], int] edges
+    cpp_map[int, cpp_vector[int]] in_neighbors
+    cpp_map[int, cpp_vector[int]] out_neighbors
+
+
+
 # algorithms ###################################################################
 
 
@@ -52,20 +73,20 @@ from .integerization import encode_graphs, decode_graphs, encode_match, decode_m
 
 
 # function: callable wrapper for the maximum connected extensions --------------
-def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGraph
-                                 H = nx.Graph(),       # can also receive a DiGraph
-                                 input_anchor = []):   # should be non-empty list
+def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
+                                 nx_H = nx.Graph(),      # can be nx.DiGraph
+                                 input_anchor = []):     # should be non-empty list
     # description
     """
-    > description: receives two graphs G and H, and a match between them (here called
-    anchor), and uses a VF2-like approach to obtain the maximum extensions of the anchor
-    producing connected common subgraphs (not necessarily maximum themselves). The anchor
-    alone also produces a subgraph, which may not be an induced common subgraph, but
-    the subgraph produced by any extension after removing the achor is always induced.
+    > description: receives two networkx graphs G and H, and a match between them (here
+    called anchor), and uses a VF2-like approach to obtain the maximum extensions of the
+    anchor producing connected common subgraphs (not necessarily maximum themselves). The
+    anchor alone also produces a subgraph, which may not be an induced common subgraph,
+    but the subgraph produced by any extension after removing the achor is always induced.
 
     > input:
-    * G - first networkx (di)graph being matched.
-    * H - second networkx (di)graph being matched.
+    * nx_G - first networkx (di)graph being matched.
+    * nx_H - second networkx (di)graph being matched.
     * input_anchor - inyective map as a non-empty list of 2-tuples (x, y) of nodes x
     from G and y from H. An exception is raised if the anchor is empty.
 
@@ -92,31 +113,31 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     test_tuple = (0, 0)
     test_undir = nx.Graph()
     test_dir = nx.DiGraph()
-    if(type(G) not in [type(test_undir), type(test_dir)]):
-        raise(ValueError("first argument must be a networkx graph or digraph."))
-    if(type(H) not in [type(test_undir), type(test_dir)]):
-        raise(ValueError("second argument must be a networkx graph or digraph."))
-    if((nx.is_directed(G)) and (not nx.is_directed(H))):
-        raise(ValueError("input graphs must be both directed or both undirected."))
-    if((not nx.is_directed(G)) and (nx.is_directed(H))):
-        raise(ValueError("input graphs must be both directed or both undirected."))
+    if(type(nx_G) not in [type(test_undir), type(test_dir)]):
+        raise(ValueError("gmapache: first argument must be a networkx graph or digraph."))
+    if(type(nx_H) not in [type(test_undir), type(test_dir)]):
+        raise(ValueError("gmapache: second argument must be a networkx graph or digraph."))
+    if((nx.is_directed(nx_G)) and (not nx.is_directed(nx_H))):
+        raise(ValueError("gmapache: input graphs must be both directed or both undirected."))
+    if((not nx.is_directed(nx_G)) and (nx.is_directed(nx_H))):
+        raise(ValueError("gmapache: input graphs must be both directed or both undirected."))
     if(not type(input_anchor) in [type(test_list)]):
-        raise(ValueError("third argument must be a non-empty list of 2-tuples."))
+        raise(ValueError("gmapache: third argument must be a non-empty list of 2-tuples."))
     if(len(input_anchor) == 0):
-        raise(ValueError("third argument must be a non-empty list of 2-tuples."))
+        raise(ValueError("gmapache: third argument must be a non-empty list of 2-tuples."))
     for test_entry in input_anchor:
         if(not type(test_entry) in [type(test_tuple)]):
-            raise(ValueError("all elements in input list must be tuples."))
+            raise(ValueError("gmapache: all elements in input list must be tuples."))
         if(not len(test_entry) == 2):
-            raise(ValueError("all tuples in input list must be of lenght 2."))
-        if(test_entry[0] not in list(G.nodes())):
-            raise(ValueError("the input list is matching a vertex not present in the first graph."))
-        if(test_entry[1] not in list(H.nodes())):
-            raise(ValueError("the input list is matching a vertex not present in the second graph."))
+            raise(ValueError("gmapache: all tuples in input list must be of lenght 2."))
+        if(test_entry[0] not in list(nx_G.nodes())):
+            raise(ValueError("gmapache: the input list is matching a vertex not present in the first graph."))
+        if(test_entry[1] not in list(nx_H.nodes())):
+            raise(ValueError("gmapache: the input list is matching a vertex not present in the second graph."))
     if(not len(list(set([x for (x, y) in input_anchor]))) == len(input_anchor)):
-        raise(ValueError("the input list must be an injective map and without repeated elements."))
+        raise(ValueError("gmapache: the input list must be an injective map and without repeated elements."))
     if(not len(list(set([y for (x, y) in input_anchor]))) == len(input_anchor)):
-        raise(ValueError("the input list must be an injective map and without repeated elements."))
+        raise(ValueError("gmapache: the input list must be an injective map and without repeated elements."))
     # output holders
     cdef list extensions = []
     good_anchor = False
@@ -128,21 +149,15 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     cdef int current_limit = 0
     cdef int required_limit = 0
     cdef float scalation_value = 0
-    cdef long unsigned int expected_order = 0
+    cdef size_t expected_order = 0
     cdef cpp_vector[cpp_pair[int, int]] encoded_anchor
     cdef cpp_vector[cpp_pair[int, int]] each_extension
     cdef cpp_vector[cpp_vector[cpp_pair[int, int]]] encoded_extensions
     cdef cpp_map[int, int] total_order
-    cdef cpp_map[int, int] nodes_G
-    cdef cpp_map[int, int] nodes_H
-    cdef cpp_map[int, cpp_vector[int]] neigh_G        # only used if undirected
-    cdef cpp_map[int, cpp_vector[int]] neigh_H        # only used if undirected
-    cdef cpp_map[int, cpp_vector[int]] in_neigh_G     # only used if directed
-    cdef cpp_map[int, cpp_vector[int]] in_neigh_H     # only used if directed
-    cdef cpp_map[int, cpp_vector[int]] out_neigh_G    # only used if directed
-    cdef cpp_map[int, cpp_vector[int]] out_neigh_H    # only used if directed
-    cdef cpp_map[cpp_pair[int, int], int] edges_G
-    cdef cpp_map[cpp_pair[int, int], int] edges_H
+    cdef partial_maps_undirected_graph undirected_G
+    cdef partial_maps_undirected_graph undirected_H
+    cdef partial_maps_directed_graph directed_G
+    cdef partial_maps_directed_graph directed_H
     # local variables (python)
     cdef list encoded_graphs = []
     cdef list inside_anchor_H = []
@@ -152,28 +167,32 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
     cdef dict encoded_node_label = dict()
     cdef dict encoded_edge_label = dict()
     # encode graphs
-    encoded_graphs, encoded_node_names, encoded_node_label, encoded_edge_label = encode_graphs([G, H])
+    encoded_graphs, encoded_node_names, encoded_node_label, encoded_edge_label = encode_graphs([nx_G, nx_H])
     # encode match
     encoded_anchor = encode_match(input_anchor, encoded_node_names)
     # prepare nodes
-    nodes_G = {node:info["GMNL"] for (node, info) in encoded_graphs[0].nodes(data = True)}
-    nodes_H = {node:info["GMNL"] for (node, info) in encoded_graphs[1].nodes(data = True)}
+    if(nx.is_directed(nx_G)):
+        directed_G.nodes = {node:info["GMNL"] for (node, info) in encoded_graphs[0].nodes(data = True)}
+        directed_H.nodes = {node:info["GMNL"] for (node, info) in encoded_graphs[1].nodes(data = True)}
+    else:
+        undirected_G.nodes = {node:info["GMNL"] for (node, info) in encoded_graphs[0].nodes(data = True)}
+        undirected_H.nodes = {node:info["GMNL"] for (node, info) in encoded_graphs[1].nodes(data = True)}
     # prepare edges
-    if(nx.is_directed(G)):
-        edges_G = {(node1, node2):info["GMEL"] for (node1, node2, info) in encoded_graphs[0].edges(data = True)}
-        edges_H = {(node1, node2):info["GMEL"] for (node1, node2, info) in encoded_graphs[1].edges(data = True)}
+    if(nx.is_directed(nx_G)):
+        directed_G.edges = {(node1, node2):info["GMEL"] for (node1, node2, info) in encoded_graphs[0].edges(data = True)}
+        directed_H.edges = {(node1, node2):info["GMEL"] for (node1, node2, info) in encoded_graphs[1].edges(data = True)}
     else:
-        edges_G = {tuple(sorted([node1, node2])):info["GMEL"] for (node1, node2, info) in encoded_graphs[0].edges(data = True)}
-        edges_H = {tuple(sorted([node1, node2])):info["GMEL"] for (node1, node2, info) in encoded_graphs[1].edges(data = True)}
+        undirected_G.edges = {tuple(sorted([node1, node2])):info["GMEL"] for (node1, node2, info) in encoded_graphs[0].edges(data = True)}
+        undirected_H.edges = {tuple(sorted([node1, node2])):info["GMEL"] for (node1, node2, info) in encoded_graphs[1].edges(data = True)}
     # prepare neighbors
-    if(nx.is_directed(G)):
-        in_neigh_G = {node:list(encoded_graphs[0].predecessors(node)) for node in list(encoded_graphs[0].nodes())}
-        in_neigh_H = {node:list(encoded_graphs[1].predecessors(node)) for node in list(encoded_graphs[1].nodes())}
-        out_neigh_G = {node:list(encoded_graphs[0].neighbors(node)) for node in list(encoded_graphs[0].nodes())}
-        out_neigh_H = {node:list(encoded_graphs[1].neighbors(node)) for node in list(encoded_graphs[1].nodes())}
+    if(nx.is_directed(nx_G)):
+        directed_G.in_neighbors = {node:list(encoded_graphs[0].predecessors(node)) for node in list(encoded_graphs[0].nodes())}
+        directed_H.in_neighbors = {node:list(encoded_graphs[1].predecessors(node)) for node in list(encoded_graphs[1].nodes())}
+        directed_G.out_neighbors = {node:list(encoded_graphs[0].neighbors(node)) for node in list(encoded_graphs[0].nodes())}
+        directed_H.out_neighbors = {node:list(encoded_graphs[1].neighbors(node)) for node in list(encoded_graphs[1].nodes())}
     else:
-        neigh_G = {node:list(encoded_graphs[0].neighbors(node)) for node in list(encoded_graphs[0].nodes())}
-        neigh_H = {node:list(encoded_graphs[1].neighbors(node)) for node in list(encoded_graphs[1].nodes())}
+        undirected_G.neighbors = {node:list(encoded_graphs[0].neighbors(node)) for node in list(encoded_graphs[0].nodes())}
+        undirected_H.neighbors = {node:list(encoded_graphs[1].neighbors(node)) for node in list(encoded_graphs[1].nodes())}
     # get total order for VF2-like analysis
     inside_anchor_H = [node2 for (node1, node2) in encoded_anchor]
     outside_anchor_H = [node for node in list(encoded_graphs[1].nodes()) if(node not in inside_anchor_H)]
@@ -184,43 +203,33 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
         counter = counter + 1
         total_order[node] = counter
     # get expected order
-    expected_order = min([len(nodes_G), len(nodes_H)])
+    expected_order = min([nx_G.order(), nx_H.order()])
     # set recursion limit
     scalation_value = 1.5
-    required_limit = max([len(nodes_G), len(nodes_H)])
+    required_limit = max([nx_G.order(), nx_H.order()])
     current_limit = getrecursionlimit()
     if(current_limit < (scalation_value * required_limit)):
         setrecursionlimit(int(scalation_value * required_limit))
     # get maximum extensions
-    if(nx.is_directed(G)):
-        directed_maximum_connected_extensions(nodes_G,
-                                              nodes_H,
-                                              in_neigh_G,
-                                              in_neigh_H,
-                                              out_neigh_G,
-                                              out_neigh_H,
-                                              edges_G,
-                                              edges_H,
-                                              total_order,
-                                              expected_order,
+    if(nx.is_directed(nx_G)):
+        directed_maximum_connected_extensions(expected_order,
                                               encoded_anchor,
+                                              directed_G,
+                                              directed_H,
+                                              total_order,
                                               encoded_extensions)
     else:
-        undirected_maximum_connected_extensions(nodes_G,
-                                                nodes_H,
-                                                neigh_G,
-                                                neigh_H,
-                                                edges_G,
-                                                edges_H,
-                                                total_order,
-                                                expected_order,
+        undirected_maximum_connected_extensions(expected_order,
                                                 encoded_anchor,
+                                                total_order,
+                                                undirected_G,
+                                                undirected_H,
                                                 encoded_extensions)
     # decode maximum extensions
     for each_extension in encoded_extensions:
         extensions.append(decode_match(list(each_extension), encoded_node_names))
     # check if the anchor was a good partial map
-    if((len(extensions[0]) == len(nodes_G)) and (len(extensions[0]) == len(nodes_H))):
+    if((len(extensions[0]) == nx_G.order()) and (len(extensions[0]) == nx_H.order())):
         good_anchor = True
     # end of function
     return(extensions, good_anchor)
@@ -232,19 +241,15 @@ def maximum_connected_extensions(G = nx.Graph(),       # can also receive a DiGr
 
 
 # function: core routine of VF2-like undirected approach -----------------------
-cdef void undirected_maximum_connected_extensions(cpp_map[int, int] & nodes_G,
-                                                  cpp_map[int, int] & nodes_H,
-                                                  cpp_map[int, cpp_vector[int]] & neigh_G,
-                                                  cpp_map[int, cpp_vector[int]] & neigh_H,
-                                                  cpp_map[cpp_pair[int, int], int] & edges_G,
-                                                  cpp_map[cpp_pair[int, int], int] & edges_H,
-                                                  cpp_map[int, int] & total_order,
-                                                  long unsigned int & expected_order,
+cdef void undirected_maximum_connected_extensions(size_t expected_order,
                                                   cpp_vector[cpp_pair[int, int]] current_match,
+                                                  cpp_map[int, int] & total_order,
+                                                  partial_maps_undirected_graph & G,
+                                                  partial_maps_undirected_graph & H,
                                                   cpp_vector[cpp_vector[cpp_pair[int, int]]] & all_matches) noexcept:
     # local variables (cython)
-    cdef long unsigned int new_score = 0
-    cdef long unsigned int old_score = 0
+    cdef size_t new_score = 0
+    cdef size_t old_score = 0
     cdef cpp_bool semantic_feasibility = False
     cdef cpp_bool syntactic_feasibility = False
     cdef cpp_pair[int, int] each_pair
@@ -279,8 +284,8 @@ cdef void undirected_maximum_connected_extensions(cpp_map[int, int] & nodes_G,
         candidates = undirected_candidates(current_match,
                                            current_match_G,
                                            current_match_H,
-                                           neigh_G,
-                                           neigh_H,
+                                           G.neighbors,
+                                           H.neighbors,
                                            total_order)
         # evaluate candidates
         for each_pair in candidates:
@@ -290,33 +295,29 @@ cdef void undirected_maximum_connected_extensions(cpp_map[int, int] & nodes_G,
                                                                      current_match_G,
                                                                      current_match_H,
                                                                      forward_match,
-                                                                     neigh_G,
-                                                                     neigh_H)
+                                                                     G.neighbors,
+                                                                     H.neighbors)
             if(syntactic_feasibility):
                 # evaluate semantic feasibility
                 semantic_feasibility = undirected_semantic_feasibility(each_pair.first,
                                                                        each_pair.second,
                                                                        current_match_G,
                                                                        forward_match,
-                                                                       nodes_G,
-                                                                       nodes_H,
-                                                                       neigh_G,
-                                                                       edges_G,
-                                                                       edges_H)
+                                                                       G.nodes,
+                                                                       H.nodes,
+                                                                       G.neighbors,
+                                                                       G.edges,
+                                                                       H.edges)
                 if(semantic_feasibility):
                     # build new match
                     new_match = current_match
                     new_match.push_back(each_pair)
                     # extend match
-                    undirected_maximum_connected_extensions(nodes_G,
-                                                            nodes_H,
-                                                            neigh_G,
-                                                            neigh_H,
-                                                            edges_G,
-                                                            edges_H,
-                                                            total_order,
-                                                            expected_order,
+                    undirected_maximum_connected_extensions(expected_order,
                                                             new_match,
+                                                            total_order,
+                                                            G,
+                                                            H,
                                                             all_matches)
     # end of function
 
@@ -374,8 +375,8 @@ cdef cpp_vector[cpp_pair[int, int]] undirected_candidates(cpp_vector[cpp_pair[in
 
 
 # function: evaluate syntactic feasability for undirected extension ------------
-cdef cpp_bool undirected_syntactic_feasibility(int & node1,
-                                               int & node2,
+cdef cpp_bool undirected_syntactic_feasibility(int node1,
+                                               int node2,
                                                cpp_vector[int] & current_match_G,
                                                cpp_vector[int] & current_match_H,
                                                cpp_map[int, int] & forward_match,
@@ -417,8 +418,8 @@ cdef cpp_bool undirected_syntactic_feasibility(int & node1,
 
 
 # function: evaluate semantic feasability for undirected extension -------------
-cdef cpp_bool undirected_semantic_feasibility(int & node1,
-                                              int & node2,
+cdef cpp_bool undirected_semantic_feasibility(int node1,
+                                              int node2,
                                               cpp_vector[int] & current_match_G,
                                               cpp_map[int, int] & forward_match,
                                               cpp_map[int, int] & nodes_G,
@@ -475,21 +476,15 @@ cdef cpp_bool undirected_semantic_feasibility(int & node1,
 
 
 # function: core routine of VF2-like directed approach -------------------------
-cdef void directed_maximum_connected_extensions(cpp_map[int, int] & nodes_G,
-                                                cpp_map[int, int] & nodes_H,
-                                                cpp_map[int, cpp_vector[int]] & in_neigh_G,
-                                                cpp_map[int, cpp_vector[int]] & in_neigh_H,
-                                                cpp_map[int, cpp_vector[int]] & out_neigh_G,
-                                                cpp_map[int, cpp_vector[int]] & out_neigh_H,
-                                                cpp_map[cpp_pair[int, int], int] & edges_G,
-                                                cpp_map[cpp_pair[int, int], int] & edges_H,
-                                                cpp_map[int, int] & total_order,
-                                                long unsigned int & expected_order,
+cdef void directed_maximum_connected_extensions(size_t expected_order,
                                                 cpp_vector[cpp_pair[int, int]] current_match,
+                                                partial_maps_directed_graph & G,
+                                                partial_maps_directed_graph & H,
+                                                cpp_map[int, int] & total_order,
                                                 cpp_vector[cpp_vector[cpp_pair[int, int]]] & all_matches) noexcept:
     # local variables
-    cdef long unsigned int new_score = 0
-    cdef long unsigned int old_score = 0
+    cdef size_t new_score = 0
+    cdef size_t old_score = 0
     cdef cpp_bool semantic_feasibility = False
     cdef cpp_bool syntactic_feasibility = False
     cdef cpp_pair[int, int] each_pair
@@ -524,10 +519,10 @@ cdef void directed_maximum_connected_extensions(cpp_map[int, int] & nodes_G,
         candidates = directed_candidates(current_match,
                                          current_match_G,
                                          current_match_H,
-                                         in_neigh_G,
-                                         in_neigh_H,
-                                         out_neigh_G,
-                                         out_neigh_H,
+                                         G.in_neighbors,
+                                         H.in_neighbors,
+                                         G.out_neighbors,
+                                         H.out_neighbors,
                                          total_order)
         # evaluate candidates
         for each_pair in candidates:
@@ -537,38 +532,32 @@ cdef void directed_maximum_connected_extensions(cpp_map[int, int] & nodes_G,
                                                                    current_match_G,
                                                                    current_match_H,
                                                                    forward_match,
-                                                                   in_neigh_G,
-                                                                   in_neigh_H,
-                                                                   out_neigh_G,
-                                                                   out_neigh_H)
+                                                                   G.in_neighbors,
+                                                                   H.in_neighbors,
+                                                                   G.out_neighbors,
+                                                                   H.out_neighbors)
             if(syntactic_feasibility):
                 # evaluate semantic feasibility
                 semantic_feasibility = directed_semantic_feasibility(each_pair.first,
                                                                      each_pair.second,
                                                                      current_match_G,
                                                                      forward_match,
-                                                                     nodes_G,
-                                                                     nodes_H,
-                                                                     in_neigh_G,
-                                                                     out_neigh_G,
-                                                                     edges_G,
-                                                                     edges_H)
+                                                                     G.nodes,
+                                                                     H.nodes,
+                                                                     G.in_neighbors,
+                                                                     G.out_neighbors,
+                                                                     G.edges,
+                                                                     H.edges)
                 if(semantic_feasibility):
                     # build new match
                     new_match = current_match
                     new_match.push_back(each_pair)
                     # extend match
-                    directed_maximum_connected_extensions(nodes_G,
-                                                          nodes_H,
-                                                          in_neigh_G,
-                                                          in_neigh_H,
-                                                          out_neigh_G,
-                                                          out_neigh_H,
-                                                          edges_G,
-                                                          edges_H,
-                                                          total_order,
-                                                          expected_order,
+                    directed_maximum_connected_extensions(expected_order,
                                                           new_match,
+                                                          G,
+                                                          H,
+                                                          total_order,
                                                           all_matches)
     # end of function
 
@@ -651,8 +640,8 @@ cdef cpp_vector[cpp_pair[int, int]] directed_candidates(cpp_vector[cpp_pair[int,
 
 
 # function: evaluate syntactic feasability for directed extension --------------
-cdef cpp_bool directed_syntactic_feasibility(int & node1,
-                                             int & node2,
+cdef cpp_bool directed_syntactic_feasibility(int node1,
+                                             int node2,
                                              cpp_vector[int] & current_match_G,
                                              cpp_vector[int] & current_match_H,
                                              cpp_map[int, int] & forward_match,
@@ -714,8 +703,8 @@ cdef cpp_bool directed_syntactic_feasibility(int & node1,
 
 
 # function: evaluate semantic feasability for directed extension ---------------
-cdef cpp_bool directed_semantic_feasibility(int & node1,
-                                            int & node2,
+cdef cpp_bool directed_semantic_feasibility(int node1,
+                                            int node2,
                                             cpp_vector[int] & current_match_G,
                                             cpp_map[int, int] & forward_match,
                                             cpp_map[int, int] & nodes_G,
