@@ -3,20 +3,19 @@
 # - GranMapache: GRAphs-and-Networks MAPping Applications                      #
 #   with Cython and HEuristics                                                 #
 #                                                                              #
-# - Module: isomorphisms                                                       #
+# - Module: integerization                                                     #
 #                                                                              #
-# - Description: analysis of isomorphisms and automorphisms.                   #
+# - Description: convert node "names", node attributes and edge attributes     #
+#   into integers to simplify their comparison in the other rutines            #
 #                                                                              #
 ################################################################################
-
-
 
 # dependencies #################################################################
 
 
 
 # already in python ------------------------------------------------------------
-from sys import getrecursionlimit, setrecursionlimit
+from copy import deepcopy
 
 
 
@@ -27,40 +26,6 @@ import networkx as nx
 
 # cython specifics -------------------------------------------------------------
 import cython
-from libcpp cimport bool as cpp_bool
-from libcpp.map cimport map as cpp_map
-from libcpp.pair cimport pair as cpp_pair
-from libcpp.vector cimport vector as cpp_vector
-cdef extern from "<algorithm>" namespace "std":
-    # find element in vector
-    Iter find[Iter, Const](Iter first, Iter last, Const value)
-
-
-
-# custom dependencies ----------------------------------------------------------
-from .integerization import encode_graphs, decode_graphs, decode_match
-
-
-
-# structures ###################################################################
-
-
-
-# structure: container for the info of candidate matches - undirected ----------
-cdef struct candidates_struct_undirected:
-    cpp_vector[cpp_pair[int, int]] candidates
-    cpp_vector[int] ring_G
-    cpp_vector[int] ring_H
-
-
-
-# structure: container for the info of candidate matches - directed ------------
-cdef struct candidates_struct_directed:
-    cpp_vector[cpp_pair[int, int]] candidates
-    cpp_vector[int] in_ring_G
-    cpp_vector[int] in_ring_H
-    cpp_vector[int] out_ring_G
-    cpp_vector[int] out_ring_H
 
 
 
@@ -68,1038 +33,345 @@ cdef struct candidates_struct_directed:
 
 
 
-# functions - search isomorphisms - wrapper ####################################
+# functions - encoding and decoding of graphs ##################################
 
 
 
-# function: callable wrapper for searching for isomorphisms --------------------
-def search_isomorphisms(G = nx.Graph(),              # can also receive a DiGraph
-                        H = nx.Graph(),              # can also receive a DiGraph
-                        all_isomorphisms = False):   # by default stops when finding one isomorphism (if any)
+# function: homogenizes nodes, node labels, and edgelabels of list of graphs ---
+def encode_graphs(input_graphs = []):
     # description
     """
-    > description: receives two (di-)graphs G and H both directed or both undirected,
-    with the same number of vertices and edges, and a boolean variable indicating if
-    the function should finish when finding only one isomorphism from G to H (if any),
-    or if it should search for all possible isomorphisms from G to H and return them.
+    > description: receives a list of inputs networkx (di)graphs, of the same type
+    directed or undirected, and turns node names, node labels and edge labels into
+    integers, considering their repetitions across the input list. All names and
+    labels are encoded by integers starting from 0. The function returns a list with
+    the copies of the input graphs preserving their order, together with dictionaries
+    mapping integers into the original node_labels, edge_labels, and node_names. There
+    are functions in networkx with similar behavior, but they are made for a given graph,
+    while here we want to take into account all repetitions across the input list.
 
     > input:
-    * G - first networkx (di)graph being matched.
-    * H - second networkx (di)graph being matched.
-    * all_isomorphisms - boolean variable indicating if the function should stop as soon
-    as one isomorphism is found (if any) - this is the default behavior- or if it should
-    search for all possible isomorphisms between the graphs.
+    * input_graphs - list of networkx graphs or digraphs, all of the same type.
 
     > output:
-    * isomorphisms - (possibly empty) list of isomorphisms, each as a list of 2-tuples
-    (x, y) of nodes x from G and y from H representing the one-to-one correspondences
-    preserving adyacency and labels.
-    * found_isomorphism - boolean value indicating if any isomorphism was found and
-    equivalently if G and H are isomorphic labeled (di-)graphs.
-
-    > calls:
-    * .integerization.encode_graphs
-    * .integerization.decode_graphs
-    * .integerization.decode_match
-    * undirected_search_isomorphisms
-    * directed_search_isomorphisms
+    * encoded_graphs - list of transformed graphs.
+    * node_name_encoding - dict from integers into original nodes (hashable objects).
+    * node_label_encoding - dict from integers into original dicts of node labels.
+    * edge_label_encoding - dict from integers into original dicts of edge labels.
     """
     # exception handling and input correctness
+    test_list = [0, 0]
     test_undir = nx.Graph()
     test_dir = nx.DiGraph()
-    test_bool = False
-    if(type(G) not in [type(test_undir), type(test_dir)]):
-        raise(ValueError("first argument must be a networkx graph or digraph."))
-    if(type(H) not in [type(test_undir), type(test_dir)]):
-        raise(ValueError("second argument must be a networkx graph or digraph."))
-    if(type(all_isomorphisms) not in [type(test_bool)]):
-        raise(ValueError("third argument must be a boolean variable."))
-    if((nx.is_directed(G)) and (not nx.is_directed(H))):
-        raise(ValueError("input graphs must be both directed or both undirected."))
-    if((not nx.is_directed(G)) and (nx.is_directed(H))):
-        raise(ValueError("input graphs must be both directed or both undirected."))
-    if((G.order() == 0) or (H.order() == 0)):
-        raise(ValueError("input graphs must have at least one node each."))
-    if(not G.order() == H.order()):
-        raise(ValueError("input graphs must have the same number of nodes."))
-    if(not G.size() == H.size()):
-        raise(ValueError("input graphs must have the same number of edges."))
+    test_count_undir = 0
+    test_count_dir = 0
+    if(not type(input_graphs) in [type(test_list)]):
+        raise(ValueError("gmapache: argument must be a list of networkx graphs or digraphs."))
+    for test_entry in input_graphs:
+        if(type(test_entry) not in [type(test_undir)]):
+            if(type(test_entry) not in [type(test_dir)]):
+                raise(ValueError("gmapache: elements in list must be networkx graphs or digraphs."))
+            else:
+                test_count_dir = test_count_dir + 1
+        else:
+            test_count_undir = test_count_undir + 1
+    if(not test_count_undir == len(input_graphs)):
+        if(not test_count_dir == len(input_graphs)):
+            raise(ValueError("gmapache: elements in list must be networkx graphs or digraphs of the same type."))
     # output holders
-    cdef list isomorphisms = []
-    found_isomorphism = False
-    # local variables (cython)
-    cdef int node = 0
-    cdef int node1 = 0
-    cdef int node2 = 0
-    cdef int counter = 0
-    cdef int current_limit = 0
-    cdef int required_limit = 0
-    cdef float scalation_value = 0
-    cdef long unsigned int expected_order = 0
-    cdef cpp_vector[cpp_pair[int, int]] each_isomorphism
-    cdef cpp_vector[cpp_pair[int, int]] current_match = []
-    cdef cpp_vector[cpp_vector[cpp_pair[int, int]]] encoded_isomorphisms
-    cdef cpp_map[int, int] total_order
-    cdef cpp_map[int, int] nodes_G
-    cdef cpp_map[int, int] nodes_H
-    cdef cpp_map[int, cpp_vector[int]] neigh_G        # only used if undirected
-    cdef cpp_map[int, cpp_vector[int]] neigh_H        # only used if undirected
-    cdef cpp_map[int, cpp_vector[int]] in_neigh_G     # only used if directed
-    cdef cpp_map[int, cpp_vector[int]] in_neigh_H     # only used if directed
-    cdef cpp_map[int, cpp_vector[int]] out_neigh_G    # only used if directed
-    cdef cpp_map[int, cpp_vector[int]] out_neigh_H    # only used if directed
-    cdef cpp_map[cpp_pair[int, int], int] edges_G
-    cdef cpp_map[cpp_pair[int, int], int] edges_H
-    # local variables (python)
     cdef list encoded_graphs = []
-    cdef dict info = dict()
-    cdef dict encoded_node_names = dict()
-    cdef dict encoded_node_label = dict()
-    cdef dict encoded_edge_label = dict()
-    # encode graphs
-    encoded_graphs, encoded_node_names, encoded_node_label, encoded_edge_label = encode_graphs([G, H])
-    # prepare nodes
-    nodes_G = {node:info["GMNL"] for (node, info) in encoded_graphs[0].nodes(data = True)}
-    nodes_H = {node:info["GMNL"] for (node, info) in encoded_graphs[1].nodes(data = True)}
-    # prepare edges
-    if(nx.is_directed(G)):
-        edges_G = {(node1, node2):info["GMEL"] for (node1, node2, info) in encoded_graphs[0].edges(data = True)}
-        edges_H = {(node1, node2):info["GMEL"] for (node1, node2, info) in encoded_graphs[1].edges(data = True)}
-    else:
-        edges_G = {tuple(sorted([node1, node2])):info["GMEL"] for (node1, node2, info) in encoded_graphs[0].edges(data = True)}
-        edges_H = {tuple(sorted([node1, node2])):info["GMEL"] for (node1, node2, info) in encoded_graphs[1].edges(data = True)}
-    # prepare neighbors
-    if(nx.is_directed(G)):
-        in_neigh_G = {node:list(encoded_graphs[0].predecessors(node)) for node in list(encoded_graphs[0].nodes())}
-        in_neigh_H = {node:list(encoded_graphs[1].predecessors(node)) for node in list(encoded_graphs[1].nodes())}
-        out_neigh_G = {node:list(encoded_graphs[0].neighbors(node)) for node in list(encoded_graphs[0].nodes())}
-        out_neigh_H = {node:list(encoded_graphs[1].neighbors(node)) for node in list(encoded_graphs[1].nodes())}
-    else:
-        neigh_G = {node:list(encoded_graphs[0].neighbors(node)) for node in list(encoded_graphs[0].nodes())}
-        neigh_H = {node:list(encoded_graphs[1].neighbors(node)) for node in list(encoded_graphs[1].nodes())}
-    # get total order for VF2-like analysis
-    for node in list(encoded_graphs[1].nodes()):
-        counter = counter + 1
-        total_order[node] = counter
-    # get expected order
-    expected_order = len(nodes_G)
-    # set recursion limit
-    scalation_value = 1.5
-    required_limit = len(nodes_G)
-    current_limit = getrecursionlimit()
-    if(current_limit < (scalation_value * required_limit)):
-        setrecursionlimit(int(scalation_value * required_limit))
-    # evaluate isomorphisms
-    if(nx.is_directed(G)):
-        directed_search_isomorphisms(all_isomorphisms,
-                                     nodes_G,
-                                     nodes_H,
-                                     in_neigh_G,
-                                     in_neigh_H,
-                                     out_neigh_G,
-                                     out_neigh_H,
-                                     edges_G,
-                                     edges_H,
-                                     total_order,
-                                     expected_order,
-                                     current_match,
-                                     encoded_isomorphisms)
-    else:
-        undirected_search_isomorphisms(all_isomorphisms,
-                                       nodes_G,
-                                       nodes_H,
-                                       neigh_G,
-                                       neigh_H,
-                                       edges_G,
-                                       edges_H,
-                                       total_order,
-                                       expected_order,
-                                       current_match,
-                                       encoded_isomorphisms)
-    # decode isomorphisms
-    for each_isomorphism in encoded_isomorphisms:
-        isomorphisms.append(decode_match(list(each_isomorphism), encoded_node_names))
-    # check if the graphs were isomorphic
-    if(len(isomorphisms) > 0):
-        found_isomorphism = True
-    # end of function
-    return(isomorphisms, found_isomorphism)
-
-
-
-# functions - search isomorphisms - undirected #################################
-
-
-
-# function: core routine of VF2-like undirected approach -----------------------
-cdef void undirected_search_isomorphisms(cpp_bool & all_isomorphisms,
-                                         cpp_map[int, int] & nodes_G,
-                                         cpp_map[int, int] & nodes_H,
-                                         cpp_map[int, cpp_vector[int]] & neigh_G,
-                                         cpp_map[int, cpp_vector[int]] & neigh_H,
-                                         cpp_map[cpp_pair[int, int], int] & edges_G,
-                                         cpp_map[cpp_pair[int, int], int] & edges_H,
-                                         cpp_map[int, int] & total_order,
-                                         long unsigned int & expected_order,
-                                         cpp_vector[cpp_pair[int, int]] current_match,
-                                         cpp_vector[cpp_vector[cpp_pair[int, int]]] & all_matches) noexcept:
+    cdef dict node_name_encoding = dict()    # from ints to node names
+    cdef dict node_label_encoding = dict()   # from ints to node label-dicts
+    cdef dict edge_label_encoding = dict()   # from ints to edge label-dicts
     # local variables (cython)
-    cdef long unsigned int new_score = 0
-    cdef long unsigned int old_score = 0
-    cdef cpp_bool semantic_feasibility = False
-    cdef cpp_bool syntactic_feasibility = False
-    cdef cpp_pair[int, int] each_pair
-    cdef cpp_vector[int] ring_G
-    cdef cpp_vector[int] ring_H
-    cdef cpp_vector[int] current_match_G
-    cdef cpp_vector[int] current_match_H
-    cdef cpp_vector[cpp_pair[int, int]] new_match
-    cdef cpp_vector[cpp_pair[int, int]] candidates
-    cdef cpp_map[int, int] forward_match
-    cdef candidates_struct_undirected candidates_struct
-    # save if isomorphism was reached
-    # NOTE: in the future we might want score-optimal isomorphisms
-    if(current_match.size() == expected_order):
-        all_matches.push_back(current_match)
-        if(not all_isomorphisms):
-            return
-    # if not optimal yet then obtain available pairs
-    if(current_match.size() < expected_order):
-        # generate auxiliary structures
-        for each_pair in current_match:
-            current_match_G.push_back(each_pair.first)
-            current_match_H.push_back(each_pair.second)
-            forward_match[each_pair.first] = each_pair.second
-        # get candidates information
-        candidates_struct = undirected_candidates(current_match,
-                                                  current_match_G,
-                                                  current_match_H,
-                                                  nodes_G,
-                                                  nodes_H,
-                                                  neigh_G,
-                                                  neigh_H,
-                                                  total_order)
-        # unpack candidates information for readability
-        candidates = candidates_struct.candidates
-        ring_G = candidates_struct.ring_G
-        ring_H = candidates_struct.ring_H
-        # evaluate candidates
-        for each_pair in candidates:
-            # evaluate sintactic feasibility
-            syntactic_feasibility = undirected_syntactic_feasibility(each_pair.first,
-                                                                     each_pair.second,
-                                                                     ring_G,
-                                                                     ring_H,
-                                                                     current_match_G,
-                                                                     current_match_H,
-                                                                     forward_match,
-                                                                     neigh_G,
-                                                                     neigh_H)
-            if(syntactic_feasibility):
-                # evaluate semantic feasibility
-                semantic_feasibility = undirected_semantic_feasibility(each_pair.first,
-                                                                       each_pair.second,
-                                                                       ring_G,
-                                                                       ring_H,
-                                                                       current_match_G,
-                                                                       current_match_H,
-                                                                       forward_match,
-                                                                       nodes_G,
-                                                                       nodes_H,
-                                                                       neigh_G,
-                                                                       neigh_H,
-                                                                       edges_G,
-                                                                       edges_H)
-                if(semantic_feasibility):
-                    # build new match
-                    new_match = current_match
-                    new_match.push_back(each_pair)
-                    # extend match
-                    undirected_search_isomorphisms(all_isomorphisms,
-                                                   nodes_G,
-                                                   nodes_H,
-                                                   neigh_G,
-                                                   neigh_H,
-                                                   edges_G,
-                                                   edges_H,
-                                                   total_order,
-                                                   expected_order,
-                                                   new_match,
-                                                   all_matches)
-                    # finish if only one isosmorphism was requested and it was already found
-                    if(not all_isomorphisms):
-                        if(not all_matches.empty()):
-                            return
-    # end of function
-
-
-
-# function: get candidate pairs for undirected isomorphism search --------------
-cdef candidates_struct_undirected undirected_candidates(cpp_vector[cpp_pair[int, int]] & current_match,
-                                                        cpp_vector[int] & current_match_G,
-                                                        cpp_vector[int] & current_match_H,
-                                                        cpp_map[int, int] & nodes_G,
-                                                        cpp_map[int, int] & nodes_H,
-                                                        cpp_map[int, cpp_vector[int]] & neigh_G,
-                                                        cpp_map[int, cpp_vector[int]] & neigh_H,
-                                                        cpp_map[int, int] & total_order) noexcept:
-    # local variables
-    cdef int node = 0
-    cdef int node1 = 0
-    cdef int node2 = 0
-    cdef int reference_minimum = -1
-    cdef cpp_vector[int] ring_G
-    cdef cpp_vector[int] ring_H
-    cdef cpp_vector[int] valid_G
-    cdef cpp_vector[int] valid_H
-    cdef cpp_vector[cpp_pair[int, int]] candidate_pairs
-    cdef cpp_vector[cpp_pair[int, int]] filtered_candidate_pairs
-    cdef cpp_pair[int, int] each_pair
-    cdef cpp_pair[int, int] temp_pair
-    cdef candidates_struct_undirected candidates_struct
-    # get valid sets
-    for each_pair in current_match:
-        # reinitialize valid neighbors
-        valid_G.clear()
-        valid_H.clear()
-        # get valid neighbors in G
-        for node in neigh_G[each_pair.first]:
-            # if not yet in match
-            if(find(current_match_G.begin(), current_match_G.end(), node) == current_match_G.end()):
-                valid_G.push_back(node)
-        # get valid neighbors in H
-        for node in neigh_H[each_pair.second]:
-            # if not yet in match
-            if(find(current_match_H.begin(), current_match_H.end(), node) == current_match_H.end()):
-                valid_H.push_back(node)
-        # make product of valid neighbors
-        if((not valid_G.empty()) and (not valid_H.empty())):
-            for node1 in valid_G:
-                for node2 in valid_H:
-                    temp_pair.first = node1
-                    temp_pair.second = node2
-                    if(find(candidate_pairs.begin(), candidate_pairs.end(), temp_pair) == candidate_pairs.end()):
-                        candidate_pairs.push_back(temp_pair)
-        # additionally save neighbors in ring around match in G
-        for node in valid_G:
-            # save if unrepeated
-            if(find(ring_G.begin(), ring_G.end(), node) == ring_G.end()):
-                ring_G.push_back(node)
-        # additionally save neighbors in ring around match in H
-        for node in valid_H:
-            # save if unrepeated
-            if(find(ring_H.begin(), ring_H.end(), node) == ring_H.end()):
-                ring_H.push_back(node)
-    # alternatively get all unmatched nodes also not adjacent with match
-    if(candidate_pairs.empty()):
-        # reinitialize valid neighbors
-        valid_G.clear()
-        valid_H.clear()
-        # get alternatives in G
-        for each_pair in nodes_G:
-            node = each_pair.first
-            if(find(current_match_G.begin(), current_match_G.end(), node) == current_match_G.end()):
-                if(find(ring_G.begin(), ring_G.end(), node) == ring_G.end()):
-                    valid_G.push_back(node)
-        # get alternatives in H
-        for each_pair in nodes_H:
-            node = each_pair.first
-            if(find(current_match_H.begin(), current_match_H.end(), node) == current_match_H.end()):
-                if(find(ring_H.begin(), ring_H.end(), node) == ring_H.end()):
-                    valid_H.push_back(node)
-        # make product of valid neighbors
-        if((not valid_G.empty()) and (not valid_H.empty())):
-            for node1 in valid_G:
-                for node2 in valid_H:
-                    temp_pair.first = node1
-                    temp_pair.second = node2
-                    # during isomorphism search the pair cannot be repeated at this point
-                    candidate_pairs.push_back(temp_pair)
-    # filter candidate pairs
-    if(not candidate_pairs.empty()):
-        # get minimum total order
-        for each_pair in candidate_pairs:
-            node = each_pair.second
-            if(reference_minimum == -1):
-                reference_minimum = total_order[node]
-                filtered_candidate_pairs.push_back(each_pair)
-            else:
-                if(total_order[node] == reference_minimum):
-                    filtered_candidate_pairs.push_back(each_pair)
-                if(total_order[node] < reference_minimum):
-                    reference_minimum = total_order[node]
-                    filtered_candidate_pairs.clear()
-                    filtered_candidate_pairs.push_back(each_pair)
-        # copy just for clean output coding
-        candidate_pairs = filtered_candidate_pairs
-    # pack return structure
-    candidates_struct.candidates = candidate_pairs
-    candidates_struct.ring_G = ring_G
-    candidates_struct.ring_H = ring_H
-    # end of function
-    return(candidates_struct)
-
-
-
-# function: evaluate syntactic feasability for undirected isomorphisms ---------
-cdef cpp_bool undirected_syntactic_feasibility(int & node1,
-                                               int & node2,
-                                               cpp_vector[int] & ring_G,
-                                               cpp_vector[int] & ring_H,
-                                               cpp_vector[int] & current_match_G,
-                                               cpp_vector[int] & current_match_H,
-                                               cpp_map[int, int] & forward_match,
-                                               cpp_map[int, cpp_vector[int]] & neigh_G,
-                                               cpp_map[int, cpp_vector[int]] & neigh_H) noexcept:
-    # local variables
-    cdef int node = 0
-    cdef int mapped = 0
-    cdef cpp_vector[int] neighbors_ring_G
-    cdef cpp_vector[int] neighbors_ring_H
-    cdef cpp_vector[int] neighbors_match_G
-    cdef cpp_vector[int] neighbors_match_H
-    cdef cpp_vector[int] neighbors_extern_G
-    cdef cpp_vector[int] neighbors_extern_H
-    # loop-consistency-test
-    if(find(neigh_G[node1].begin(), neigh_G[node1].end(), node1) != neigh_G[node1].end()):
-        if(find(neigh_H[node2].begin(), neigh_H[node2].end(), node2) == neigh_H[node2].end()):
-            # node1 has a loop in G but node2 has no loop in H
-            return(False)
-    if(find(neigh_G[node1].begin(), neigh_G[node1].end(), node1) == neigh_G[node1].end()):
-        if(find(neigh_H[node2].begin(), neigh_H[node2].end(), node2) != neigh_H[node2].end()):
-            # node1 has no loop in G but node2 has a loop in H
-            return(False)
-    # obtain tripartition of neighbors
-    for node in neigh_G[node1]:
-        if(find(current_match_G.begin(), current_match_G.end(), node) != current_match_G.end()):
-            # save map of neighbor to be compared later
-            mapped = forward_match[node]
-            neighbors_match_G.push_back(mapped)
+    cdef int i = 0
+    cdef int N1 = 0
+    cdef int N2 = 0
+    cdef int encoded_node = 0
+    cdef int encoded_node_a = 0
+    cdef int encoded_node_b = 0
+    cdef int encoded_label = 0
+    cdef int new_node_label = 0
+    cdef int new_edge_label = 0
+    # local variables (python)
+    cdef list all_nodes = []
+    cdef list all_node_labels = []
+    cdef list all_edge_labels = []
+    cdef list node_label_encoding_inv = []   # from node label-dicts to ints (indices)
+    cdef list edge_label_encoding_inv = []   # from edge label-dicts to ints (indices)
+    cdef dict nodeInfo = dict()
+    cdef dict edgeInfo = dict()
+    cdef dict node_name_encoding_inv = dict()   # from node names to ints
+    u = None
+    v = None
+    int_graph = None
+    # homogenize node names across input graphs
+    N1 = len(input_graphs)
+    for i in range(0, N1):
+        all_nodes = list(set(all_nodes + list(input_graphs[i].nodes())))
+    N2 = len(all_nodes)
+    for i in range(0, N2):
+        node_name_encoding[i] = deepcopy(all_nodes[i])
+        node_name_encoding_inv[deepcopy(all_nodes[i])] = i # nodes are hashable objects
+    # homogenize node labels across input graphs
+    for i in range(0, N1):
+        for (v, nodeInfo) in list(input_graphs[i].nodes(data = True)):
+            if(nodeInfo not in node_label_encoding_inv):
+                node_label_encoding[new_node_label] = deepcopy(nodeInfo) # starting from 0
+                node_label_encoding_inv.append(deepcopy(nodeInfo)) # labels are dictionaries
+                new_node_label = new_node_label + 1
+    # homogenize edge labels across input graphs
+    for i in range(0, N1):
+        for (u, v, edgeInfo) in list(input_graphs[i].edges(data = True)):
+            if(edgeInfo not in edge_label_encoding_inv):
+                edge_label_encoding[new_edge_label] = deepcopy(edgeInfo) # starting from 0
+                edge_label_encoding_inv.append(deepcopy(edgeInfo)) # labels are dictionaries
+                new_edge_label = new_edge_label + 1
+    # create integerized copies of input graphs
+    for i in range(0, N1):
+        # initialize graph with original type
+        if(input_graphs[i].is_directed()):
+            int_graph = nx.DiGraph()
         else:
-            if(find(ring_G.begin(), ring_G.end(), node) != ring_G.end()):
-                # save neighbor since we are just comparing numbers later
-                neighbors_ring_G.push_back(node)
+            int_graph = nx.Graph()
+        # add encoded nodes with encoded node labels
+        for (v, nodeInfo) in list(input_graphs[i].nodes(data = True)):
+            encoded_node = node_name_encoding_inv[v]
+            encoded_label = node_label_encoding_inv.index(nodeInfo)
+            int_graph.add_node(encoded_node,
+                               GMNL = encoded_label) # gran_mapache_node_label
+        # add encoded edges with encoded edge labels
+        for (u, v, edgeInfo) in list(input_graphs[i].edges(data = True)):
+            encoded_node_a = node_name_encoding_inv[u]
+            encoded_node_b = node_name_encoding_inv[v]
+            encoded_label = edge_label_encoding_inv.index(edgeInfo)
+            int_graph.add_edge(encoded_node_a, encoded_node_b,
+                               GMEL = encoded_label) # gran_mapache_edge_label
+        # save graph in list
+        encoded_graphs.append(deepcopy(int_graph))
+    # end of function
+    return(encoded_graphs, node_name_encoding, node_label_encoding, edge_label_encoding)
+
+
+
+# function: decode graphs in list recovering original input graphs -------------
+def decode_graphs(encoded_graphs = [],
+                  node_name_encoding = dict(),
+                  node_label_encoding = dict(),
+                  edge_label_encoding = dict()):
+    # description
+    """
+    > description: recieves encoded list of networkx (di)graphs, of the same type
+    directed or undirected, and the dicts necessary for decodeding them. Returns
+    the original graphs according to the decoding. This is basically the inverse
+    operation of the function encode_graphs.
+
+    > input:
+    * encoded_graphs - list of transformed graphs.
+    * node_name_encoding - dict from integers into original nodes (hashable objects).
+    * node_label_encoding - dict from integers into original dicts of node labels.
+    * edge_label_encoding - dict from integers into original dicts of edge labels.
+
+    > output:
+    * decoded_graphs - list of networkx graph or digraph objects.
+    """
+    # exception handling and input correctness
+    test_list = [0, 0]
+    test_dict = dict()
+    test_count_undir = 0
+    test_count_dir = 0
+    test_undir = nx.Graph()
+    test_dir = nx.DiGraph()
+    if(not type(encoded_graphs) in [type(test_list)]):
+        raise(ValueError("gmapache: first argument must be a list of networkx graphs or digraphs encoded with granmapache."))
+    if(not type(node_name_encoding) in [type(test_dict)]):
+        raise(ValueError("gmapache: second argument must be a dictionary."))
+    if(not type(node_label_encoding) in [type(test_dict)]):
+        raise(ValueError("gmapache: third argument must be a dictionary."))
+    if(not type(edge_label_encoding) in [type(test_dict)]):
+        raise(ValueError("gmapache: fourth argument must be a dictionary."))
+    for test_entry in encoded_graphs:
+        if(type(test_entry) not in [type(test_undir)]):
+            if(type(test_entry) not in [type(test_dir)]):
+                raise(ValueError("gmapache: elements in list must be networkx graphs or digraphs."))
             else:
-                # save neighbor since we are just comparing numbers later
-                neighbors_extern_G.push_back(node)
-    for node in neigh_H[node2]:
-        if(find(current_match_H.begin(), current_match_H.end(), node) != current_match_H.end()):
-            neighbors_match_H.push_back(node)
+                test_count_dir = test_count_dir + 1
+                for (test_node, test_info) in list(test_entry.nodes(data = True)):
+                    if(test_node not in list(node_name_encoding.keys())):
+                        raise(ValueError("gmapache: all the nodes of the input (di)graphs must be encoded by the input dictionaries."))
+                    if("GMNL" not in list(test_info.keys())):
+                        raise(ValueError("gmapache: one of the input (di)graphs is not encoded by granmapache."))
+                    if(test_info["GMNL"] not in list(node_label_encoding.keys())):
+                        raise(ValueError("gmapache: all the node-labels of the input (di)graphs must be encoded by the input dictionaries."))
+                for (test_edge, test_info) in list(test_entry.edges(data = True)):
+                    if("GMEL" not in list(test_info.keys())):
+                        raise(ValueError("gmapache: one of the input (di)graphs is not encoded by granmapache."))
+                    if(test_info["GMEL"] not in list(edge_label_encoding.keys())):
+                        raise(ValueError("gmapache: all the edge-labels of the input (di)graphs must be encoded by the input dictionaries."))
         else:
-            if(find(ring_H.begin(), ring_H.end(), node) != ring_H.end()):
-                neighbors_ring_H.push_back(node)
-            else:
-                neighbors_extern_H.push_back(node)
-    # look ahead 0: consistency of neighbors in match
-    if(neighbors_match_G.size() != neighbors_match_H.size()):
-        # one node has more neighbors in the match than the other
-        return(False)
-    else:
-        for mapped in neighbors_match_G:
-            if(find(neighbors_match_H.begin(), neighbors_match_H.end(), mapped) == neighbors_match_H.end()):
-                # the neighbors dont respect the match
-                return(False)
-    # look ahead 1: consistency of neighbors in ring (not in match but adjacent to match)
-    if(neighbors_ring_G.size() != neighbors_ring_H.size()):
-        return(False)
-    # look ahead 2: consistency of extern neighbors (neither in match nor adjacent to match)
-    if(neighbors_extern_G.size() != neighbors_extern_H.size()):
-        return(False)
-    # end of function
-    return(True)
-
-
-
-# function: evaluate semantic feasability for undirected isomorphisms ----------
-cdef cpp_bool undirected_semantic_feasibility(int & node1,
-                                              int & node2,
-                                              cpp_vector[int] & ring_G,
-                                              cpp_vector[int] & ring_H,
-                                              cpp_vector[int] & current_match_G,
-                                              cpp_vector[int] & current_match_H,
-                                              cpp_map[int, int] & forward_match,
-                                              cpp_map[int, int] & nodes_G,
-                                              cpp_map[int, int] & nodes_H,
-                                              cpp_map[int, cpp_vector[int]] & neigh_G,
-                                              cpp_map[int, cpp_vector[int]] & neigh_H,
-                                              cpp_map[cpp_pair[int, int], int] & edges_G,
-                                              cpp_map[cpp_pair[int, int], int] & edges_H) noexcept:
-    # local variables
-    cdef int node = 0
-    cdef int mapped = 0
-    cdef int node_label = 0
-    cdef int edge_label = 0
-    cdef cpp_pair[int, int] each_pair
-    cdef cpp_pair[int, int] labeled_edge_G
-    cdef cpp_pair[int, int] labeled_edge_H
-    cdef cpp_vector[int] neighbors_ring_G
-    cdef cpp_vector[int] neighbors_ring_H
-    cdef cpp_vector[int] neighbors_match_G
-    cdef cpp_vector[int] neighbors_match_H
-    cdef cpp_vector[int] neighbors_extern_G
-    cdef cpp_vector[int] neighbors_extern_H
-    cdef cpp_map[int, int] count_node_ring_G
-    cdef cpp_map[int, int] count_node_ring_H
-    cdef cpp_map[int, int] count_edge_ring_G
-    cdef cpp_map[int, int] count_edge_ring_H
-    cdef cpp_map[int, int] count_node_extern_G
-    cdef cpp_map[int, int] count_node_extern_H
-    cdef cpp_map[int, int] count_edge_extern_G
-    cdef cpp_map[int, int] count_edge_extern_H
-    # compare vertex-labels
-    if(nodes_G[node1] != nodes_H[node2]):
-        return(False)
-    # compare loop-labels
-    if(find(neigh_G[node1].begin(), neigh_G[node1].end(), node1) != neigh_G[node1].end()):
-        labeled_edge_G.first = node1
-        labeled_edge_G.second = node1
-        labeled_edge_H.first = node2
-        labeled_edge_H.second = node2
-        if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
-            return(False)
-    # obtain tripartition of neighbors in G
-    for node in neigh_G[node1]:
-        if(find(current_match_G.begin(), current_match_G.end(), node) != current_match_G.end()):
-            neighbors_match_G.push_back(node)
+            test_count_undir = test_count_undir + 1
+            for (test_node, test_info) in list(test_entry.nodes(data = True)):
+                if(test_node not in list(node_name_encoding.keys())):
+                    raise(ValueError("gmapache: all the nodes of the input (di)graphs must be encoded by the input dictionaries."))
+                if("GMNL" not in list(test_info.keys())):
+                    raise(ValueError("gmapache: one of the input (di)graphs is not encoded by granmapache."))
+                if(test_info["GMNL"] not in list(node_label_encoding.keys())):
+                    raise(ValueError("gmapache: all the node-labels of the input (di)graphs must be encoded by the input dictionaries."))
+            for (test_edge, test_info) in list(test_entry.edges(data = True)):
+                if("GMEL" not in list(test_info.keys())):
+                    raise(ValueError("gmapache: one of the input (di)graphs is not encoded by granmapache."))
+                if(test_info["GMEL"] not in list(edge_label_encoding.keys())):
+                    raise(ValueError("gmapache: all the edge-labels of the input (di)graphs must be encoded by the input dictionaries."))
+    if(not test_count_undir == len(encoded_graphs)):
+        if(not test_count_dir == len(encoded_graphs)):
+            raise(ValueError("gmapache: elements in list must be networkx graphs or digraphs of the same type."))
+    # output holders
+    cdef list decoded_graphs = []
+    # local variables (cython)
+    cdef int i = 0
+    cdef int u = 0
+    cdef int v = 0
+    cdef int N1 = 0
+    cdef int decoded_node = 0
+    cdef int decoded_node_a = 0
+    cdef int decoded_node_b = 0
+    cdef int decoded_label = 0
+    # local variables (python)
+    cdef dict nodeInfo = dict()
+    cdef dict edgeInfo = dict()
+    dec_graph = None
+    # iterate decoding graphs
+    N1 = len(encoded_graphs)
+    for i in range(0, N1):
+        # initialize graph with original type
+        if(encoded_graphs[i].is_directed()):
+            dec_graph = nx.DiGraph()
         else:
-            if(find(ring_G.begin(), ring_G.end(), node) != ring_G.end()):
-                # save neighbor since we are just comparing numbers later
-                neighbors_ring_G.push_back(node)
-            else:
-                # save neighbor since we are just comparing numbers later
-                neighbors_extern_G.push_back(node)
-    # label look ahead 0: compare non-loop edge-labels in match
-    for node in neighbors_match_G:
-        # edge in G with only one end in match
-        if(node1 < node):
-            labeled_edge_G.first = node1
-            labeled_edge_G.second = node
-        else:
-            labeled_edge_G.first = node
-            labeled_edge_G.second = node1
-        # edge in H with only one end in match
-        mapped = forward_match[node]
-        if(node2 < mapped):
-            labeled_edge_H.first = node2
-            labeled_edge_H.second = mapped
-        else:
-            labeled_edge_H.first = mapped
-            labeled_edge_H.second = node2
-        if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
-            return(False)
-    # obtain tripartition of neighbors in H
-    for node in neigh_H[node2]:
-        if(find(current_match_H.begin(), current_match_H.end(), node) != current_match_H.end()):
-            neighbors_match_H.push_back(node)
-        else:
-            if(find(ring_H.begin(), ring_H.end(), node) != ring_H.end()):
-                neighbors_ring_H.push_back(node)
-            else:
-                neighbors_extern_H.push_back(node)
-    # label look ahead 1: compare labels of neighbors in ring (not in match but adjacent to match)
-    if(not neighbors_ring_G.empty()):
-        for node in neighbors_ring_G:
-            # get node label
-            node_label = nodes_G[node]
-            # get edge label
-            if(node1 <= node):
-                labeled_edge_G.first = node1
-                labeled_edge_G.second = node
-            else:
-                labeled_edge_G.first = node
-                labeled_edge_G.second = node1
-            edge_label = edges_G[labeled_edge_G]
-            # count node label
-            if(count_node_ring_G.find(node_label) != count_node_ring_G.end()):
-                count_node_ring_G[node_label] = count_node_ring_G[node_label] + 1
-            else:
-                count_node_ring_G[node_label] = 1
-            # count edge label
-            if(count_edge_ring_G.find(edge_label) != count_edge_ring_G.end()):
-                count_edge_ring_G[edge_label] = count_edge_ring_G[edge_label] + 1
-            else:
-                count_edge_ring_G[edge_label] = 1
-        for node in neighbors_ring_H:
-            # get node label
-            node_label = nodes_H[node]
-            # get edge label
-            if(node2 <= node):
-                labeled_edge_H.first = node2
-                labeled_edge_H.second = node
-            else:
-                labeled_edge_H.first = node
-                labeled_edge_H.second = node2
-            edge_label = edges_H[labeled_edge_H]
-            # count node label
-            if(count_node_ring_H.find(node_label) != count_node_ring_H.end()):
-                count_node_ring_H[node_label] = count_node_ring_H[node_label] + 1
-            else:
-                count_node_ring_H[node_label] = 1
-            # count edge label
-            if(count_edge_ring_H.find(edge_label) != count_edge_ring_H.end()):
-                count_edge_ring_H[edge_label] = count_edge_ring_H[edge_label] + 1
-            else:
-                count_edge_ring_H[edge_label] = 1
-        if(count_node_ring_G.size() != count_node_ring_H.size()):
-            return(False)
-        if(count_edge_ring_G.size() != count_edge_ring_H.size()):
-            return(False)
-        for each_pair in count_node_ring_G:
-            if(count_node_ring_H.find(each_pair.first) == count_node_ring_H.end()):
-                return(False)
-            else:
-                if(each_pair.second != count_node_ring_H[each_pair.first]):
-                    return(False)
-        for each_pair in count_edge_ring_G:
-            if(count_edge_ring_H.find(each_pair.first) == count_edge_ring_H.end()):
-                return(False)
-            else:
-                if(each_pair.second != count_edge_ring_H[each_pair.first]):
-                    return(False)
-    # label look ahead 2: compare labels of extern neighbors (neither in match nor adjacent to match)
-    if(not neighbors_extern_G.empty()):
-        for node in neighbors_extern_G:
-            # get node label
-            node_label = nodes_G[node]
-            # get edge label
-            if(node1 <= node):
-                labeled_edge_G.first = node1
-                labeled_edge_G.second = node
-            else:
-                labeled_edge_G.first = node
-                labeled_edge_G.second = node1
-            edge_label = edges_G[labeled_edge_G]
-            # count node label
-            if(count_node_extern_G.find(node_label) != count_node_extern_G.end()):
-                count_node_extern_G[node_label] = count_node_extern_G[node_label] + 1
-            else:
-                count_node_extern_G[node_label] = 1
-            # count edge label
-            if(count_edge_extern_G.find(edge_label) != count_edge_extern_G.end()):
-                count_edge_extern_G[edge_label] = count_edge_extern_G[edge_label] + 1
-            else:
-                count_edge_extern_G[edge_label] = 1
-        for node in neighbors_extern_H:
-            # get node label
-            node_label = nodes_H[node]
-            # get edge label
-            if(node2 <= node):
-                labeled_edge_H.first = node2
-                labeled_edge_H.second = node
-            else:
-                labeled_edge_H.first = node
-                labeled_edge_H.second = node2
-            edge_label = edges_H[labeled_edge_H]
-            # count node label
-            if(count_node_extern_H.find(node_label) != count_node_extern_H.end()):
-                count_node_extern_H[node_label] = count_node_extern_H[node_label] + 1
-            else:
-                count_node_extern_H[node_label] = 1
-            # count edge label
-            if(count_edge_extern_H.find(edge_label) != count_edge_extern_H.end()):
-                count_edge_extern_H[edge_label] = count_edge_extern_H[edge_label] + 1
-            else:
-                count_edge_extern_H[edge_label] = 1
-        if(count_node_extern_G.size() != count_node_extern_H.size()):
-            return(False)
-        if(count_edge_extern_G.size() != count_edge_extern_H.size()):
-            return(False)
-        for each_pair in count_node_extern_G:
-            if(count_node_extern_H.find(each_pair.first) == count_node_extern_H.end()):
-                return(False)
-            else:
-                if(each_pair.second != count_node_extern_H[each_pair.first]):
-                    return(False)
-        for each_pair in count_edge_extern_G:
-            if(count_edge_extern_H.find(each_pair.first) == count_edge_extern_H.end()):
-                return(False)
-            else:
-                if(each_pair.second != count_edge_extern_H[each_pair.first]):
-                    return(False)
+            dec_graph = nx.Graph()
+        # compare vertices
+        for (v, nodeInfo) in list(encoded_graphs[i].nodes(data = True)):
+            decoded_node = node_name_encoding[v]
+            decoded_label = node_label_encoding[nodeInfo["GMNL"]]   # gran_mapache_node_label
+            dec_graph.add_nodes_from([(deepcopy(decoded_node), deepcopy(decoded_label))])
+        # compare edges
+        for (u, v, edgeInfo) in list(encoded_graphs[i].edges(data = True)):
+            decoded_node_a = node_name_encoding[u]
+            decoded_node_b = node_name_encoding[v]
+            decoded_label = edge_label_encoding[edgeInfo["GMEL"]]   # gran_mapache_edge_label
+            dec_graph.add_edges_from([(deepcopy(decoded_node_a), deepcopy(decoded_node_b), deepcopy(decoded_label))])
+        # save graph in list
+        decoded_graphs.append(deepcopy(dec_graph))
     # end of function
-    return(True)
+    return(decoded_graphs)
 
 
 
-# functions - search isomorphisms - directed ###################################
+# functions - encoding and decoding of matches #################################
 
 
 
-# function: core routine of VF2-like directed approach -------------------------
-cdef void directed_search_isomorphisms(cpp_bool & all_isomorphisms,
-                                       cpp_map[int, int] & nodes_G,
-                                       cpp_map[int, int] & nodes_H,
-                                       cpp_map[int, cpp_vector[int]] & in_neigh_G,
-                                       cpp_map[int, cpp_vector[int]] & in_neigh_H,
-                                       cpp_map[int, cpp_vector[int]] & out_neigh_G,
-                                       cpp_map[int, cpp_vector[int]] & out_neigh_H,
-                                       cpp_map[cpp_pair[int, int], int] & edges_G,
-                                       cpp_map[cpp_pair[int, int], int] & edges_H,
-                                       cpp_map[int, int] & total_order,
-                                       long unsigned int & expected_order,
-                                       cpp_vector[cpp_pair[int, int]] current_match,
-                                       cpp_vector[cpp_vector[cpp_pair[int, int]]] & all_matches) noexcept:
-    # local variables
-    cdef long unsigned int new_score = 0
-    cdef long unsigned int old_score = 0
-    cdef cpp_bool semantic_feasibility = False
-    cdef cpp_bool syntactic_feasibility = False
-    cdef cpp_vector[int] in_ring_G
-    cdef cpp_vector[int] in_ring_H
-    cdef cpp_vector[int] out_ring_G
-    cdef cpp_vector[int] out_ring_H
-    cdef cpp_vector[int] current_match_G
-    cdef cpp_vector[int] current_match_H
-    cdef cpp_vector[cpp_pair[int, int]] new_match
-    cdef cpp_vector[cpp_pair[int, int]] candidates
-    cdef cpp_map[int, int] forward_match
-    cdef cpp_pair[int, int] each_pair
-    cdef candidates_struct_directed candidates_struct
-    # save if isomorphism was reached
-    # NOTE: in the future we might want score-optimal isomorphisms
-    if(current_match.size() == expected_order):
-        all_matches.push_back(current_match)
-        if(not all_isomorphisms):
-            return
-    # if not optimal yet then obtain available pairs
-    if(current_match.size() < expected_order):
-        # generate auxiliary structures
-        for each_pair in current_match:
-            current_match_G.push_back(each_pair.first)
-            current_match_H.push_back(each_pair.second)
-            forward_match[each_pair.first] = each_pair.second
-        # get candidate pairs
-        candidates_tuple = directed_candidates(current_match,
-                                               current_match_G,
-                                               current_match_H,
-                                               nodes_G,
-                                               nodes_H,
-                                               in_neigh_G,
-                                               in_neigh_H,
-                                               out_neigh_G,
-                                               out_neigh_H,
-                                               total_order)
-        # unpack candidates information
-        candidates = candidates_tuple.first
-        ring_G = candidates_tuple.second.first
-        ring_H = candidates_tuple.second.second
-        # evaluate candidates
-        for each_pair in candidates:
-            # evaluate sintactic feasibility
-            syntactic_feasibility = directed_syntactic_feasibility(each_pair.first,
-                                                                   each_pair.second,
-                                                                   ring_G,
-                                                                   ring_H,
-                                                                   current_match_G,
-                                                                   current_match_H,
-                                                                   forward_match,
-                                                                   in_neigh_G,
-                                                                   in_neigh_H,
-                                                                   out_neigh_G,
-                                                                   out_neigh_H)
-            if(syntactic_feasibility):
-                # evaluate semantic feasibility
-                semantic_feasibility = directed_semantic_feasibility(each_pair.first,
-                                                                     each_pair.second,
-                                                                     ring_G,
-                                                                     ring_H,
-                                                                     current_match_G,
-                                                                     current_match_H,
-                                                                     forward_match,
-                                                                     nodes_G,
-                                                                     nodes_H,
-                                                                     in_neigh_G,
-                                                                     in_neigh_H,
-                                                                     out_neigh_G,
-                                                                     out_neigh_H,
-                                                                     edges_G,
-                                                                     edges_H)
-                if(semantic_feasibility):
-                    # build new match
-                    new_match = current_match
-                    new_match.push_back(each_pair)
-                    # extend match
-                    directed_search_isomorphisms(all_isomorphisms,
-                                                 nodes_G,
-                                                 nodes_H,
-                                                 in_neigh_G,
-                                                 in_neigh_H,
-                                                 out_neigh_G,
-                                                 out_neigh_H,
-                                                 edges_G,
-                                                 edges_H,
-                                                 total_order,
-                                                 expected_order,
-                                                 new_match,
-                                                 all_matches)
-                    # finish if only one isosmorphism was requested and it was already found
-                    if(not all_isomorphisms):
-                        if(not all_matches.empty()):
-                            return
+# function: encode match given an encoding of node names -----------------------
+def encode_match(input_match = [],
+                 node_name_encoding = dict()):
+    # description
+    """
+    > description: receives a list of 2-tuples of nodes and a dictionary encoding
+    nodes into integers, and returns the corresponding encoded list of 2-tuples.
+
+    > input:
+    * input_match - list of 2-tuples (x, y) representing a match between graphs.
+    * node_name_encoding - dict from integers into the original nodes.
+
+    > output:
+    * encoded_match - list of 2-tuples of integers (i, j) encoding the nodes.
+    """
+    # exception handling and input correctness
+    test_list = [0, 0]
+    test_tuple = (0, 0)
+    test_dict = dict()
+    if(not type(input_match) in [type(test_list)]):
+        raise(ValueError("gmapache: first argument must be a list of 2-tuples."))
+    if(not type(node_name_encoding) in [type(test_dict)]):
+        raise(ValueError("gmapache: second argument must be a dictionary."))
+    for test_entry in input_match:
+        if(not type(test_entry) in [type(test_tuple)]):
+            raise(ValueError("gmapache: all elements in input list must be tuples."))
+        if(not len(test_entry) == 2):
+            raise(ValueError("gmapache: all tuples in input list must be of lenght 2."))
+        if(test_entry[0] not in list(node_name_encoding.values())):
+            raise(ValueError("gmapache: input dictionary must encode all elements being matched."))
+        if(test_entry[1] not in list(node_name_encoding.values())):
+            raise(ValueError("gmapache: input dictionary must encode all elements being matched."))
+    # output holders
+    cdef list encoded_match = []
+    # local variables (cython)
+    cdef int i = 0
+    cdef int N1 = 0
+    cdef int index1 = 0
+    cdef int index2 = 0
+    # local variables (python)
+    cdef dict node_name_encoding_inv = dict()
+    # get encoding as array
+    node_name_encoding_inv = {node_name_encoding[i]:i for i in range(len(node_name_encoding))}
+    # encode match
+    N1 = len(input_match)
+    for i in range(0, N1):
+        index1 = node_name_encoding_inv[input_match[i][0]]
+        index2 = node_name_encoding_inv[input_match[i][1]]
+        encoded_match.append((index1, index2))
     # end of function
+    return(encoded_match)
 
 
 
-# function: get candidate pairs for directed isomorphism search ----------------
-cdef cpp_pair[cpp_vector[cpp_pair[int, int]], cpp_pair[cpp_vector[int], cpp_vector[int]]] directed_candidates(cpp_vector[cpp_pair[int, int]] current_match,
-                                                                                                              cpp_vector[int] & current_match_G,
-                                                                                                              cpp_vector[int] & current_match_H,
-                                                                                                              cpp_map[int, int] & nodes_G,
-                                                                                                              cpp_map[int, int] & nodes_H,
-                                                                                                              cpp_map[int, cpp_vector[int]] & in_neigh_G,
-                                                                                                              cpp_map[int, cpp_vector[int]] & in_neigh_H,
-                                                                                                              cpp_map[int, cpp_vector[int]] & out_neigh_G,
-                                                                                                              cpp_map[int, cpp_vector[int]] & out_neigh_H,
-                                                                                                              cpp_map[int, int] & total_order) noexcept:
-    # local variables
-    cdef int node = 0
-    cdef int node1 = 0
-    cdef int node2 = 0
-    cdef int reference_minimum = -1
-    cdef cpp_vector[int] ring_G
-    cdef cpp_vector[int] ring_H
-    cdef cpp_vector[int] valid_G
-    cdef cpp_vector[int] valid_H
-    cdef cpp_vector[cpp_pair[int, int]] candidate_pairs
-    cdef cpp_vector[cpp_pair[int, int]] filtered_candidate_pairs
-    cdef cpp_pair[int, int] temp_pair
-    cdef cpp_pair[int, int] each_pair
-    cdef cpp_pair[cpp_vector[cpp_pair[int, int]], cpp_pair[cpp_vector[int], cpp_vector[int]]] candidates_tuple
-    # get valid sets
-    for each_pair in current_match:
-        # reinitialize valid neighbors
-        valid_G.clear()
-        valid_H.clear()
-        # get valid in-neighbors in G
-        for node in in_neigh_G[each_pair.first]:
-            # if not yet in match
-            if(find(current_match_G.begin(), current_match_G.end(), node) == current_match_G.end()):
-                valid_G.push_back(node)
-        # get valid in-neighbors in H
-        for node in in_neigh_H[each_pair.second]:
-            # if not yet in match
-            if(find(current_match_H.begin(), current_match_H.end(), node) == current_match_H.end()):
-                # if total order greater than in match
-                if(total_order[node] > reference_maximum):
-                    valid_H.push_back(node)
-        # make product of valid in-neighbors
-        if((not valid_G.empty()) and (not valid_H.empty())):
-            for node1 in valid_G:
-                for node2 in valid_H:
-                    temp_pair.first = node1
-                    temp_pair.second = node2
-                    if(find(candidate_pairs.begin(), candidate_pairs.end(), temp_pair) == candidate_pairs.end()):
-                        candidate_pairs.push_back(temp_pair)
-        # additionally save in-neighbors in ring around match in G
-        for node in valid_G:
-            # save if unrepeated
-            if(find(ring_G.begin(), ring_G.end(), node) == ring_G.end()):
-                ring_G.push_back(node)
-        # additionally save in-neighbors in ring around match in H
-        for node in valid_H:
-            # save if unrepeated
-            if(find(ring_H.begin(), ring_H.end(), node) == ring_H.end()):
-                ring_H.push_back(node)
-        # reinitialize valid neighbors
-        valid_G.clear()
-        valid_H.clear()
-        # get valid out-neighbors in G
-        for node in out_neigh_G[each_pair.first]:
-            # if not yet in match
-            if(find(current_match_G.begin(), current_match_G.end(), node) == current_match_G.end()):
-                valid_G.push_back(node)
-        # get valid out-neighbors in H
-        for node in out_neigh_H[each_pair.second]:
-            # if not yet in match
-            if(find(current_match_H.begin(), current_match_H.end(), node) == current_match_H.end()):
-                valid_H.push_back(node)
-        # make product of valid out-neighbors
-        if((not valid_G.empty()) and (not valid_H.empty())):
-            for node1 in valid_G:
-                for node2 in valid_H:
-                    temp_pair.first = node1
-                    temp_pair.second = node2
-                    if(find(candidate_pairs.begin(), candidate_pairs.end(), temp_pair) == candidate_pairs.end()):
-                        candidate_pairs.push_back(temp_pair)
-        # additionally save neighbors in ring around match in G
-        for node in valid_G:
-            # save if unrepeated
-            if(find(ring_G.begin(), ring_G.end(), node) == ring_G.end()):
-                ring_G.push_back(node)
-        # additionally save neighbors in ring around match in H
-        for node in valid_H:
-            # save if unrepeated
-            if(find(ring_H.begin(), ring_H.end(), node) == ring_H.end()):
-                ring_H.push_back(node)
-    # alternatively get all unmatched nodes also not adjacent with match
-    if(candidate_pairs.empty()):
-        # reinitialize valid neighbors
-        valid_G.clear()
-        valid_H.clear()
-        # get alternatives in G
-        for each_pair in nodes_G:
-            node = each_pair.first
-            if(find(current_match_G.begin(), current_match_G.end(), node) == current_match_G.end()):
-                if(find(ring_G.begin(), ring_G.end(), node) == ring_G.end()):
-                    valid_G.push_back(node)
-        # get alternatives in H
-        for each_pair in nodes_H:
-            node = each_pair.first
-            if(find(current_match_H.begin(), current_match_H.end(), node) == current_match_H.end()):
-                if(find(ring_H.begin(), ring_H.end(), node) == ring_H.end()):
-                    valid_H.push_back(node)
-        # make product of valid neighbors
-        if((not valid_G.empty()) and (not valid_H.empty())):
-            for node1 in valid_G:
-                for node2 in valid_H:
-                    temp_pair.first = node1
-                    temp_pair.second = node2
-                    # during isomorphism search the pair cannot be repeated at this point
-                    candidate_pairs.push_back(temp_pair)
-    # filter candidate pairs
-    if(not candidate_pairs.empty()):
-        # get minimum total order
-        for each_pair in candidate_pairs:
-            node = each_pair.second
-            if(reference_minimum == -1):
-                reference_minimum = total_order[node]
-                filtered_candidate_pairs.push_back(each_pair)
-            else:
-                if(total_order[node] == reference_minimum):
-                    filtered_candidate_pairs.push_back(each_pair)
-                if(total_order[node] < reference_minimum):
-                    reference_minimum = total_order[node]
-                    filtered_candidate_pairs.clear()
-                    filtered_candidate_pairs.push_back(each_pair)
-        # copy just for clean output coding
-        candidate_pairs = filtered_candidate_pairs
-    # pack return structure
-    candidates_tuple.first = candidate_pairs
-    candidates_tuple.second.first = ring_G
-    candidates_tuple.second.second = ring_H
+# function: decode match given an encoding of node names -----------------------
+def decode_match(encoded_match = [],
+                 node_name_encoding = dict()):
+    # description
+    """
+    > description: receives a list of 2-tuples of integers and a dictionary mapping
+    integers to nodes, and returns the corresponding decoded list of 2-tuples of nodes.
+
+    > input:
+    * encoded_match - list of 2-tuples (i, j) of integers encoding pairs of nodes.
+    * node_name_encoding - dict from integers into the original nodes.
+
+    > output:
+    * decoded_match - list of 2-tuples (x, y) of nodes representing the match.
+    """
+    # exception handling and input correctness
+    test_list = [0, 0]
+    test_tuple = (0, 0)
+    test_dict = dict()
+    if(not type(encoded_match) in [type(test_list)]):
+        raise(ValueError("gmapache: first argument must be a list of 2-tuples."))
+    if(not type(node_name_encoding) in [type(test_dict)]):
+        raise(ValueError("gmapache: second argument must be a dictionary."))
+    for test_entry in encoded_match:
+        if(not type(test_entry) in [type(test_tuple)]):
+            raise(ValueError("gmapache: all elements in input list must be tuples."))
+        if(not len(test_entry) == 2):
+            raise(ValueError("gmapache: all tuples in input list must be of lenght 2."))
+        if(test_entry[0] not in list(node_name_encoding.keys())):
+            raise(ValueError("gmapache: input dictionary must encode all elements being matched."))
+        if(test_entry[1] not in list(node_name_encoding.keys())):
+            raise(ValueError("gmapache: input dictionary must encode all elements being matched."))
+    # output holders
+    cdef list decoded_match = []
+    # local variables (cython)
+    cdef int i = 0
+    cdef int N1 = 0
+    # local variables (python)
+    node1 = None
+    node2 = None
+    # decode match
+    N1 = len(encoded_match)
+    for i in range(0, N1):
+        node1 = node_name_encoding[encoded_match[i][0]]
+        node2 = node_name_encoding[encoded_match[i][1]]
+        decoded_match.append((deepcopy(node1), deepcopy(node2)))
     # end of function
-    return(candidate_pairs)
-
-
-
-# function: evaluate syntactic feasability for directed isomorphisms -----------
-cdef cpp_bool directed_syntactic_feasibility(int & node1,
-                                             int & node2,
-                                             cpp_vector[int] & current_match_G,
-                                             cpp_vector[int] & current_match_H,
-                                             cpp_map[int, int] & forward_match,
-                                             cpp_map[int, cpp_vector[int]] & in_neigh_G,
-                                             cpp_map[int, cpp_vector[int]] & in_neigh_H,
-                                             cpp_map[int, cpp_vector[int]] & out_neigh_G,
-                                             cpp_map[int, cpp_vector[int]] & out_neigh_H) noexcept:
-    # local variables
-    cdef int node = 0
-    cdef int mapped = 0
-    cdef cpp_vector[int] in_neighbors_match_G
-    cdef cpp_vector[int] in_neighbors_match_H
-    cdef cpp_vector[int] out_neighbors_match_G
-    cdef cpp_vector[int] out_neighbors_match_H
-    # loop-consistency-test
-    if(find(in_neigh_G[node1].begin(), in_neigh_G[node1].end(), node1) != in_neigh_G[node1].end()):
-        if(find(in_neigh_H[node2].begin(), in_neigh_H[node2].end(), node2) == in_neigh_H[node2].end()):
-            # node1 has a loop in G but node2 has no loop in H
-            return(False)
-    if(find(in_neigh_G[node1].begin(), in_neigh_G[node1].end(), node1) == in_neigh_G[node1].end()):
-        if(find(in_neigh_H[node2].begin(), in_neigh_H[node2].end(), node2) != in_neigh_H[node2].end()):
-            # node1 has no loop in G but node2 has a loop in H
-            return(False)
-    # look ahead 0: consistency of in-neighbors in match
-    for node in in_neigh_G[node1]:
-        if(find(current_match_G.begin(), current_match_G.end(), node) != current_match_G.end()):
-            mapped = forward_match[node]
-            in_neighbors_match_G.push_back(mapped)
-    for node in in_neigh_H[node2]:
-        if(find(current_match_H.begin(), current_match_H.end(), node) != current_match_H.end()):
-            in_neighbors_match_H.push_back(node)
-    if(in_neighbors_match_G.size() != in_neighbors_match_H.size()):
-        # one node has more in-neighbors in the match than the other
-        return(False)
-    else:
-        for mapped in in_neighbors_match_G:
-            if(find(in_neighbors_match_H.begin(), in_neighbors_match_H.end(), mapped) == in_neighbors_match_H.end()):
-                # the in-neighbors dont respect the match
-                return(False)
-    # look ahead 0: consistency of out-neighbors in match
-    for node in out_neigh_G[node1]:
-        if(find(current_match_G.begin(), current_match_G.end(), node) != current_match_G.end()):
-            mapped = forward_match[node]
-            out_neighbors_match_G.push_back(mapped)
-    for node in out_neigh_H[node2]:
-        if(find(current_match_H.begin(), current_match_H.end(), node) != current_match_H.end()):
-            out_neighbors_match_H.push_back(node)
-    if(out_neighbors_match_G.size() != out_neighbors_match_H.size()):
-        # one node has more out-neighbors in the match than the other
-        return(False)
-    else:
-        for mapped in out_neighbors_match_G:
-            if(find(out_neighbors_match_H.begin(), out_neighbors_match_H.end(), mapped) == out_neighbors_match_H.end()):
-                # the out-neighbors dont respect the match
-                return(False)
-    # end of function
-    return(True)
-
-
-
-# function: evaluate semantic feasability for directed isomorphisms ------------
-cdef cpp_bool directed_semantic_feasibility(int & node1,
-                                            int & node2,
-                                            cpp_vector[int] & current_match_G,
-                                            cpp_map[int, int] & forward_match,
-                                            cpp_map[int, int] & nodes_G,
-                                            cpp_map[int, int] & nodes_H,
-                                            cpp_map[int, cpp_vector[int]] & in_neigh_G,
-                                            cpp_map[int, cpp_vector[int]] & out_neigh_G,
-                                            cpp_map[cpp_pair[int, int], int] & edges_G,
-                                            cpp_map[cpp_pair[int, int], int] & edges_H) noexcept:
-    # local variables
-    cdef int node = 0
-    cdef int mapped = 0
-    cdef cpp_pair[int, int] labeled_edge_G
-    cdef cpp_pair[int, int] labeled_edge_H
-    cdef cpp_vector[int] in_neighbors_match_G
-    cdef cpp_vector[int] out_neighbors_match_G
-    # compare vertex-labels
-    if(nodes_G[node1] != nodes_H[node2]):
-        return(False)
-    # compare loop-labels
-    if(find(in_neigh_G[node1].begin(), in_neigh_G[node1].end(), node1) != in_neigh_G[node1].end()):
-        labeled_edge_G.first = node1
-        labeled_edge_G.second = node1
-        labeled_edge_H.first = node2
-        labeled_edge_H.second = node2
-        if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
-            return(False)
-    # compare non-loop in-edge-labels
-    for node in in_neigh_G[node1]:
-        if(find(current_match_G.begin(), current_match_G.end(), node) != current_match_G.end()):
-            in_neighbors_match_G.push_back(node)
-    for node in in_neighbors_match_G:
-        # edge in G with only one end in match
-        labeled_edge_G.first = node
-        labeled_edge_G.second = node1
-        labeled_edge_H.first = forward_match[node]
-        labeled_edge_H.second = node2
-        if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
-            return(False)
-    # compare non-loop out-edge-labels
-    for node in out_neigh_G[node1]:
-        if(find(current_match_G.begin(), current_match_G.end(), node) != current_match_G.end()):
-            out_neighbors_match_G.push_back(node)
-    for node in out_neighbors_match_G:
-        # edge in G with only one end in match
-        labeled_edge_G.first = node1
-        labeled_edge_G.second = node
-        labeled_edge_H.first = node2
-        labeled_edge_H.second = forward_match[node]
-        if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
-            return(False)
-    # end of function
-    return(True)
+    return(decoded_match)
 
 
 
