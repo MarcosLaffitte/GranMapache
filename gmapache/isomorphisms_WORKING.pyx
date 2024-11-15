@@ -42,7 +42,7 @@ from .integerization import encode_graphs, decode_graphs, decode_match
 
 
 
-# structures ###################################################################
+# C/C++ structs ################################################################
 
 
 
@@ -155,19 +155,13 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     cdef float scalation_value = 0
     cdef size_t expected_order = 0
     cdef cpp_vector[cpp_pair[int, int]] each_isomorphism
-    cdef cpp_vector[cpp_pair[int, int]] current_match = []
+    cdef cpp_vector[cpp_pair[int, int]] current_match
     cdef cpp_vector[cpp_vector[cpp_pair[int, int]]] encoded_isomorphisms
     cdef cpp_map[int, int] total_order
-    cdef cpp_map[int, int] nodes_G
-    cdef cpp_map[int, int] nodes_H
-    cdef cpp_map[int, cpp_vector[int]] neigh_G        # only used if undirected
-    cdef cpp_map[int, cpp_vector[int]] neigh_H        # only used if undirected
-    cdef cpp_map[int, cpp_vector[int]] in_neigh_G     # only used if directed
-    cdef cpp_map[int, cpp_vector[int]] in_neigh_H     # only used if directed
-    cdef cpp_map[int, cpp_vector[int]] out_neigh_G    # only used if directed
-    cdef cpp_map[int, cpp_vector[int]] out_neigh_H    # only used if directed
-    cdef cpp_map[cpp_pair[int, int], int] edges_G
-    cdef cpp_map[cpp_pair[int, int], int] edges_H
+    cdef isomorphisms_undirected_graph undirected_G
+    cdef isomorphisms_undirected_graph undirected_H
+    cdef isomorphisms_directed_graph directed_G
+    cdef isomorphisms_directed_graph directed_H
     # local variables (python)
     cdef list encoded_graphs = []
     cdef dict info = dict()
@@ -177,24 +171,28 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     # encode graphs
     encoded_graphs, encoded_node_names, encoded_node_label, encoded_edge_label = encode_graphs([nx_G, nx_H])
     # prepare nodes
-    nodes_G = {node:info["GMNL"] for (node, info) in encoded_graphs[0].nodes(data = True)}
-    nodes_H = {node:info["GMNL"] for (node, info) in encoded_graphs[1].nodes(data = True)}
+    if(nx.is_directed(nx_G)):
+        directed_G.nodes = {node:info["GMNL"] for (node, info) in encoded_graphs[0].nodes(data = True)}
+        directed_H.nodes = {node:info["GMNL"] for (node, info) in encoded_graphs[1].nodes(data = True)}
+    else:
+        undirected_G.nodes = {node:info["GMNL"] for (node, info) in encoded_graphs[0].nodes(data = True)}
+        undirected_H.nodes = {node:info["GMNL"] for (node, info) in encoded_graphs[1].nodes(data = True)}
     # prepare edges
     if(nx.is_directed(nx_G)):
-        edges_G = {(node1, node2):info["GMEL"] for (node1, node2, info) in encoded_graphs[0].edges(data = True)}
-        edges_H = {(node1, node2):info["GMEL"] for (node1, node2, info) in encoded_graphs[1].edges(data = True)}
+        directed_G.edges = {(node1, node2):info["GMEL"] for (node1, node2, info) in encoded_graphs[0].edges(data = True)}
+        directed_H.edges = {(node1, node2):info["GMEL"] for (node1, node2, info) in encoded_graphs[1].edges(data = True)}
     else:
-        edges_G = {tuple(sorted([node1, node2])):info["GMEL"] for (node1, node2, info) in encoded_graphs[0].edges(data = True)}
-        edges_H = {tuple(sorted([node1, node2])):info["GMEL"] for (node1, node2, info) in encoded_graphs[1].edges(data = True)}
+        undirected_G.edges = {tuple(sorted([node1, node2])):info["GMEL"] for (node1, node2, info) in encoded_graphs[0].edges(data = True)}
+        undirected_H.edges = {tuple(sorted([node1, node2])):info["GMEL"] for (node1, node2, info) in encoded_graphs[1].edges(data = True)}
     # prepare neighbors
     if(nx.is_directed(nx_G)):
-        in_neigh_G = {node:list(encoded_graphs[0].predecessors(node)) for node in list(encoded_graphs[0].nodes())}
-        in_neigh_H = {node:list(encoded_graphs[1].predecessors(node)) for node in list(encoded_graphs[1].nodes())}
-        out_neigh_G = {node:list(encoded_graphs[0].neighbors(node)) for node in list(encoded_graphs[0].nodes())}
-        out_neigh_H = {node:list(encoded_graphs[1].neighbors(node)) for node in list(encoded_graphs[1].nodes())}
+        directed_G.in_neighbors = {node:list(encoded_graphs[0].predecessors(node)) for node in list(encoded_graphs[0].nodes())}
+        directed_H.in_neighbors = {node:list(encoded_graphs[1].predecessors(node)) for node in list(encoded_graphs[1].nodes())}
+        directed_G.out_neighbors = {node:list(encoded_graphs[0].neighbors(node)) for node in list(encoded_graphs[0].nodes())}
+        directed_H.out_neighbors = {node:list(encoded_graphs[1].neighbors(node)) for node in list(encoded_graphs[1].nodes())}
     else:
-        neigh_G = {node:list(encoded_graphs[0].neighbors(node)) for node in list(encoded_graphs[0].nodes())}
-        neigh_H = {node:list(encoded_graphs[1].neighbors(node)) for node in list(encoded_graphs[1].nodes())}
+        undirected_G.neighbors = {node:list(encoded_graphs[0].neighbors(node)) for node in list(encoded_graphs[0].nodes())}
+        undirected_H.neighbors = {node:list(encoded_graphs[1].neighbors(node)) for node in list(encoded_graphs[1].nodes())}
     # get total order for VF2-like analysis
     for node in list(encoded_graphs[1].nodes()):
         counter = counter + 1
@@ -207,31 +205,33 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     current_limit = getrecursionlimit()
     if(current_limit < (scalation_value * required_limit)):
         setrecursionlimit(int(scalation_value * required_limit))
+    # prepare current match
+    current_match.clear()
     # evaluate isomorphisms
     if(nx.is_directed(nx_G)):
         directed_search_isomorphisms(expected_order,
                                      current_match,
                                      all_isomorphisms,
-                                     nodes_G,
-                                     nodes_H,
-                                     in_neigh_G,
-                                     in_neigh_H,
-                                     out_neigh_G,
-                                     out_neigh_H,
-                                     edges_G,
-                                     edges_H,
+                                     directed_G.nodes,
+                                     directed_H.nodes,
+                                     directed_G.in_neighbors,
+                                     directed_H.in_neighbors,
+                                     directed_G.out_neighbors,
+                                     directed_H.out_neighbors,
+                                     directed_G.edges,
+                                     directed_H.edges,
                                      total_order,
                                      encoded_isomorphisms)
     else:
         undirected_search_isomorphisms(expected_order,
                                        current_match,
                                        all_isomorphisms,
-                                       nodes_G,
-                                       nodes_H,
-                                       neigh_G,
-                                       neigh_H,
-                                       edges_G,
-                                       edges_H,
+                                       undirected_G.nodes,
+                                       undirected_H.nodes,
+                                       undirected_G.neighbors,
+                                       undirected_H.neighbors,
+                                       undirected_G.edges,
+                                       undirected_H.edges,
                                        total_order,
                                        encoded_isomorphisms)
     # decode isomorphisms
