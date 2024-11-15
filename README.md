@@ -83,9 +83,7 @@ There you can find detailed information on the algorithms implemented here. This
 ###### Before installing this package you need to make sure that you have already installed a C and C++ compiler, so that Cython can properly compile the modules inside gmapache. For this you need (in Linux) the gcc and g++ compilers, version at least 11.4.0, which usually comes pre-installed, for example, as in Ubuntu 22.04. To check if you have these installed and with which version you can run the following two commands:
 ```
 gcc --version
-```
 g++ --version
-```
 ```
 ###### If you already have the C and C++ compilers installed the foloow the next instructions to installed gmapache.
 ###### 1) installing required python version into anaconda environment
