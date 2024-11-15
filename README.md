@@ -85,7 +85,7 @@ There you can find detailed information on the algorithms implemented here. This
 gcc --version
 g++ --version
 ```
-###### Ith these are not installed then you need to search fr instructions on how to installing them in your respective OS. In ubuntu this can be done with an ```apt-get install```. If you already have the C and C++ compilers installed the follow the next instructions to installed gmapache.
+###### Ith these are not installed then you need to search fr instructions on how to installing them in your respective OS. In ubuntu this can be done with an ```apt-get install```. If you already have the C and C++ compilers installed then follow the next instructions to installed gmapache.
 ###### 1) installing required python version into anaconda environment
 ```
 conda create -n [env_name] python=3.11.10
