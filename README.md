@@ -80,12 +80,6 @@ There you can find detailed information on the algorithms implemented here. This
 
 ## Instructions
 
-###### Before installing this package you need to make sure that you have already installed a C and C++ compiler, so that Cython can properly compile the modules inside gmapache. For this you need (in Linux) the gcc and g++ compilers, version at least 11.4.0, which usually comes pre-installed, for example, as in Ubuntu 22.04. To check if you have these installed and with which version you can run the following two commands:
-```
-gcc --version
-g++ --version
-```
-###### Ith these are not installed then you need to search fr instructions on how to installing them in your respective OS. In ubuntu this can be done with an ```apt-get install```. If you already have the C and C++ compilers installed then follow the next instructions to installed gmapache.
 ###### 1) installing required python version into anaconda environment
 ```
 conda create -n [env_name] python=3.11.10
@@ -94,11 +88,15 @@ conda create -n [env_name] python=3.11.10
 ```
 conda activate [env_name]
 ```
-###### 3) installing the package and dependencies INSIDE anaconda environment, go to the folder where setup.py is located and run
+###### 3) In order to install this package you need to have C and C++ compilers. If you do not have these already in your system you can install them INSIDE the anaconda environment with the following command:
+```
+conda install -c conda-forge cxx-compiler
+```
+###### 4) installing the package and dependencies INSIDE anaconda environment, go to the folder where setup.py is located and run
 ```
 pip install .
 ```
-###### 4) there is a python script with an example on how to call the functions in the packages, called Standalone_Example.py inside the standalone directory. To run this use (make sure to "activate conda [env_name]")
+###### 5) there is a python script with an example on how to call the functions in the packages, called Standalone_Example.py inside the standalone directory. To run this use:
 ```
 python Standalone_Example.py
 ```

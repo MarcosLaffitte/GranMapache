@@ -13,6 +13,10 @@
 # Installing required python version with anaconda
 # conda create -n devdep python=3.11.10
 
+# In order to install this package you need C and C++ compilers. If you dont have these
+# already in your system you can install them INSIDE the anaconda environment with
+# conda install -c conda-forge cxx-compiler
+
 # Building the package and install dependencies inside anaconda environment
 # pip install .
 
