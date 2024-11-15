@@ -17,6 +17,7 @@
 
 
 # already in python ------------------------------------------------------------
+from copy import deepcopy
 from sys import getrecursionlimit, setrecursionlimit
 
 
@@ -159,9 +160,11 @@ def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
     cdef partial_maps_directed_graph directed_G
     cdef partial_maps_directed_graph directed_H
     # local variables (python)
+    cdef list next_level = []
+    cdef list all_ordered = []
+    cdef list current_level = []
+    cdef list previous_level = []
     cdef list encoded_graphs = []
-    cdef list inside_anchor_H = []
-    cdef list outside_anchor_H = []
     cdef dict info = dict()
     cdef dict encoded_node_names = dict()
     cdef dict encoded_node_label = dict()
@@ -194,14 +197,36 @@ def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
         undirected_G.neighbors = {node:list(encoded_graphs[0].neighbors(node)) for node in list(encoded_graphs[0].nodes())}
         undirected_H.neighbors = {node:list(encoded_graphs[1].neighbors(node)) for node in list(encoded_graphs[1].nodes())}
     # get total order for VF2-like analysis
-    inside_anchor_H = [node2 for (node1, node2) in encoded_anchor]
-    outside_anchor_H = [node for node in list(encoded_graphs[1].nodes()) if(node not in inside_anchor_H)]
-    for node in inside_anchor_H:
+    # NOTE: for connected extensions search this should be given by  concentric neighborhoods around the anchor
+    undirected_copy_H = deepcopy(encoded_graphs[1])
+    undirected_copy_H = undirected_copy_H.to_undirected()
+    current_level = [node2 for (node1, node2) in encoded_anchor]
+    for node in current_level:
         counter = counter + 1
         total_order[node] = counter
-    for node in outside_anchor_H:
-        counter = counter + 1
-        total_order[node] = counter
+        all_ordered.append(node)
+    while(len(current_level) > 0):
+        # reinitialize next_level
+        next_level = []
+        # iterate getting immediate neighbors not already ordered
+        for node1 in current_level:
+            for node2 in list(undirected_copy_H.neighbors(node1)):
+                if(node2 not in previous_level):
+                    if(node2 not in current_level):
+                        if(node2 not in next_level):
+                            # increase and assign counter
+                            counter = counter + 1
+                            total_order[node2] = counter
+                            # level management
+                            next_level.append(node2)
+                            all_ordered.append(node2)
+        # update nodes to be ordered
+        previous_level = deepcopy(current_level)
+        current_level = deepcopy(next_level)
+    for node in list(undirected_copy_H.nodes()):
+        if(node not in all_ordered):
+            counter = counter + 1
+            total_order[node] = counter
     # get expected order
     expected_order = min([nx_G.order(), nx_H.order()])
     # set recursion limit
