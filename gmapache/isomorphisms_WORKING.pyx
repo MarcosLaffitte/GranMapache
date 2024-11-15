@@ -410,12 +410,14 @@ cdef isomorphisms_candidates_struct_undirected undirected_candidates(cpp_vector[
         for each_pair in nodes_G:
             node = each_pair.first
             if(find(current_match_G.begin(), current_match_G.end(), node) == current_match_G.end()):
+                # can only match vertices outside of ring at this point
                 if(find(ring_G.begin(), ring_G.end(), node) == ring_G.end()):
                     valid_G.push_back(node)
         # get alternatives in H
         for each_pair in nodes_H:
             node = each_pair.first
             if(find(current_match_H.begin(), current_match_H.end(), node) == current_match_H.end()):
+                # can only match vertices outside of ring at this point
                 if(find(ring_H.begin(), ring_H.end(), node) == ring_H.end()):
                     valid_H.push_back(node)
         # make product of valid neighbors
@@ -428,7 +430,7 @@ cdef isomorphisms_candidates_struct_undirected undirected_candidates(cpp_vector[
                     candidate_pairs.push_back(temp_pair)
     # filter candidate pairs
     if(not candidate_pairs.empty()):
-        # get minimum total order
+        # get minimum total order and filter candidates
         for each_pair in candidate_pairs:
             node = each_pair.second
             if(reference_minimum == -1):
@@ -453,8 +455,8 @@ cdef isomorphisms_candidates_struct_undirected undirected_candidates(cpp_vector[
 
 
 # function: evaluate syntactic feasability for undirected isomorphisms ---------
-cdef cpp_bool undirected_syntactic_feasibility(int & node1,
-                                               int & node2,
+cdef cpp_bool undirected_syntactic_feasibility(int node1,
+                                               int node2,
                                                cpp_vector[int] & ring_G,
                                                cpp_vector[int] & ring_H,
                                                cpp_vector[int] & current_match_G,
@@ -522,8 +524,8 @@ cdef cpp_bool undirected_syntactic_feasibility(int & node1,
 
 
 # function: evaluate semantic feasability for undirected isomorphisms ----------
-cdef cpp_bool undirected_semantic_feasibility(int & node1,
-                                              int & node2,
+cdef cpp_bool undirected_semantic_feasibility(int node1,
+                                              int node2,
                                               cpp_vector[int] & ring_G,
                                               cpp_vector[int] & ring_H,
                                               cpp_vector[int] & current_match_G,
@@ -612,7 +614,7 @@ cdef cpp_bool undirected_semantic_feasibility(int & node1,
         for node in neighbors_ring_G:
             # get node label
             node_label = nodes_G[node]
-            # get edge label
+            # get edge label (possibly loop label)
             if(node1 <= node):
                 labeled_edge_G.first = node1
                 labeled_edge_G.second = node
@@ -633,7 +635,7 @@ cdef cpp_bool undirected_semantic_feasibility(int & node1,
         for node in neighbors_ring_H:
             # get node label
             node_label = nodes_H[node]
-            # get edge label
+            # get edge label (possibly loop label)
             if(node2 <= node):
                 labeled_edge_H.first = node2
                 labeled_edge_H.second = node
@@ -651,16 +653,20 @@ cdef cpp_bool undirected_semantic_feasibility(int & node1,
                 count_edge_ring_H[edge_label] = count_edge_ring_H[edge_label] + 1
             else:
                 count_edge_ring_H[edge_label] = 1
+        # compare number of types of adjacent nodes
         if(count_node_ring_G.size() != count_node_ring_H.size()):
             return(False)
+        # compare number of types of incident edges
         if(count_edge_ring_G.size() != count_edge_ring_H.size()):
             return(False)
+        # compare types of adjacent nodes
         for each_pair in count_node_ring_G:
             if(count_node_ring_H.find(each_pair.first) == count_node_ring_H.end()):
                 return(False)
             else:
                 if(each_pair.second != count_node_ring_H[each_pair.first]):
                     return(False)
+        # compare types of incident edges
         for each_pair in count_edge_ring_G:
             if(count_edge_ring_H.find(each_pair.first) == count_edge_ring_H.end()):
                 return(False)
@@ -672,7 +678,7 @@ cdef cpp_bool undirected_semantic_feasibility(int & node1,
         for node in neighbors_extern_G:
             # get node label
             node_label = nodes_G[node]
-            # get edge label
+            # get edge label (possibly loop label)
             if(node1 <= node):
                 labeled_edge_G.first = node1
                 labeled_edge_G.second = node
@@ -693,7 +699,7 @@ cdef cpp_bool undirected_semantic_feasibility(int & node1,
         for node in neighbors_extern_H:
             # get node label
             node_label = nodes_H[node]
-            # get edge label
+            # get edge label (possibly loop label)
             if(node2 <= node):
                 labeled_edge_H.first = node2
                 labeled_edge_H.second = node
@@ -711,16 +717,20 @@ cdef cpp_bool undirected_semantic_feasibility(int & node1,
                 count_edge_extern_H[edge_label] = count_edge_extern_H[edge_label] + 1
             else:
                 count_edge_extern_H[edge_label] = 1
+        # compare number of types of adjacent nodes
         if(count_node_extern_G.size() != count_node_extern_H.size()):
             return(False)
+        # compare number of types of incident edges
         if(count_edge_extern_G.size() != count_edge_extern_H.size()):
             return(False)
+        # compare types of adjacent nodes
         for each_pair in count_node_extern_G:
             if(count_node_extern_H.find(each_pair.first) == count_node_extern_H.end()):
                 return(False)
             else:
                 if(each_pair.second != count_node_extern_H[each_pair.first]):
                     return(False)
+        # compare types of incident edges
         for each_pair in count_edge_extern_G:
             if(count_edge_extern_H.find(each_pair.first) == count_edge_extern_H.end()):
                 return(False)
