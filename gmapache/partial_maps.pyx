@@ -564,7 +564,7 @@ cdef void directed_maximum_connected_extensions(size_t expected_order,
 
 
 # function: get candidate pairs for directed extension search ------------------
-cdef cpp_vector[cpp_pair[int, int]] directed_candidates(cpp_vector[cpp_pair[int, int]] current_match,
+cdef cpp_vector[cpp_pair[int, int]] directed_candidates(cpp_vector[cpp_pair[int, int]] & current_match,
                                                         cpp_vector[int] & current_match_G,
                                                         cpp_vector[int] & current_match_H,
                                                         cpp_map[int, cpp_vector[int]] & in_neigh_G,
