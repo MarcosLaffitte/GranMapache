@@ -151,24 +151,27 @@ def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
     cdef int required_limit = 0
     cdef float scalation_value = 0
     cdef size_t expected_order = 0
+    cdef cpp_vector[int] all_nodes
+    cdef cpp_vector[int] next_level
+    cdef cpp_vector[int] all_ordered
+    cdef cpp_vector[int] current_level
+    cdef cpp_vector[int] previous_level
     cdef cpp_vector[cpp_pair[int, int]] encoded_anchor
     cdef cpp_vector[cpp_pair[int, int]] each_extension
     cdef cpp_vector[cpp_vector[cpp_pair[int, int]]] encoded_extensions
     cdef cpp_map[int, int] total_order
+    cdef cpp_map[int, cpp_vector[int]] connectivity_neighbors
     cdef partial_maps_undirected_graph undirected_G
     cdef partial_maps_undirected_graph undirected_H
     cdef partial_maps_directed_graph directed_G
     cdef partial_maps_directed_graph directed_H
     # local variables (python)
-    cdef list next_level = []
-    cdef list all_ordered = []
-    cdef list current_level = []
-    cdef list previous_level = []
     cdef list encoded_graphs = []
     cdef dict info = dict()
     cdef dict encoded_node_names = dict()
     cdef dict encoded_node_label = dict()
     cdef dict encoded_edge_label = dict()
+    undirected_copy_H = None
     # encode graphs
     encoded_graphs, encoded_node_names, encoded_node_label, encoded_edge_label = encode_graphs([nx_G, nx_H])
     # encode match
@@ -199,32 +202,37 @@ def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
     # get total order for VF2-like analysis
     # NOTE: for connected extensions search this should be given by  concentric neighborhoods around the anchor
     undirected_copy_H = deepcopy(encoded_graphs[1])
-    undirected_copy_H = undirected_copy_H.to_undirected()
+    if(nx.is_directed(nx_H)):
+        undirected_copy_H = undirected_copy_H.to_undirected()
+    connectivity_neighbors = {node:list(undirected_copy_H.neighbors(node)) for node in list(undirected_copy_H.nodes())}
+    all_nodes = list(undirected_copy_H.nodes())
     current_level = [node2 for (node1, node2) in encoded_anchor]
     for node in current_level:
         counter = counter + 1
         total_order[node] = counter
-        all_ordered.append(node)
-    while(len(current_level) > 0):
+        all_ordered.push_back(node)
+    while(not current_level.empty()):
         # reinitialize next_level
-        next_level = []
+        next_level.clear()
         # iterate getting immediate neighbors not already ordered
         for node1 in current_level:
-            for node2 in list(undirected_copy_H.neighbors(node1)):
-                if(node2 not in previous_level):
-                    if(node2 not in current_level):
-                        if(node2 not in next_level):
+            for node2 in connectivity_neighbors[node1]:
+                if(find(previous_level.begin(), previous_level.end(), node2) == previous_level.end()):
+                    if(find(current_level.begin(), current_level.end(), node2) == current_level.end()):
+                        if(find(next_level.begin(), next_level.end(), node2) == next_level.end()):
                             # increase and assign counter
                             counter = counter + 1
                             total_order[node2] = counter
                             # level management
-                            next_level.append(node2)
-                            all_ordered.append(node2)
+                            next_level.push_back(node2)
+                            all_ordered.push_back(node2)
         # update nodes to be ordered
-        previous_level = deepcopy(current_level)
-        current_level = deepcopy(next_level)
-    for node in list(undirected_copy_H.nodes()):
-        if(node not in all_ordered):
+        previous_level.clear()
+        previous_level = current_level
+        current_level.clear()
+        current_level = next_level
+    for node in all_nodes:
+        if(find(all_ordered.begin(), all_ordered.end(), node) == all_ordered.end()):
             counter = counter + 1
             total_order[node] = counter
     # get expected order
