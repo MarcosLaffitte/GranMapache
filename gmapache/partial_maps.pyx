@@ -12,7 +12,9 @@
 
 
 
+
 # dependencies #################################################################
+
 
 
 
@@ -22,8 +24,10 @@ from sys import getrecursionlimit, setrecursionlimit
 
 
 
+
 # not in python ----------------------------------------------------------------
 import networkx as nx
+
 
 
 
@@ -39,12 +43,15 @@ cdef extern from "<algorithm>" namespace "std":
 
 
 
+
 # custom dependencies ----------------------------------------------------------
 from .integerization import encode_graphs, decode_graphs, encode_match, decode_match
 
 
 
+
 # C/C++ structs ################################################################
+
 
 
 
@@ -53,6 +60,7 @@ cdef struct partial_maps_undirected_graph:
     cpp_map[int, int] nodes
     cpp_map[cpp_pair[int, int], int] edges
     cpp_map[int, cpp_vector[int]] neighbors
+
 
 
 
@@ -65,11 +73,14 @@ cdef struct partial_maps_directed_graph:
 
 
 
+
 # algorithms ###################################################################
 
 
 
+
 # functions - maximum connected extensions - wrapper ###########################
+
 
 
 
@@ -109,6 +120,7 @@ def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
     * undirected_maximum_connected_extensions
     * directed_maximum_connected_extensions
     """
+
     # exception handling and input correctness
     test_list = [0, 0]
     test_tuple = (0, 0)
@@ -139,9 +151,11 @@ def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
         raise(ValueError("gmapache: the input list must be an injective map and without repeated elements."))
     if(not len(list(set([y for (x, y) in input_anchor]))) == len(input_anchor)):
         raise(ValueError("gmapache: the input list must be an injective map and without repeated elements."))
+
     # output holders
     cdef list extensions = []
     good_anchor = False
+
     # local variables (cython)
     cdef int node = 0
     cdef int node1 = 0
@@ -151,6 +165,7 @@ def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
     cdef int required_limit = 0
     cdef float scalation_value = 0
     cdef size_t expected_order = 0
+    cdef cpp_pair[int, int] temp_pair
     cdef cpp_vector[int] all_nodes
     cdef cpp_vector[int] next_level
     cdef cpp_vector[int] all_ordered
@@ -165,6 +180,7 @@ def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
     cdef partial_maps_undirected_graph undirected_H
     cdef partial_maps_directed_graph directed_G
     cdef partial_maps_directed_graph directed_H
+
     # local variables (python)
     cdef list encoded_graphs = []
     cdef dict info = dict()
@@ -172,10 +188,13 @@ def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
     cdef dict encoded_node_label = dict()
     cdef dict encoded_edge_label = dict()
     undirected_copy_H = None
+
     # encode graphs
     encoded_graphs, encoded_node_names, encoded_node_label, encoded_edge_label = encode_graphs([nx_G, nx_H])
+
     # encode match
     encoded_anchor = encode_match(input_anchor, encoded_node_names)
+
     # prepare nodes
     if(nx.is_directed(nx_G)):
         directed_G.nodes = {node:info["GMNL"] for (node, info) in encoded_graphs[0].nodes(data = True)}
@@ -183,13 +202,41 @@ def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
     else:
         undirected_G.nodes = {node:info["GMNL"] for (node, info) in encoded_graphs[0].nodes(data = True)}
         undirected_H.nodes = {node:info["GMNL"] for (node, info) in encoded_graphs[1].nodes(data = True)}
+
     # prepare edges
     if(nx.is_directed(nx_G)):
         directed_G.edges = {(node1, node2):info["GMEL"] for (node1, node2, info) in encoded_graphs[0].edges(data = True)}
         directed_H.edges = {(node1, node2):info["GMEL"] for (node1, node2, info) in encoded_graphs[1].edges(data = True)}
     else:
-        undirected_G.edges = {tuple(sorted([node1, node2])):info["GMEL"] for (node1, node2, info) in encoded_graphs[0].edges(data = True)}
-        undirected_H.edges = {tuple(sorted([node1, node2])):info["GMEL"] for (node1, node2, info) in encoded_graphs[1].edges(data = True)}
+        # prepare edges of undirected G
+        for (node1, node2, info) in encoded_graphs[0].edges(data = True):
+            if(node1 == node2):
+                temp_pair.first = node1
+                temp_pair.second = node1
+                undirected_G.edges[temp_pair] = info["GMEL"]
+            else:
+                # save the two label edges to simplify future access
+                temp_pair.first = node1
+                temp_pair.second = node2
+                undirected_G.edges[temp_pair] = info["GMEL"]
+                temp_pair.first = node2
+                temp_pair.second = node1
+                undirected_G.edges[temp_pair] = info["GMEL"]
+        # prepare edges of undirected H
+        for (node1, node2, info) in encoded_graphs[1].edges(data = True):
+            if(node1 == node2):
+                temp_pair.first = node1
+                temp_pair.second = node1
+                undirected_H.edges[temp_pair] = info["GMEL"]
+            else:
+                # save the two label edges to simplify future access
+                temp_pair.first = node1
+                temp_pair.second = node2
+                undirected_H.edges[temp_pair] = info["GMEL"]
+                temp_pair.first = node2
+                temp_pair.second = node1
+                undirected_H.edges[temp_pair] = info["GMEL"]
+
     # prepare neighbors
     if(nx.is_directed(nx_G)):
         directed_G.in_neighbors = {node:list(encoded_graphs[0].predecessors(node)) for node in list(encoded_graphs[0].nodes())}
@@ -199,6 +246,7 @@ def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
     else:
         undirected_G.neighbors = {node:list(encoded_graphs[0].neighbors(node)) for node in list(encoded_graphs[0].nodes())}
         undirected_H.neighbors = {node:list(encoded_graphs[1].neighbors(node)) for node in list(encoded_graphs[1].nodes())}
+
     # get total order for VF2-like analysis
     # NOTE: for connected extensions search this should be given by  concentric neighborhoods around the anchor
     undirected_copy_H = deepcopy(encoded_graphs[1])
@@ -207,19 +255,21 @@ def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
     connectivity_neighbors = {node:list(undirected_copy_H.neighbors(node)) for node in list(undirected_copy_H.nodes())}
     all_nodes = list(undirected_copy_H.nodes())
     current_level = [node2 for (node1, node2) in encoded_anchor]
+
     for node in current_level:
         counter = counter + 1
         total_order[node] = counter
         all_ordered.push_back(node)
+
     while(not current_level.empty()):
         # reinitialize next_level
         next_level.clear()
         # iterate getting immediate neighbors not already ordered
         for node1 in current_level:
             for node2 in connectivity_neighbors[node1]:
-                if(find(previous_level.begin(), previous_level.end(), node2) == previous_level.end()):
+                if(find(next_level.begin(), next_level.end(), node2) == next_level.end()):
                     if(find(current_level.begin(), current_level.end(), node2) == current_level.end()):
-                        if(find(next_level.begin(), next_level.end(), node2) == next_level.end()):
+                        if(find(previous_level.begin(), previous_level.end(), node2) == previous_level.end()):
                             # increase and assign counter
                             counter = counter + 1
                             total_order[node2] = counter
@@ -231,18 +281,22 @@ def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
         previous_level = current_level
         current_level.clear()
         current_level = next_level
+
     for node in all_nodes:
         if(find(all_ordered.begin(), all_ordered.end(), node) == all_ordered.end()):
             counter = counter + 1
             total_order[node] = counter
+
     # get expected order
     expected_order = min([nx_G.order(), nx_H.order()])
+
     # set recursion limit
     scalation_value = 1.5
     required_limit = max([nx_G.order(), nx_H.order()])
     current_limit = getrecursionlimit()
     if(current_limit < (scalation_value * required_limit)):
         setrecursionlimit(int(scalation_value * required_limit))
+
     # get maximum extensions
     if(nx.is_directed(nx_G)):
         directed_maximum_connected_extensions(expected_order,
@@ -258,18 +312,23 @@ def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
                                                 undirected_G,
                                                 undirected_H,
                                                 encoded_extensions)
+
     # decode maximum extensions
     for each_extension in encoded_extensions:
         extensions.append(decode_match(list(each_extension), encoded_node_names))
+
     # check if the anchor was a good partial map
     if((len(extensions[0]) == nx_G.order()) and (len(extensions[0]) == nx_H.order())):
         good_anchor = True
+
     # end of function
     return(extensions, good_anchor)
 
 
 
+
 # functions - maximum connected extensions - undirected ########################
+
 
 
 
@@ -280,6 +339,7 @@ cdef void undirected_maximum_connected_extensions(size_t expected_order,
                                                   partial_maps_undirected_graph & G,
                                                   partial_maps_undirected_graph & H,
                                                   cpp_vector[cpp_vector[cpp_pair[int, int]]] & all_matches) noexcept:
+
     # local variables (cython)
     cdef size_t new_score = 0
     cdef size_t old_score = 0
@@ -291,6 +351,7 @@ cdef void undirected_maximum_connected_extensions(size_t expected_order,
     cdef cpp_vector[cpp_pair[int, int]] new_match
     cdef cpp_vector[cpp_pair[int, int]] candidates
     cdef cpp_map[int, int] forward_match
+
     # test initial match and improve if possible
     if(all_matches.empty()):
         if(not current_match.empty()):
@@ -306,6 +367,7 @@ cdef void undirected_maximum_connected_extensions(size_t expected_order,
         if(new_score > old_score):
             all_matches.clear()
             all_matches.push_back(current_match)
+
     # if not optimal yet then obtain available pairs
     if(current_match.size() < expected_order):
         # generate auxiliary structures
@@ -313,6 +375,7 @@ cdef void undirected_maximum_connected_extensions(size_t expected_order,
             current_match_G.push_back(each_pair.first)
             current_match_H.push_back(each_pair.second)
             forward_match[each_pair.first] = each_pair.second
+
         # get candidate pairs
         candidates = undirected_candidates(current_match,
                                            current_match_G,
@@ -320,6 +383,7 @@ cdef void undirected_maximum_connected_extensions(size_t expected_order,
                                            G.neighbors,
                                            H.neighbors,
                                            total_order)
+
         # evaluate candidates
         for each_pair in candidates:
             # evaluate sintactic feasibility
@@ -356,6 +420,7 @@ cdef void undirected_maximum_connected_extensions(size_t expected_order,
 
 
 
+
 # function: get candidate pairs for undirected extension search ----------------
 cdef cpp_vector[cpp_pair[int, int]] undirected_candidates(cpp_vector[cpp_pair[int, int]] & current_match,
                                                           cpp_vector[int] & current_match_G,
@@ -363,6 +428,10 @@ cdef cpp_vector[cpp_pair[int, int]] undirected_candidates(cpp_vector[cpp_pair[in
                                                           cpp_map[int, cpp_vector[int]] & neigh_G,
                                                           cpp_map[int, cpp_vector[int]] & neigh_H,
                                                           cpp_map[int, int] & total_order) noexcept:
+
+    # output holders
+    cdef cpp_vector[cpp_pair[int, int]] candidate_pairs
+
     # local variables
     cdef int node = 0
     cdef int node1 = 0
@@ -372,28 +441,32 @@ cdef cpp_vector[cpp_pair[int, int]] undirected_candidates(cpp_vector[cpp_pair[in
     cdef cpp_pair[int, int] temp_pair
     cdef cpp_vector[int] valid_G
     cdef cpp_vector[int] valid_H
-    cdef cpp_vector[cpp_pair[int, int]] candidate_pairs
+
     # get maximum value of total order in match
     for node in current_match_H:
         if(total_order[node] > reference_maximum):
             reference_maximum = total_order[node]
-    # get valid sets
+
+    # get candidate pairs based on valid sets
     for each_pair in current_match:
         # reinitialize valid neighbors
         valid_G.clear()
         valid_H.clear()
+
         # get valid neighbors in G
         for node in neigh_G[each_pair.first]:
             # if not yet in match
             if(find(current_match_G.begin(), current_match_G.end(), node) == current_match_G.end()):
                 valid_G.push_back(node)
+
         # get valid neighbors in H
         for node in neigh_H[each_pair.second]:
-            # if not yet in match
-            if(find(current_match_H.begin(), current_match_H.end(), node) == current_match_H.end()):
-                # if total order greater than in match
-                if(total_order[node] > reference_maximum):
+            # if total order greater than in match
+            if(total_order[node] > reference_maximum):
+                # if not yet in match
+                if(find(current_match_H.begin(), current_match_H.end(), node) == current_match_H.end()):
                     valid_H.push_back(node)
+
         # make product of valid neighbors
         if((not valid_G.empty()) and (not valid_H.empty())):
             for node1 in valid_G:
@@ -402,8 +475,10 @@ cdef cpp_vector[cpp_pair[int, int]] undirected_candidates(cpp_vector[cpp_pair[in
                     temp_pair.second = node2
                     if(find(candidate_pairs.begin(), candidate_pairs.end(), temp_pair) == candidate_pairs.end()):
                         candidate_pairs.push_back(temp_pair)
+
     # end of function
     return(candidate_pairs)
+
 
 
 
@@ -415,11 +490,13 @@ cdef cpp_bool undirected_syntactic_feasibility(int node1,
                                                cpp_map[int, int] & forward_match,
                                                cpp_map[int, cpp_vector[int]] & neigh_G,
                                                cpp_map[int, cpp_vector[int]] & neigh_H) noexcept:
+
     # local variables
     cdef int node = 0
     cdef int mapped = 0
     cdef cpp_vector[int] neighbors_match_G
     cdef cpp_vector[int] neighbors_match_H
+
     # loop-consistency-test
     if(find(neigh_G[node1].begin(), neigh_G[node1].end(), node1) != neigh_G[node1].end()):
         if(find(neigh_H[node2].begin(), neigh_H[node2].end(), node2) == neigh_H[node2].end()):
@@ -429,14 +506,17 @@ cdef cpp_bool undirected_syntactic_feasibility(int node1,
         if(find(neigh_H[node2].begin(), neigh_H[node2].end(), node2) != neigh_H[node2].end()):
             # node1 has no loop in G but node2 has a loop in H
             return(False)
+
     # look ahead 0: consistency of neighbors in match
     for node in neigh_G[node1]:
         if(find(current_match_G.begin(), current_match_G.end(), node) != current_match_G.end()):
             mapped = forward_match[node]
             neighbors_match_G.push_back(mapped)
+
     for node in neigh_H[node2]:
         if(find(current_match_H.begin(), current_match_H.end(), node) != current_match_H.end()):
             neighbors_match_H.push_back(node)
+
     if(neighbors_match_G.size() != neighbors_match_H.size()):
         # one node has more neighbors in the match than the other
         return(False)
@@ -445,8 +525,10 @@ cdef cpp_bool undirected_syntactic_feasibility(int node1,
             if(find(neighbors_match_H.begin(), neighbors_match_H.end(), mapped) == neighbors_match_H.end()):
                 # the neighbors dont respect the match
                 return(False)
+
     # end of function
     return(True)
+
 
 
 
@@ -460,51 +542,49 @@ cdef cpp_bool undirected_semantic_feasibility(int node1,
                                               cpp_map[int, cpp_vector[int]] & neigh_G,
                                               cpp_map[cpp_pair[int, int], int] & edges_G,
                                               cpp_map[cpp_pair[int, int], int] & edges_H) noexcept:
+
     # local variables
     cdef int node = 0
-    cdef int mapped = 0
     cdef cpp_pair[int, int] labeled_edge_G
     cdef cpp_pair[int, int] labeled_edge_H
-    cdef cpp_vector[int] neighbors_match_G
+
     # compare vertex-labels
     if(nodes_G[node1] != nodes_H[node2]):
         return(False)
+
     # compare loop-labels
     if(find(neigh_G[node1].begin(), neigh_G[node1].end(), node1) != neigh_G[node1].end()):
+        # loop in G
         labeled_edge_G.first = node1
         labeled_edge_G.second = node1
+        # loop in H
         labeled_edge_H.first = node2
         labeled_edge_H.second = node2
+        # compare edge labels
         if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
             return(False)
+
     # compare non-loop edge-labels
     for node in neigh_G[node1]:
         if(find(current_match_G.begin(), current_match_G.end(), node) != current_match_G.end()):
-            neighbors_match_G.push_back(node)
-    for node in neighbors_match_G:
-        # edge in G with only one end in match
-        if(node1 < node):
+            # edge in G with only one end in match
             labeled_edge_G.first = node1
             labeled_edge_G.second = node
-        else:
-            labeled_edge_G.first = node
-            labeled_edge_G.second = node1
-        # edge in H with only one end in match
-        mapped = forward_match[node]
-        if(node2 < mapped):
+            # edge in H with only one end in match
             labeled_edge_H.first = node2
-            labeled_edge_H.second = mapped
-        else:
-            labeled_edge_H.first = mapped
-            labeled_edge_H.second = node2
-        if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
-            return(False)
+            labeled_edge_H.second = forward_match[node]
+            # compare edge labels
+            if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
+                return(False)
+
     # end of function
     return(True)
 
 
 
+
 # functions - maximum connected extensions - directed ##########################
+
 
 
 
@@ -515,6 +595,7 @@ cdef void directed_maximum_connected_extensions(size_t expected_order,
                                                 partial_maps_directed_graph & H,
                                                 cpp_map[int, int] & total_order,
                                                 cpp_vector[cpp_vector[cpp_pair[int, int]]] & all_matches) noexcept:
+
     # local variables
     cdef size_t new_score = 0
     cdef size_t old_score = 0
@@ -526,6 +607,7 @@ cdef void directed_maximum_connected_extensions(size_t expected_order,
     cdef cpp_vector[cpp_pair[int, int]] new_match
     cdef cpp_vector[cpp_pair[int, int]] candidates
     cdef cpp_map[int, int] forward_match
+
     # test initial match and consecutive matches
     if(all_matches.empty()):
         if(not current_match.empty()):
@@ -541,6 +623,7 @@ cdef void directed_maximum_connected_extensions(size_t expected_order,
         if(new_score > old_score):
             all_matches.clear()
             all_matches.push_back(current_match)
+
     # if not optimal yet then obtain available pairs
     if(current_match.size() < expected_order):
         # generate auxiliary structures
@@ -548,6 +631,7 @@ cdef void directed_maximum_connected_extensions(size_t expected_order,
             current_match_G.push_back(each_pair.first)
             current_match_H.push_back(each_pair.second)
             forward_match[each_pair.first] = each_pair.second
+
         # get candidate pairs
         candidates = directed_candidates(current_match,
                                          current_match_G,
@@ -557,6 +641,7 @@ cdef void directed_maximum_connected_extensions(size_t expected_order,
                                          G.out_neighbors,
                                          H.out_neighbors,
                                          total_order)
+
         # evaluate candidates
         for each_pair in candidates:
             # evaluate sintactic feasibility
@@ -596,6 +681,7 @@ cdef void directed_maximum_connected_extensions(size_t expected_order,
 
 
 
+
 # function: get candidate pairs for directed extension search ------------------
 cdef cpp_vector[cpp_pair[int, int]] directed_candidates(cpp_vector[cpp_pair[int, int]] & current_match,
                                                         cpp_vector[int] & current_match_G,
@@ -605,6 +691,9 @@ cdef cpp_vector[cpp_pair[int, int]] directed_candidates(cpp_vector[cpp_pair[int,
                                                         cpp_map[int, cpp_vector[int]] & out_neigh_G,
                                                         cpp_map[int, cpp_vector[int]] & out_neigh_H,
                                                         cpp_map[int, int] & total_order) noexcept:
+    # output holders
+    cdef cpp_vector[cpp_pair[int, int]] candidate_pairs
+
     # local variables
     cdef int node = 0
     cdef int node1 = 0
@@ -614,28 +703,32 @@ cdef cpp_vector[cpp_pair[int, int]] directed_candidates(cpp_vector[cpp_pair[int,
     cdef cpp_pair[int, int] each_pair
     cdef cpp_vector[int] valid_G
     cdef cpp_vector[int] valid_H
-    cdef cpp_vector[cpp_pair[int, int]] candidate_pairs
+
     # get maximum value of total order in match
     for node in current_match_H:
         if(total_order[node] > reference_maximum):
             reference_maximum = total_order[node]
-    # get valid sets
+
+    # get candidates based on valid sets
     for each_pair in current_match:
         # reinitialize valid neighbors
         valid_G.clear()
         valid_H.clear()
+
         # get valid in-neighbors in G
         for node in in_neigh_G[each_pair.first]:
             # if not yet in match
             if(find(current_match_G.begin(), current_match_G.end(), node) == current_match_G.end()):
                 valid_G.push_back(node)
+
         # get valid in-neighbors in H
         for node in in_neigh_H[each_pair.second]:
-            # if not yet in match
-            if(find(current_match_H.begin(), current_match_H.end(), node) == current_match_H.end()):
-                # if total order greater than in match
-                if(total_order[node] > reference_maximum):
+            # if total order greater than in match
+            if(total_order[node] > reference_maximum):
+                # if not yet in match
+                if(find(current_match_H.begin(), current_match_H.end(), node) == current_match_H.end()):
                     valid_H.push_back(node)
+
         # make product of valid in-neighbors
         if((not valid_G.empty()) and (not valid_H.empty())):
             for node1 in valid_G:
@@ -644,21 +737,25 @@ cdef cpp_vector[cpp_pair[int, int]] directed_candidates(cpp_vector[cpp_pair[int,
                     temp_pair.second = node2
                     if(find(candidate_pairs.begin(), candidate_pairs.end(), temp_pair) == candidate_pairs.end()):
                         candidate_pairs.push_back(temp_pair)
+
         # reinitialize valid neighbors
         valid_G.clear()
         valid_H.clear()
+
         # get valid out-neighbors in G
         for node in out_neigh_G[each_pair.first]:
             # if not yet in match
             if(find(current_match_G.begin(), current_match_G.end(), node) == current_match_G.end()):
                 valid_G.push_back(node)
+
         # get valid out-neighbors in H
         for node in out_neigh_H[each_pair.second]:
-            # if not yet in match
-            if(find(current_match_H.begin(), current_match_H.end(), node) == current_match_H.end()):
-                # if total order greater than in match
-                if(total_order[node] > reference_maximum):
+            # if total order greater than in match
+            if(total_order[node] > reference_maximum):
+                # if not yet in match
+                if(find(current_match_H.begin(), current_match_H.end(), node) == current_match_H.end()):
                     valid_H.push_back(node)
+
         # make product of valid out-neighbors
         if((not valid_G.empty()) and (not valid_H.empty())):
             for node1 in valid_G:
@@ -667,8 +764,10 @@ cdef cpp_vector[cpp_pair[int, int]] directed_candidates(cpp_vector[cpp_pair[int,
                     temp_pair.second = node2
                     if(find(candidate_pairs.begin(), candidate_pairs.end(), temp_pair) == candidate_pairs.end()):
                         candidate_pairs.push_back(temp_pair)
+
     # end of function
     return(candidate_pairs)
+
 
 
 
@@ -682,6 +781,7 @@ cdef cpp_bool directed_syntactic_feasibility(int node1,
                                              cpp_map[int, cpp_vector[int]] & in_neigh_H,
                                              cpp_map[int, cpp_vector[int]] & out_neigh_G,
                                              cpp_map[int, cpp_vector[int]] & out_neigh_H) noexcept:
+
     # local variables
     cdef int node = 0
     cdef int mapped = 0
@@ -689,6 +789,7 @@ cdef cpp_bool directed_syntactic_feasibility(int node1,
     cdef cpp_vector[int] in_neighbors_match_H
     cdef cpp_vector[int] out_neighbors_match_G
     cdef cpp_vector[int] out_neighbors_match_H
+
     # loop-consistency-test
     if(find(in_neigh_G[node1].begin(), in_neigh_G[node1].end(), node1) != in_neigh_G[node1].end()):
         if(find(in_neigh_H[node2].begin(), in_neigh_H[node2].end(), node2) == in_neigh_H[node2].end()):
@@ -698,14 +799,17 @@ cdef cpp_bool directed_syntactic_feasibility(int node1,
         if(find(in_neigh_H[node2].begin(), in_neigh_H[node2].end(), node2) != in_neigh_H[node2].end()):
             # node1 has no loop in G but node2 has a loop in H
             return(False)
+
     # look ahead 0: consistency of in-neighbors in match
     for node in in_neigh_G[node1]:
         if(find(current_match_G.begin(), current_match_G.end(), node) != current_match_G.end()):
             mapped = forward_match[node]
             in_neighbors_match_G.push_back(mapped)
+
     for node in in_neigh_H[node2]:
         if(find(current_match_H.begin(), current_match_H.end(), node) != current_match_H.end()):
             in_neighbors_match_H.push_back(node)
+
     if(in_neighbors_match_G.size() != in_neighbors_match_H.size()):
         # one node has more in-neighbors in the match than the other
         return(False)
@@ -714,14 +818,17 @@ cdef cpp_bool directed_syntactic_feasibility(int node1,
             if(find(in_neighbors_match_H.begin(), in_neighbors_match_H.end(), mapped) == in_neighbors_match_H.end()):
                 # the in-neighbors dont respect the match
                 return(False)
+
     # look ahead 0: consistency of out-neighbors in match
     for node in out_neigh_G[node1]:
         if(find(current_match_G.begin(), current_match_G.end(), node) != current_match_G.end()):
             mapped = forward_match[node]
             out_neighbors_match_G.push_back(mapped)
+
     for node in out_neigh_H[node2]:
         if(find(current_match_H.begin(), current_match_H.end(), node) != current_match_H.end()):
             out_neighbors_match_H.push_back(node)
+
     if(out_neighbors_match_G.size() != out_neighbors_match_H.size()):
         # one node has more out-neighbors in the match than the other
         return(False)
@@ -730,8 +837,10 @@ cdef cpp_bool directed_syntactic_feasibility(int node1,
             if(find(out_neighbors_match_H.begin(), out_neighbors_match_H.end(), mapped) == out_neighbors_match_H.end()):
                 # the out-neighbors dont respect the match
                 return(False)
+
     # end of function
     return(True)
+
 
 
 
@@ -746,50 +855,57 @@ cdef cpp_bool directed_semantic_feasibility(int node1,
                                             cpp_map[int, cpp_vector[int]] & out_neigh_G,
                                             cpp_map[cpp_pair[int, int], int] & edges_G,
                                             cpp_map[cpp_pair[int, int], int] & edges_H) noexcept:
+
     # local variables
     cdef int node = 0
-    cdef int mapped = 0
     cdef cpp_pair[int, int] labeled_edge_G
     cdef cpp_pair[int, int] labeled_edge_H
-    cdef cpp_vector[int] in_neighbors_match_G
-    cdef cpp_vector[int] out_neighbors_match_G
+
     # compare vertex-labels
     if(nodes_G[node1] != nodes_H[node2]):
         return(False)
+
     # compare loop-labels
     if(find(in_neigh_G[node1].begin(), in_neigh_G[node1].end(), node1) != in_neigh_G[node1].end()):
+        # loop in G
         labeled_edge_G.first = node1
         labeled_edge_G.second = node1
+        # loop in H
         labeled_edge_H.first = node2
         labeled_edge_H.second = node2
+        # compare edge labels
         if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
             return(False)
+
     # compare non-loop in-edge-labels
     for node in in_neigh_G[node1]:
         if(find(current_match_G.begin(), current_match_G.end(), node) != current_match_G.end()):
-            in_neighbors_match_G.push_back(node)
-    for node in in_neighbors_match_G:
-        # edge in G with only one end in match
-        labeled_edge_G.first = node
-        labeled_edge_G.second = node1
-        labeled_edge_H.first = forward_match[node]
-        labeled_edge_H.second = node2
-        if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
-            return(False)
+            # edge in G with only one end in match
+            labeled_edge_G.first = node
+            labeled_edge_G.second = node1
+            # edge in H with only one end in match
+            labeled_edge_H.first = forward_match[node]
+            labeled_edge_H.second = node2
+            # compare edge labels
+            if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
+                return(False)
+
     # compare non-loop out-edge-labels
     for node in out_neigh_G[node1]:
         if(find(current_match_G.begin(), current_match_G.end(), node) != current_match_G.end()):
-            out_neighbors_match_G.push_back(node)
-    for node in out_neighbors_match_G:
-        # edge in G with only one end in match
-        labeled_edge_G.first = node1
-        labeled_edge_G.second = node
-        labeled_edge_H.first = node2
-        labeled_edge_H.second = forward_match[node]
-        if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
-            return(False)
+            # edge in G with only one end in match
+            labeled_edge_G.first = node1
+            labeled_edge_G.second = node
+            # edge in H with only one end in match
+            labeled_edge_H.first = node2
+            labeled_edge_H.second = forward_match[node]
+            # compare edge labels
+            if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
+                return(False)
+
     # end of function
     return(True)
+
 
 
 

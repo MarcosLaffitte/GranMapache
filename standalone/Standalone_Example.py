@@ -18,6 +18,11 @@
 #   * for all the following, activate anaconda environment with                #
 #     conda activate [env_name]                                                #
 #                                                                              #
+#   * in order to install this package you need C and C++ compilers. If you    #
+#     dont have them already in your system you can install them INSIDE the    #
+#     anaconda environment with                                                #
+#     conda install -c conda-forge cxx-compiler                                #
+#                                                                              #
 #   * installing the package and dependencies INSIDE anaconda environment,     #
 #     go to the folder where setup.py is located and run                       #
 #     pip install .                                                            #
@@ -137,6 +142,9 @@ partial_map = [("g1", "h1"),
 initial_time = time.time()
 all_extensions, good_map = gm.maximum_connected_extensions(G, H, partial_map)
 final_time = time.time()
+
+
+# print results
 print("\n")
 print("***** Given anchor:")
 print(partial_map)

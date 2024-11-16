@@ -14,8 +14,10 @@
 
 
 
+
 # already in python ------------------------------------------------------------
 from copy import deepcopy
+
 
 
 
@@ -24,8 +26,10 @@ import networkx as nx
 
 
 
+
 # cython specifics -------------------------------------------------------------
 import cython
+
 
 
 
@@ -33,7 +37,9 @@ import cython
 
 
 
+
 # functions - encoding and decoding of graphs ##################################
+
 
 
 
@@ -59,6 +65,7 @@ def encode_graphs(input_graphs = []):
     * node_label_encoding - dict from integers into original dicts of node labels.
     * edge_label_encoding - dict from integers into original dicts of edge labels.
     """
+
     # exception handling and input correctness
     test_list = [0, 0]
     test_undir = nx.Graph()
@@ -78,11 +85,13 @@ def encode_graphs(input_graphs = []):
     if(not test_count_undir == len(input_graphs)):
         if(not test_count_dir == len(input_graphs)):
             raise(ValueError("gmapache: elements in list must be networkx graphs or digraphs of the same type."))
+
     # output holders
     cdef list encoded_graphs = []
     cdef dict node_name_encoding = dict()    # from ints to node names
     cdef dict node_label_encoding = dict()   # from ints to node label-dicts
     cdef dict edge_label_encoding = dict()   # from ints to edge label-dicts
+
     # local variables (cython)
     cdef int i = 0
     cdef int N1 = 0
@@ -93,6 +102,7 @@ def encode_graphs(input_graphs = []):
     cdef int encoded_label = 0
     cdef int new_node_label = 0
     cdef int new_edge_label = 0
+
     # local variables (python)
     cdef list all_nodes = []
     cdef list all_node_labels = []
@@ -105,6 +115,7 @@ def encode_graphs(input_graphs = []):
     u = None
     v = None
     int_graph = None
+
     # homogenize node names across input graphs
     N1 = len(input_graphs)
     for i in range(0, N1):
@@ -113,6 +124,7 @@ def encode_graphs(input_graphs = []):
     for i in range(0, N2):
         node_name_encoding[i] = deepcopy(all_nodes[i])
         node_name_encoding_inv[deepcopy(all_nodes[i])] = i # nodes are hashable objects
+
     # homogenize node labels across input graphs
     for i in range(0, N1):
         for (v, nodeInfo) in list(input_graphs[i].nodes(data = True)):
@@ -120,6 +132,7 @@ def encode_graphs(input_graphs = []):
                 node_label_encoding[new_node_label] = deepcopy(nodeInfo) # starting from 0
                 node_label_encoding_inv.append(deepcopy(nodeInfo)) # labels are dictionaries
                 new_node_label = new_node_label + 1
+
     # homogenize edge labels across input graphs
     for i in range(0, N1):
         for (u, v, edgeInfo) in list(input_graphs[i].edges(data = True)):
@@ -127,6 +140,7 @@ def encode_graphs(input_graphs = []):
                 edge_label_encoding[new_edge_label] = deepcopy(edgeInfo) # starting from 0
                 edge_label_encoding_inv.append(deepcopy(edgeInfo)) # labels are dictionaries
                 new_edge_label = new_edge_label + 1
+
     # create integerized copies of input graphs
     for i in range(0, N1):
         # initialize graph with original type
@@ -149,8 +163,10 @@ def encode_graphs(input_graphs = []):
                                GMEL = encoded_label) # gran_mapache_edge_label
         # save graph in list
         encoded_graphs.append(deepcopy(int_graph))
+
     # end of function
     return(encoded_graphs, node_name_encoding, node_label_encoding, edge_label_encoding)
+
 
 
 
@@ -175,6 +191,7 @@ def decode_graphs(encoded_graphs = [],
     > output:
     * decoded_graphs - list of networkx graph or digraph objects.
     """
+
     # exception handling and input correctness
     test_list = [0, 0]
     test_dict = dict()
@@ -225,8 +242,10 @@ def decode_graphs(encoded_graphs = [],
     if(not test_count_undir == len(encoded_graphs)):
         if(not test_count_dir == len(encoded_graphs)):
             raise(ValueError("gmapache: elements in list must be networkx graphs or digraphs of the same type."))
+
     # output holders
     cdef list decoded_graphs = []
+
     # local variables (cython)
     cdef int i = 0
     cdef int u = 0
@@ -236,10 +255,12 @@ def decode_graphs(encoded_graphs = [],
     cdef int decoded_node_a = 0
     cdef int decoded_node_b = 0
     cdef int decoded_label = 0
+
     # local variables (python)
     cdef dict nodeInfo = dict()
     cdef dict edgeInfo = dict()
     dec_graph = None
+
     # iterate decoding graphs
     N1 = len(encoded_graphs)
     for i in range(0, N1):
@@ -261,12 +282,15 @@ def decode_graphs(encoded_graphs = [],
             dec_graph.add_edges_from([(deepcopy(decoded_node_a), deepcopy(decoded_node_b), deepcopy(decoded_label))])
         # save graph in list
         decoded_graphs.append(deepcopy(dec_graph))
+
     # end of function
     return(decoded_graphs)
 
 
 
+
 # functions - encoding and decoding of matches #################################
+
 
 
 
@@ -285,6 +309,7 @@ def encode_match(input_match = [],
     > output:
     * encoded_match - list of 2-tuples of integers (i, j) encoding the nodes.
     """
+
     # exception handling and input correctness
     test_list = [0, 0]
     test_tuple = (0, 0)
@@ -302,25 +327,32 @@ def encode_match(input_match = [],
             raise(ValueError("gmapache: input dictionary must encode all elements being matched."))
         if(test_entry[1] not in list(node_name_encoding.values())):
             raise(ValueError("gmapache: input dictionary must encode all elements being matched."))
+
     # output holders
     cdef list encoded_match = []
+
     # local variables (cython)
     cdef int i = 0
     cdef int N1 = 0
     cdef int index1 = 0
     cdef int index2 = 0
+
     # local variables (python)
     cdef dict node_name_encoding_inv = dict()
+
     # get encoding as array
     node_name_encoding_inv = {node_name_encoding[i]:i for i in range(len(node_name_encoding))}
+
     # encode match
     N1 = len(input_match)
     for i in range(0, N1):
         index1 = node_name_encoding_inv[input_match[i][0]]
         index2 = node_name_encoding_inv[input_match[i][1]]
         encoded_match.append((index1, index2))
+
     # end of function
     return(encoded_match)
+
 
 
 
@@ -339,6 +371,7 @@ def decode_match(encoded_match = [],
     > output:
     * decoded_match - list of 2-tuples (x, y) of nodes representing the match.
     """
+
     # exception handling and input correctness
     test_list = [0, 0]
     test_tuple = (0, 0)
@@ -356,22 +389,28 @@ def decode_match(encoded_match = [],
             raise(ValueError("gmapache: input dictionary must encode all elements being matched."))
         if(test_entry[1] not in list(node_name_encoding.keys())):
             raise(ValueError("gmapache: input dictionary must encode all elements being matched."))
+
     # output holders
     cdef list decoded_match = []
+
     # local variables (cython)
     cdef int i = 0
     cdef int N1 = 0
+
     # local variables (python)
     node1 = None
     node2 = None
+
     # decode match
     N1 = len(encoded_match)
     for i in range(0, N1):
         node1 = node_name_encoding[encoded_match[i][0]]
         node2 = node_name_encoding[encoded_match[i][1]]
         decoded_match.append((deepcopy(node1), deepcopy(node2)))
+
     # end of function
     return(decoded_match)
+
 
 
 
