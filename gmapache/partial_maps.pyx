@@ -37,6 +37,7 @@ from libcpp cimport bool as cpp_bool
 from libcpp.map cimport map as cpp_map
 from libcpp.pair cimport pair as cpp_pair
 from libcpp.vector cimport vector as cpp_vector
+from libcpp.unordered_map cimport unordered_map as cpp_unordered_map
 cdef extern from "<algorithm>" namespace "std":
     # find element in vector
     Iter find[Iter, Const](Iter first, Iter last, Const value)
@@ -166,16 +167,15 @@ def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
     cdef float scalation_value = 0
     cdef size_t expected_order = 0
     cdef cpp_pair[int, int] temp_pair
-    cdef cpp_vector[int] all_nodes
+    cdef cpp_pair[int, cpp_vector[int]] each_pair
     cdef cpp_vector[int] next_level
-    cdef cpp_vector[int] all_ordered
     cdef cpp_vector[int] current_level
-    cdef cpp_vector[int] previous_level
     cdef cpp_vector[cpp_pair[int, int]] encoded_anchor
     cdef cpp_vector[cpp_pair[int, int]] each_extension
     cdef cpp_vector[cpp_vector[cpp_pair[int, int]]] encoded_extensions
     cdef cpp_map[int, int] total_order
     cdef cpp_map[int, cpp_vector[int]] connectivity_neighbors
+    cdef cpp_unordered_map[int, cpp_bool] visited
     cdef partial_maps_undirected_graph undirected_G
     cdef partial_maps_undirected_graph undirected_H
     cdef partial_maps_directed_graph directed_G
@@ -248,18 +248,20 @@ def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
         undirected_H.neighbors = {node:list(encoded_graphs[1].neighbors(node)) for node in list(encoded_graphs[1].nodes())}
 
     # get total order for VF2-like analysis
-    # NOTE: for connected extensions search this should be given by  concentric neighborhoods around the anchor
+    # NOTE: for connected extensions this should be given by concentric neighborhoods around the anchor with a multisource BFS
     undirected_copy_H = deepcopy(encoded_graphs[1])
     if(nx.is_directed(nx_H)):
         undirected_copy_H = undirected_copy_H.to_undirected()
     connectivity_neighbors = {node:list(undirected_copy_H.neighbors(node)) for node in list(undirected_copy_H.nodes())}
-    all_nodes = list(undirected_copy_H.nodes())
     current_level = [node2 for (node1, node2) in encoded_anchor]
+    for each_pair in connectivity_neighbors:
+        node = each_pair.first
+        visited[node] = False
 
     for node in current_level:
         counter = counter + 1
         total_order[node] = counter
-        all_ordered.push_back(node)
+        visited[node] = True
 
     while(not current_level.empty()):
         # reinitialize next_level
@@ -267,25 +269,24 @@ def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
         # iterate getting immediate neighbors not already ordered
         for node1 in current_level:
             for node2 in connectivity_neighbors[node1]:
-                if(find(next_level.begin(), next_level.end(), node2) == next_level.end()):
-                    if(find(current_level.begin(), current_level.end(), node2) == current_level.end()):
-                        if(find(previous_level.begin(), previous_level.end(), node2) == previous_level.end()):
-                            # increase and assign counter
-                            counter = counter + 1
-                            total_order[node2] = counter
-                            # level management
-                            next_level.push_back(node2)
-                            all_ordered.push_back(node2)
+                # only assign oreder of not visited yet
+                if(not visited[node2]):
+                    # increase and assign counter
+                    counter = counter + 1
+                    total_order[node2] = counter
+                    visited[node2] = True
+                    # level management
+                    next_level.push_back(node2)
         # update nodes to be ordered
-        previous_level.clear()
-        previous_level = current_level
         current_level.clear()
         current_level = next_level
 
-    for node in all_nodes:
-        if(find(all_ordered.begin(), all_ordered.end(), node) == all_ordered.end()):
+    for each_pair in connectivity_neighbors:
+        node = each_pair.first
+        if(not visited[node]):
             counter = counter + 1
             total_order[node] = counter
+            visited[node] = True
 
     # get expected order
     expected_order = min([nx_G.order(), nx_H.order()])
