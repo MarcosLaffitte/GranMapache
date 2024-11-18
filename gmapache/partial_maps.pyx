@@ -58,19 +58,19 @@ from .integerization import encode_graphs, decode_graphs, encode_match, decode_m
 
 # struct: undirected graph ---------------------------------------------------
 cdef struct partial_maps_undirected_graph:
-    cpp_map[int, int] nodes
+    cpp_unordered_map[int, int] nodes
     cpp_map[cpp_pair[int, int], int] edges
-    cpp_map[int, cpp_vector[int]] neighbors
+    cpp_unordered_map[int, cpp_vector[int]] neighbors
 
 
 
 
 # struct: directed graph -------------------------------------------------------
 cdef struct partial_maps_directed_graph:
-    cpp_map[int, int] nodes
+    cpp_unordered_map[int, int] nodes
     cpp_map[cpp_pair[int, int], int] edges
-    cpp_map[int, cpp_vector[int]] in_neighbors
-    cpp_map[int, cpp_vector[int]] out_neighbors
+    cpp_unordered_map[int, cpp_vector[int]] in_neighbors
+    cpp_unordered_map[int, cpp_vector[int]] out_neighbors
 
 
 
@@ -173,9 +173,9 @@ def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
     cdef cpp_vector[cpp_pair[int, int]] encoded_anchor
     cdef cpp_vector[cpp_pair[int, int]] each_extension
     cdef cpp_vector[cpp_vector[cpp_pair[int, int]]] encoded_extensions
-    cdef cpp_map[int, int] total_order
-    cdef cpp_map[int, cpp_vector[int]] connectivity_neighbors
+    cdef cpp_unordered_map[int, int] total_order
     cdef cpp_unordered_map[int, cpp_bool] visited
+    cdef cpp_unordered_map[int, cpp_vector[int]] connectivity_neighbors
     cdef partial_maps_undirected_graph undirected_G
     cdef partial_maps_undirected_graph undirected_H
     cdef partial_maps_directed_graph directed_G
@@ -336,7 +336,7 @@ def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
 # function: core routine of VF2-like undirected approach -----------------------
 cdef void undirected_maximum_connected_extensions(size_t expected_order,
                                                   cpp_vector[cpp_pair[int, int]] current_match,
-                                                  cpp_map[int, int] & total_order,
+                                                  cpp_unordered_map[int, int] & total_order,
                                                   partial_maps_undirected_graph & G,
                                                   partial_maps_undirected_graph & H,
                                                   cpp_vector[cpp_vector[cpp_pair[int, int]]] & all_matches) noexcept:
@@ -351,7 +351,7 @@ cdef void undirected_maximum_connected_extensions(size_t expected_order,
     cdef cpp_vector[int] current_match_H
     cdef cpp_vector[cpp_pair[int, int]] new_match
     cdef cpp_vector[cpp_pair[int, int]] candidates
-    cdef cpp_map[int, int] forward_match
+    cdef cpp_unordered_map[int, int] forward_match
 
     # test initial match and improve if possible
     if(all_matches.empty()):
@@ -426,9 +426,9 @@ cdef void undirected_maximum_connected_extensions(size_t expected_order,
 cdef cpp_vector[cpp_pair[int, int]] undirected_candidates(cpp_vector[cpp_pair[int, int]] & current_match,
                                                           cpp_vector[int] & current_match_G,
                                                           cpp_vector[int] & current_match_H,
-                                                          cpp_map[int, cpp_vector[int]] & neigh_G,
-                                                          cpp_map[int, cpp_vector[int]] & neigh_H,
-                                                          cpp_map[int, int] & total_order) noexcept:
+                                                          cpp_unordered_map[int, cpp_vector[int]] & neigh_G,
+                                                          cpp_unordered_map[int, cpp_vector[int]] & neigh_H,
+                                                          cpp_unordered_map[int, int] & total_order) noexcept:
 
     # output holders
     cdef cpp_vector[cpp_pair[int, int]] candidate_pairs
@@ -488,9 +488,9 @@ cdef cpp_bool undirected_syntactic_feasibility(int node1,
                                                int node2,
                                                cpp_vector[int] & current_match_G,
                                                cpp_vector[int] & current_match_H,
-                                               cpp_map[int, int] & forward_match,
-                                               cpp_map[int, cpp_vector[int]] & neigh_G,
-                                               cpp_map[int, cpp_vector[int]] & neigh_H) noexcept:
+                                               cpp_unordered_map[int, int] & forward_match,
+                                               cpp_unordered_map[int, cpp_vector[int]] & neigh_G,
+                                               cpp_unordered_map[int, cpp_vector[int]] & neigh_H) noexcept:
 
     # local variables
     cdef int node = 0
@@ -537,10 +537,10 @@ cdef cpp_bool undirected_syntactic_feasibility(int node1,
 cdef cpp_bool undirected_semantic_feasibility(int node1,
                                               int node2,
                                               cpp_vector[int] & current_match_G,
-                                              cpp_map[int, int] & forward_match,
-                                              cpp_map[int, int] & nodes_G,
-                                              cpp_map[int, int] & nodes_H,
-                                              cpp_map[int, cpp_vector[int]] & neigh_G,
+                                              cpp_unordered_map[int, int] & forward_match,
+                                              cpp_unordered_map[int, int] & nodes_G,
+                                              cpp_unordered_map[int, int] & nodes_H,
+                                              cpp_unordered_map[int, cpp_vector[int]] & neigh_G,
                                               cpp_map[cpp_pair[int, int], int] & edges_G,
                                               cpp_map[cpp_pair[int, int], int] & edges_H) noexcept:
 
@@ -594,7 +594,7 @@ cdef void directed_maximum_connected_extensions(size_t expected_order,
                                                 cpp_vector[cpp_pair[int, int]] current_match,
                                                 partial_maps_directed_graph & G,
                                                 partial_maps_directed_graph & H,
-                                                cpp_map[int, int] & total_order,
+                                                cpp_unordered_map[int, int] & total_order,
                                                 cpp_vector[cpp_vector[cpp_pair[int, int]]] & all_matches) noexcept:
 
     # local variables
@@ -607,7 +607,7 @@ cdef void directed_maximum_connected_extensions(size_t expected_order,
     cdef cpp_vector[int] current_match_H
     cdef cpp_vector[cpp_pair[int, int]] new_match
     cdef cpp_vector[cpp_pair[int, int]] candidates
-    cdef cpp_map[int, int] forward_match
+    cdef cpp_unordered_map[int, int] forward_match
 
     # test initial match and consecutive matches
     if(all_matches.empty()):
@@ -687,11 +687,11 @@ cdef void directed_maximum_connected_extensions(size_t expected_order,
 cdef cpp_vector[cpp_pair[int, int]] directed_candidates(cpp_vector[cpp_pair[int, int]] & current_match,
                                                         cpp_vector[int] & current_match_G,
                                                         cpp_vector[int] & current_match_H,
-                                                        cpp_map[int, cpp_vector[int]] & in_neigh_G,
-                                                        cpp_map[int, cpp_vector[int]] & in_neigh_H,
-                                                        cpp_map[int, cpp_vector[int]] & out_neigh_G,
-                                                        cpp_map[int, cpp_vector[int]] & out_neigh_H,
-                                                        cpp_map[int, int] & total_order) noexcept:
+                                                        cpp_unordered_map[int, cpp_vector[int]] & in_neigh_G,
+                                                        cpp_unordered_map[int, cpp_vector[int]] & in_neigh_H,
+                                                        cpp_unordered_map[int, cpp_vector[int]] & out_neigh_G,
+                                                        cpp_unordered_map[int, cpp_vector[int]] & out_neigh_H,
+                                                        cpp_unordered_map[int, int] & total_order) noexcept:
     # output holders
     cdef cpp_vector[cpp_pair[int, int]] candidate_pairs
 
@@ -777,11 +777,11 @@ cdef cpp_bool directed_syntactic_feasibility(int node1,
                                              int node2,
                                              cpp_vector[int] & current_match_G,
                                              cpp_vector[int] & current_match_H,
-                                             cpp_map[int, int] & forward_match,
-                                             cpp_map[int, cpp_vector[int]] & in_neigh_G,
-                                             cpp_map[int, cpp_vector[int]] & in_neigh_H,
-                                             cpp_map[int, cpp_vector[int]] & out_neigh_G,
-                                             cpp_map[int, cpp_vector[int]] & out_neigh_H) noexcept:
+                                             cpp_unordered_map[int, int] & forward_match,
+                                             cpp_unordered_map[int, cpp_vector[int]] & in_neigh_G,
+                                             cpp_unordered_map[int, cpp_vector[int]] & in_neigh_H,
+                                             cpp_unordered_map[int, cpp_vector[int]] & out_neigh_G,
+                                             cpp_unordered_map[int, cpp_vector[int]] & out_neigh_H) noexcept:
 
     # local variables
     cdef int node = 0
@@ -849,11 +849,11 @@ cdef cpp_bool directed_syntactic_feasibility(int node1,
 cdef cpp_bool directed_semantic_feasibility(int node1,
                                             int node2,
                                             cpp_vector[int] & current_match_G,
-                                            cpp_map[int, int] & forward_match,
-                                            cpp_map[int, int] & nodes_G,
-                                            cpp_map[int, int] & nodes_H,
-                                            cpp_map[int, cpp_vector[int]] & in_neigh_G,
-                                            cpp_map[int, cpp_vector[int]] & out_neigh_G,
+                                            cpp_unordered_map[int, int] & forward_match,
+                                            cpp_unordered_map[int, int] & nodes_G,
+                                            cpp_unordered_map[int, int] & nodes_H,
+                                            cpp_unordered_map[int, cpp_vector[int]] & in_neigh_G,
+                                            cpp_unordered_map[int, cpp_vector[int]] & out_neigh_G,
                                             cpp_map[cpp_pair[int, int], int] & edges_G,
                                             cpp_map[cpp_pair[int, int], int] & edges_H) noexcept:
 
