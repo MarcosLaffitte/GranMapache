@@ -86,9 +86,10 @@ cdef struct partial_maps_directed_graph:
 
 
 # function: callable wrapper for the maximum connected extensions --------------
-def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
-                                 nx_H = nx.Graph(),      # can be nx.DiGraph
-                                 input_anchor = []):     # should be non-empty list
+def maximum_connected_extensions(nx_G = nx.Graph(),         # can be nx.DiGraph
+                                 nx_H = nx.Graph(),         # can be nx.DiGraph
+                                 input_anchor = [],         # should be non-empty list
+                                 all_extensions = False):   # by default stops when finding one complete extension (if any)
     # description
     """
     > description: receives two networkx graphs G and H, and a match between them (here
@@ -107,11 +108,20 @@ def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
     * extensions - list of injective maps each as a list of 2-tuples (x, y) of nodes x
     from G and y from H representing the maximum connected extensions of the anchor (each
     extension contains the anchor as a sublist).
-    * good_anchor - boolean value indicating if the extensions cover all nodes of G and
-    of H, i.e., if they are bijections between G and H. If so, the anchor is what we
-    have refered to as a "good partial atom map", and equivalenteĺy the match obtained
-    when removing the anchhor from any extension is a graph-isomorphism between the
-    "remainder" graphs it induces from G and H.
+    * good_anchor - boolean value indicating if the extensions are complete, i.e., cover
+    all nodes of G and of H, and thus if they are bijections between G and H. If so, the
+    anchor is what we have refered to as a "good partial atom map", and equivalenteĺy the
+    match obtained when removing the anchhor from any extension is a graph-isomorphism
+    between the "remainder" graphs it induces from G and H.
+    * all_extensions - boolean indicating if the function should stop as soon as one complete
+    extension is found (if any) - this is the default behavior- or if it should search for all
+    possible (complete) extensions. NOTE: mathematically speaking, the complete extension of
+    a FIXED and GOOD anchor is unique up to equivalence of bijections, that is equivalence
+    of atom maps or correspondingly isomorphism of their ITS graphs. Nontheless it should be
+    noted that changing the anchor may produce non-equivalent (complete) extensions. In other
+    words, each call to this function can (mathematically) produce only one complete extension,
+    but calls with different anchors can produce non-equivalent extensions, even if the anchors
+    produce isomorphic partial ITS graphs.
 
     > calls:
     * .integerization.encode_graphs
@@ -127,6 +137,7 @@ def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
     test_tuple = (0, 0)
     test_undir = nx.Graph()
     test_dir = nx.DiGraph()
+    test_bool = False
     if(type(nx_G) not in [type(test_undir), type(test_dir)]):
         raise(ValueError("gmapache: first argument must be a networkx graph or digraph."))
     if(type(nx_H) not in [type(test_undir), type(test_dir)]):
@@ -135,6 +146,8 @@ def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
         raise(ValueError("gmapache: input graphs must be both directed or both undirected."))
     if((not nx.is_directed(nx_G)) and (nx.is_directed(nx_H))):
         raise(ValueError("gmapache: input graphs must be both directed or both undirected."))
+    if(type(all_extensions) not in [type(test_bool)]):
+        raise(ValueError("gmapache: fourth argument must be a boolean variable."))
     if(not type(input_anchor) in [type(test_list)]):
         raise(ValueError("gmapache: third argument must be a non-empty list of 2-tuples."))
     if(len(input_anchor) == 0):
@@ -300,14 +313,16 @@ def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
 
     # get maximum extensions
     if(nx.is_directed(nx_G)):
-        directed_maximum_connected_extensions(expected_order,
+        directed_maximum_connected_extensions(all_extensions,
+                                              expected_order,
                                               encoded_anchor,
                                               directed_G,
                                               directed_H,
                                               total_order,
                                               encoded_extensions)
     else:
-        undirected_maximum_connected_extensions(expected_order,
+        undirected_maximum_connected_extensions(all_extensions,
+                                                expected_order,
                                                 encoded_anchor,
                                                 total_order,
                                                 undirected_G,
@@ -334,7 +349,8 @@ def maximum_connected_extensions(nx_G = nx.Graph(),      # can be nx.DiGraph
 
 
 # function: core routine of VF2-like undirected approach -----------------------
-cdef void undirected_maximum_connected_extensions(size_t expected_order,
+cdef void undirected_maximum_connected_extensions(cpp_bool all_extensions,
+                                                  size_t expected_order,
                                                   cpp_vector[cpp_pair[int, int]] current_match,
                                                   cpp_unordered_map[int, int] & total_order,
                                                   partial_maps_undirected_graph & G,
@@ -357,6 +373,11 @@ cdef void undirected_maximum_connected_extensions(size_t expected_order,
     if(all_matches.empty()):
         if(not current_match.empty()):
             all_matches.push_back(current_match)
+            # if complete match and only one then return
+            if(G.nodes.size() == H.nodes.size()):
+                if(current_match.size() == G.nodes.size()):
+                    if(not all_extensions):
+                        return
     else:
         # test improvement in matches
         new_score = current_match.size()
@@ -368,6 +389,11 @@ cdef void undirected_maximum_connected_extensions(size_t expected_order,
         if(new_score > old_score):
             all_matches.clear()
             all_matches.push_back(current_match)
+            # if complete match and only one then return
+            if(G.nodes.size() == H.nodes.size()):
+                if(current_match.size() == G.nodes.size()):
+                    if(not all_extensions):
+                        return
 
     # if not optimal yet then obtain available pairs
     if(current_match.size() < expected_order):
@@ -411,12 +437,19 @@ cdef void undirected_maximum_connected_extensions(size_t expected_order,
                     new_match = current_match
                     new_match.push_back(each_pair)
                     # extend match
-                    undirected_maximum_connected_extensions(expected_order,
+                    undirected_maximum_connected_extensions(all_extensions,
+                                                            expected_order,
                                                             new_match,
                                                             total_order,
                                                             G,
                                                             H,
                                                             all_matches)
+                    # finish if only one complete extension was requested and it was already found
+                    if(G.nodes.size() == H.nodes.size()):
+                        if(not all_extensions):
+                            # anchor is always present in vector of all matches at this point
+                            if(all_matches[0].size() == G.nodes.size()):
+                                return
     # end of function
 
 
@@ -590,7 +623,8 @@ cdef cpp_bool undirected_semantic_feasibility(int node1,
 
 
 # function: core routine of VF2-like directed approach -------------------------
-cdef void directed_maximum_connected_extensions(size_t expected_order,
+cdef void directed_maximum_connected_extensions(cpp_bool all_extensions,
+                                                size_t expected_order,
                                                 cpp_vector[cpp_pair[int, int]] current_match,
                                                 partial_maps_directed_graph & G,
                                                 partial_maps_directed_graph & H,
@@ -613,6 +647,11 @@ cdef void directed_maximum_connected_extensions(size_t expected_order,
     if(all_matches.empty()):
         if(not current_match.empty()):
             all_matches.push_back(current_match)
+            # if complete match and only one then return
+            if(G.nodes.size() == H.nodes.size()):
+                if(current_match.size() == G.nodes.size()):
+                    if(not all_extensions):
+                        return
     else:
         # test improvement in matches
         new_score = current_match.size()
@@ -624,6 +663,11 @@ cdef void directed_maximum_connected_extensions(size_t expected_order,
         if(new_score > old_score):
             all_matches.clear()
             all_matches.push_back(current_match)
+            # if complete match and only one then return
+            if(G.nodes.size() == H.nodes.size()):
+                if(current_match.size() == G.nodes.size()):
+                    if(not all_extensions):
+                        return
 
     # if not optimal yet then obtain available pairs
     if(current_match.size() < expected_order):
@@ -672,12 +716,19 @@ cdef void directed_maximum_connected_extensions(size_t expected_order,
                     new_match = current_match
                     new_match.push_back(each_pair)
                     # extend match
-                    directed_maximum_connected_extensions(expected_order,
+                    directed_maximum_connected_extensions(all_extensions,
+                                                          expected_order,
                                                           new_match,
                                                           G,
                                                           H,
                                                           total_order,
                                                           all_matches)
+                    # finish if only one complete extension was requested and it was already found
+                    if(G.nodes.size() == H.nodes.size()):
+                        if(not all_extensions):
+                            # anchor is always present in vector of all matches at this point
+                            if(all_matches[0].size() == G.nodes.size()):
+                                return
     # end of function
 
 
