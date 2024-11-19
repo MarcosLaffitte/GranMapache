@@ -26,6 +26,10 @@ Alignments and other Maps between Graphs
 
 > done: simplifying code with C++ structs
 
+> done: implemented C++ unordered maps for fast (constant look-ups).
+
+- working: implementing and testing iterative version of the algorithm(s) against current recursive versions.
+
 - working: making isomorphism routines for unidrected and directed labeled graphs.
 
 - modules: integerization, partial_maps, common_subgraphs, alignment, isomorphism, rebalancing, verbosity, visualization, (maybe) classes, (maybe) tests.
