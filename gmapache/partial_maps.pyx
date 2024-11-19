@@ -36,6 +36,7 @@ import cython
 from libcpp cimport bool as cpp_bool
 from libcpp.map cimport map as cpp_map
 from libcpp.pair cimport pair as cpp_pair
+from libcpp.stack cimport stack as cpp_stack
 from libcpp.vector cimport vector as cpp_vector
 from libcpp.unordered_map cimport unordered_map as cpp_unordered_map
 cdef extern from "<algorithm>" namespace "std":
@@ -86,10 +87,11 @@ cdef struct partial_maps_directed_graph:
 
 
 # function: callable wrapper for the maximum connected extensions --------------
-def maximum_connected_extensions(nx_G = nx.Graph(),         # can be nx.DiGraph
-                                 nx_H = nx.Graph(),         # can be nx.DiGraph
-                                 input_anchor = [],         # should be non-empty list
-                                 all_extensions = False):   # by default stops when finding one complete extension (if any)
+def maximum_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
+                                 nx_H = nx.Graph(),          # can be nx.DiGraph
+                                 input_anchor = [],          # should be non-empty list
+                                 all_extensions = False,     # by default stops when finding one complete extension (if any)
+                                 iterative_search = True):   # by default an iterative search is used, otherwise a recursive version is called
     # description
     """
     > description: receives two networkx graphs G and H, and a match between them (here
@@ -103,6 +105,17 @@ def maximum_connected_extensions(nx_G = nx.Graph(),         # can be nx.DiGraph
     * nx_H - second networkx (di)graph being matched.
     * input_anchor - inyective map as a non-empty list of 2-tuples (x, y) of nodes x
     from G and y from H. An exception is raised if the anchor is empty.
+    * all_extensions - boolean indicating if the function should stop as soon as one complete
+    extension is found (if any) - this is the default behavior- or if it should search for all
+    possible (complete) extensions. NOTE: mathematically speaking, the complete extension of
+    a FIXED and GOOD anchor is unique up to equivalence of bijections, that is equivalence
+    of atom maps or correspondingly isomorphism of their ITS graphs. Nontheless it should be
+    noted that changing the anchor may produce non-equivalent (complete) extensions. In other
+    words, each call to this function can (mathematically) produce only one complete extension,
+    but calls with different anchors can produce non-equivalent extensions, even if the anchors
+    produce isomorphic partial ITS graphs.
+    * iterative_search - boolean indicating if the iterative version of this algorithm should
+    used (the default), or if a recursive version of it should be used instead.
 
     > output:
     * extensions - list of injective maps each as a list of 2-tuples (x, y) of nodes x
@@ -113,15 +126,6 @@ def maximum_connected_extensions(nx_G = nx.Graph(),         # can be nx.DiGraph
     anchor is what we have refered to as a "good partial atom map", and equivalenteĺy the
     match obtained when removing the anchhor from any extension is a graph-isomorphism
     between the "remainder" graphs it induces from G and H.
-    * all_extensions - boolean indicating if the function should stop as soon as one complete
-    extension is found (if any) - this is the default behavior- or if it should search for all
-    possible (complete) extensions. NOTE: mathematically speaking, the complete extension of
-    a FIXED and GOOD anchor is unique up to equivalence of bijections, that is equivalence
-    of atom maps or correspondingly isomorphism of their ITS graphs. Nontheless it should be
-    noted that changing the anchor may produce non-equivalent (complete) extensions. In other
-    words, each call to this function can (mathematically) produce only one complete extension,
-    but calls with different anchors can produce non-equivalent extensions, even if the anchors
-    produce isomorphic partial ITS graphs.
 
     > calls:
     * .integerization.encode_graphs
@@ -148,6 +152,8 @@ def maximum_connected_extensions(nx_G = nx.Graph(),         # can be nx.DiGraph
         raise(ValueError("gmapache: input graphs must be both directed or both undirected."))
     if(type(all_extensions) not in [type(test_bool)]):
         raise(ValueError("gmapache: fourth argument must be a boolean variable."))
+    if(type(iterative_search) not in [type(test_bool)]):
+        raise(ValueError("gmapache: fifth argument must be a boolean variable."))
     if(not type(input_anchor) in [type(test_list)]):
         raise(ValueError("gmapache: third argument must be a non-empty list of 2-tuples."))
     if(len(input_anchor) == 0):
@@ -304,12 +310,13 @@ def maximum_connected_extensions(nx_G = nx.Graph(),         # can be nx.DiGraph
     # get expected order
     expected_order = min([nx_G.order(), nx_H.order()])
 
-    # set recursion limit
-    scalation_value = 1.5
-    required_limit = max([nx_G.order(), nx_H.order()])
-    current_limit = getrecursionlimit()
-    if(current_limit < (scalation_value * required_limit)):
-        setrecursionlimit(int(scalation_value * required_limit))
+    # set recursion limit if recursive version was requested
+    if(not iterative_search):
+        scalation_value = 1.5
+        required_limit = max([nx_G.order(), nx_H.order()])
+        current_limit = getrecursionlimit()
+        if(current_limit < (scalation_value * required_limit)):
+            setrecursionlimit(int(scalation_value * required_limit))
 
     # get maximum extensions
     if(nx.is_directed(nx_G)):
@@ -321,14 +328,22 @@ def maximum_connected_extensions(nx_G = nx.Graph(),         # can be nx.DiGraph
                                               total_order,
                                               encoded_extensions)
     else:
-        undirected_maximum_connected_extensions(all_extensions,
-                                                expected_order,
-                                                encoded_anchor,
-                                                total_order,
-                                                undirected_G,
-                                                undirected_H,
-                                                encoded_extensions)
-
+        if(iterative_search):
+            undirected_maximum_connected_extensions_iterative(all_extensions,
+                                                              expected_order,
+                                                              encoded_anchor,
+                                                              total_order,
+                                                              undirected_G,
+                                                              undirected_H,
+                                                              encoded_extensions)
+        else:
+            undirected_maximum_connected_extensions_recursive(all_extensions,
+                                                              expected_order,
+                                                              encoded_anchor,
+                                                              total_order,
+                                                              undirected_G,
+                                                              undirected_H,
+                                                              encoded_extensions)
     # decode maximum extensions
     for each_extension in encoded_extensions:
         extensions.append(decode_match(list(each_extension), encoded_node_names))
@@ -348,14 +363,133 @@ def maximum_connected_extensions(nx_G = nx.Graph(),         # can be nx.DiGraph
 
 
 
-# function: core routine of VF2-like undirected approach -----------------------
-cdef void undirected_maximum_connected_extensions(cpp_bool all_extensions,
-                                                  size_t expected_order,
-                                                  cpp_vector[cpp_pair[int, int]] current_match,
-                                                  cpp_unordered_map[int, int] & total_order,
-                                                  partial_maps_undirected_graph & G,
-                                                  partial_maps_undirected_graph & H,
-                                                  cpp_vector[cpp_vector[cpp_pair[int, int]]] & all_matches) noexcept:
+# function: core routine of VF2-like undirected approach - iterative -----------
+# NOTE: an iterative DFS version of this algorithm can be implemented without a "visited"
+# list, since the total order given to the vertices of the second graph guarantess that
+# the search space is actually a search tree, and thus cannot have repeated states.
+cdef void undirected_maximum_connected_extensions_iterative(cpp_bool all_extensions,
+                                                            size_t expected_order,
+                                                            cpp_vector[cpp_pair[int, int]] input_anchor,
+                                                            cpp_unordered_map[int, int] & total_order,
+                                                            partial_maps_undirected_graph & G,
+                                                            partial_maps_undirected_graph & H,
+                                                            cpp_vector[cpp_vector[cpp_pair[int, int]]] & all_matches) noexcept:
+
+    # local variables (cython)
+    cdef size_t new_score = 0
+    cdef size_t old_score = 0
+    cdef cpp_bool semantic_feasibility = False
+    cdef cpp_bool syntactic_feasibility = False
+    cdef cpp_pair[int, int] each_pair
+    cdef cpp_vector[int] current_match_G
+    cdef cpp_vector[int] current_match_H
+    cdef cpp_vector[cpp_pair[int, int]] new_match
+    cdef cpp_vector[cpp_pair[int, int]] candidates
+    cdef cpp_vector[cpp_pair[int, int]] current_match
+    cdef cpp_unordered_map[int, int] forward_match
+    cdef cpp_stack[cpp_vector[cpp_pair[int, int]]] dfs_stack
+
+    # initialize stack with (non-empty) input anchor match
+    dfs_stack.push(input_anchor)
+
+    # iterative DFS search
+    while(not dfs_stack.empty()):
+        # get current state and pop it
+        current_match.clear()
+        current_match = dfs_stack.top()
+        dfs_stack.pop()
+
+        # test initial match and improve if possible
+        if(all_matches.empty()):
+            if(not current_match.empty()):
+                all_matches.push_back(current_match)
+                # if complete match and only one then return
+                if(G.nodes.size() == H.nodes.size()):
+                    if(current_match.size() == G.nodes.size()):
+                        if(not all_extensions):
+                            return
+        else:
+            # test improvement in matches
+            new_score = current_match.size()
+            old_score = all_matches[0].size()
+            # save match if it has the same score
+            if(new_score == old_score):
+                all_matches.push_back(current_match)
+            # overwrite everything with new match if it improves score
+            if(new_score > old_score):
+                all_matches.clear()
+                all_matches.push_back(current_match)
+                # if complete match and only one then return
+                if(G.nodes.size() == H.nodes.size()):
+                    if(current_match.size() == G.nodes.size()):
+                        if(not all_extensions):
+                            return
+
+        # if not optimal yet then obtain available pairs
+        if(current_match.size() < expected_order):
+            # reinitialize variables used for filtering candidates
+            current_match_G.clear()
+            current_match_H.clear()
+            forward_match.clear()
+            candidates.clear()
+
+            # generate auxiliary structures
+            for each_pair in current_match:
+                current_match_G.push_back(each_pair.first)
+                current_match_H.push_back(each_pair.second)
+                forward_match[each_pair.first] = each_pair.second
+
+            # get candidate pairs
+            candidates = undirected_candidates(current_match,
+                                               current_match_G,
+                                               current_match_H,
+                                               G.neighbors,
+                                               H.neighbors,
+                                               total_order)
+
+            # evaluate candidates
+            for each_pair in candidates:
+                # evaluate sintactic feasibility
+                syntactic_feasibility = undirected_syntactic_feasibility(each_pair.first,
+                                                                         each_pair.second,
+                                                                         current_match_G,
+                                                                         current_match_H,
+                                                                         forward_match,
+                                                                         G.neighbors,
+                                                                         H.neighbors)
+
+                if(syntactic_feasibility):
+                    # evaluate semantic feasibility
+                    semantic_feasibility = undirected_semantic_feasibility(each_pair.first,
+                                                                           each_pair.second,
+                                                                           current_match_G,
+                                                                           forward_match,
+                                                                           G.nodes,
+                                                                           H.nodes,
+                                                                           G.neighbors,
+                                                                           G.edges,
+                                                                           H.edges)
+
+                    if(semantic_feasibility):
+                        # build new match
+                        new_match.clear()
+                        new_match = current_match
+                        new_match.push_back(each_pair)
+                        # add new valid candidate states
+                        dfs_stack.push(new_match)
+    # end of function
+
+
+
+
+# function: core routine of VF2-like undirected approach - recursive -----------
+cdef void undirected_maximum_connected_extensions_recursive(cpp_bool all_extensions,
+                                                            size_t expected_order,
+                                                            cpp_vector[cpp_pair[int, int]] current_match,
+                                                            cpp_unordered_map[int, int] & total_order,
+                                                            partial_maps_undirected_graph & G,
+                                                            partial_maps_undirected_graph & H,
+                                                            cpp_vector[cpp_vector[cpp_pair[int, int]]] & all_matches) noexcept:
 
     # local variables (cython)
     cdef size_t new_score = 0
@@ -434,16 +568,17 @@ cdef void undirected_maximum_connected_extensions(cpp_bool all_extensions,
                                                                        H.edges)
                 if(semantic_feasibility):
                     # build new match
+                    new_match.clear()
                     new_match = current_match
                     new_match.push_back(each_pair)
                     # extend match
-                    undirected_maximum_connected_extensions(all_extensions,
-                                                            expected_order,
-                                                            new_match,
-                                                            total_order,
-                                                            G,
-                                                            H,
-                                                            all_matches)
+                    undirected_maximum_connected_extensions_recursive(all_extensions,
+                                                                      expected_order,
+                                                                      new_match,
+                                                                      total_order,
+                                                                      G,
+                                                                      H,
+                                                                      all_matches)
                     # finish if only one complete extension was requested and it was already found
                     if(G.nodes.size() == H.nodes.size()):
                         if(not all_extensions):
@@ -713,6 +848,7 @@ cdef void directed_maximum_connected_extensions(cpp_bool all_extensions,
                                                                      H.edges)
                 if(semantic_feasibility):
                     # build new match
+                    new_match.clear()
                     new_match = current_match
                     new_match.push_back(each_pair)
                     # extend match
