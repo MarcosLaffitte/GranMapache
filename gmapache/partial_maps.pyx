@@ -108,14 +108,14 @@ def maximum_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
     * all_extensions - boolean indicating if the function should stop as soon as one complete
     extension is found (if any) - this is the default behavior- or if it should search for all
     possible (complete) extensions. NOTE: mathematically speaking, the complete extension of
-    a FIXED and GOOD anchor is unique up to equivalence of bijections, that is equivalence
+    a FIXED and GOOD anchor is unique up to equivalence of bijections, that is, equivalence
     of atom maps or correspondingly isomorphism of their ITS graphs. Nontheless it should be
-    noted that changing the anchor may produce non-equivalent (complete) extensions. In other
+    noted that changing the anchor may produce a non-equivalent (complete) extension. In other
     words, each call to this function can (mathematically) produce only one complete extension,
     but calls with different anchors can produce non-equivalent extensions, even if the anchors
-    produce isomorphic partial ITS graphs.
+    themselves produce isomorphic partial ITS graphs.
     * iterative_search - boolean indicating if the iterative version of this algorithm should
-    used (the default), or if a recursive version of it should be used instead.
+    be used (the default), or if a recursive version of it should be used instead.
 
     > output:
     * extensions - list of injective maps each as a list of 2-tuples (x, y) of nodes x
@@ -320,13 +320,22 @@ def maximum_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
 
     # get maximum extensions
     if(nx.is_directed(nx_G)):
-        directed_maximum_connected_extensions(all_extensions,
-                                              expected_order,
-                                              encoded_anchor,
-                                              directed_G,
-                                              directed_H,
-                                              total_order,
-                                              encoded_extensions)
+        if(iterative_search):
+            directed_maximum_connected_extensions_iterative(all_extensions,
+                                                            expected_order,
+                                                            encoded_anchor,
+                                                            total_order,
+                                                            directed_G,
+                                                            directed_H,
+                                                            encoded_extensions)
+        else:
+            directed_maximum_connected_extensions_recursive(all_extensions,
+                                                            expected_order,
+                                                            encoded_anchor,
+                                                            total_order,
+                                                            directed_G,
+                                                            directed_H,
+                                                            encoded_extensions)
     else:
         if(iterative_search):
             undirected_maximum_connected_extensions_iterative(all_extensions,
@@ -365,7 +374,7 @@ def maximum_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
 
 # function: core routine of VF2-like undirected approach - iterative -----------
 # NOTE: an iterative DFS version of this algorithm can be implemented without a "visited"
-# list, since the total order given to the vertices of the second graph guarantess that
+# list, since the total order given to the vertices of the second graph guarantees that
 # the search space is actually a search tree, and thus cannot have repeated states.
 cdef void undirected_maximum_connected_extensions_iterative(cpp_bool all_extensions,
                                                             size_t expected_order,
@@ -470,6 +479,7 @@ cdef void undirected_maximum_connected_extensions_iterative(cpp_bool all_extensi
                                                                            G.edges,
                                                                            H.edges)
 
+                    # push to stack if valid
                     if(semantic_feasibility):
                         # build new match
                         new_match.clear()
@@ -555,6 +565,7 @@ cdef void undirected_maximum_connected_extensions_recursive(cpp_bool all_extensi
                                                                      forward_match,
                                                                      G.neighbors,
                                                                      H.neighbors)
+
             if(syntactic_feasibility):
                 # evaluate semantic feasibility
                 semantic_feasibility = undirected_semantic_feasibility(each_pair.first,
@@ -566,6 +577,7 @@ cdef void undirected_maximum_connected_extensions_recursive(cpp_bool all_extensi
                                                                        G.neighbors,
                                                                        G.edges,
                                                                        H.edges)
+
                 if(semantic_feasibility):
                     # build new match
                     new_match.clear()
@@ -757,14 +769,139 @@ cdef cpp_bool undirected_semantic_feasibility(int node1,
 
 
 
-# function: core routine of VF2-like directed approach -------------------------
-cdef void directed_maximum_connected_extensions(cpp_bool all_extensions,
-                                                size_t expected_order,
-                                                cpp_vector[cpp_pair[int, int]] current_match,
-                                                partial_maps_directed_graph & G,
-                                                partial_maps_directed_graph & H,
-                                                cpp_unordered_map[int, int] & total_order,
-                                                cpp_vector[cpp_vector[cpp_pair[int, int]]] & all_matches) noexcept:
+# function: core routine of VF2-like directed approach - iterative -------------
+# NOTE: an iterative DFS version of this algorithm can be implemented without a "visited"
+# list, since the total order given to the vertices of the second graph guarantees that
+# the search space is actually a search tree, and thus cannot have repeated states.
+cdef void directed_maximum_connected_extensions_iterative(cpp_bool all_extensions,
+                                                          size_t expected_order,
+                                                          cpp_vector[cpp_pair[int, int]] input_anchor,
+                                                          cpp_unordered_map[int, int] & total_order,
+                                                          partial_maps_directed_graph & G,
+                                                          partial_maps_directed_graph & H,
+                                                          cpp_vector[cpp_vector[cpp_pair[int, int]]] & all_matches) noexcept:
+
+    # local variables (cython)
+    cdef size_t new_score = 0
+    cdef size_t old_score = 0
+    cdef cpp_bool semantic_feasibility = False
+    cdef cpp_bool syntactic_feasibility = False
+    cdef cpp_pair[int, int] each_pair
+    cdef cpp_vector[int] current_match_G
+    cdef cpp_vector[int] current_match_H
+    cdef cpp_vector[cpp_pair[int, int]] new_match
+    cdef cpp_vector[cpp_pair[int, int]] candidates
+    cdef cpp_vector[cpp_pair[int, int]] current_match
+    cdef cpp_unordered_map[int, int] forward_match
+    cdef cpp_stack[cpp_vector[cpp_pair[int, int]]] dfs_stack
+
+    # initialize stack with (non-empty) input anchor match
+    dfs_stack.push(input_anchor)
+
+    # iterative DFS search
+    while(not dfs_stack.empty()):
+        # get current state and pop it
+        current_match.clear()
+        current_match = dfs_stack.top()
+        dfs_stack.pop()
+
+        # test initial match and improve if possible
+        if(all_matches.empty()):
+            if(not current_match.empty()):
+                all_matches.push_back(current_match)
+                # if complete match and only one then return
+                if(G.nodes.size() == H.nodes.size()):
+                    if(current_match.size() == G.nodes.size()):
+                        if(not all_extensions):
+                            return
+        else:
+            # test improvement in matches
+            new_score = current_match.size()
+            old_score = all_matches[0].size()
+            # save match if it has the same score
+            if(new_score == old_score):
+                all_matches.push_back(current_match)
+            # overwrite everything with new match if it improves score
+            if(new_score > old_score):
+                all_matches.clear()
+                all_matches.push_back(current_match)
+                # if complete match and only one then return
+                if(G.nodes.size() == H.nodes.size()):
+                    if(current_match.size() == G.nodes.size()):
+                        if(not all_extensions):
+                            return
+
+        # if not optimal yet then obtain available pairs
+        if(current_match.size() < expected_order):
+            # reinitialize variables used for filtering candidates
+            current_match_G.clear()
+            current_match_H.clear()
+            forward_match.clear()
+            candidates.clear()
+
+            # generate auxiliary structures
+            for each_pair in current_match:
+                current_match_G.push_back(each_pair.first)
+                current_match_H.push_back(each_pair.second)
+                forward_match[each_pair.first] = each_pair.second
+
+            # get candidate pairs
+            candidates = directed_candidates(current_match,
+                                             current_match_G,
+                                             current_match_H,
+                                             G.in_neighbors,
+                                             H.in_neighbors,
+                                             G.out_neighbors,
+                                             H.out_neighbors,
+                                             total_order)
+
+            # evaluate candidates
+            for each_pair in candidates:
+                # evaluate sintactic feasibility
+                syntactic_feasibility = directed_syntactic_feasibility(each_pair.first,
+                                                                       each_pair.second,
+                                                                       current_match_G,
+                                                                       current_match_H,
+                                                                       forward_match,
+                                                                       G.in_neighbors,
+                                                                       H.in_neighbors,
+                                                                       G.out_neighbors,
+                                                                       H.out_neighbors)
+
+                if(syntactic_feasibility):
+                    # evaluate semantic feasibility
+                    semantic_feasibility = directed_semantic_feasibility(each_pair.first,
+                                                                         each_pair.second,
+                                                                         current_match_G,
+                                                                         forward_match,
+                                                                         G.nodes,
+                                                                         H.nodes,
+                                                                         G.in_neighbors,
+                                                                         G.out_neighbors,
+                                                                         G.edges,
+                                                                         H.edges)
+
+                    # push to stack if valid
+                    if(semantic_feasibility):
+                        # build new match
+                        new_match.clear()
+                        new_match = current_match
+                        new_match.push_back(each_pair)
+                        # add new valid candidate states
+                        dfs_stack.push(new_match)
+    # end of function
+
+
+
+
+# function: core routine of VF2-like directed approach - recursive -------------
+cdef void directed_maximum_connected_extensions_recursive(cpp_bool all_extensions,
+                                                          size_t expected_order,
+                                                          cpp_vector[cpp_pair[int, int]] current_match,
+                                                          cpp_unordered_map[int, int] & total_order,
+                                                          partial_maps_directed_graph & G,
+                                                          partial_maps_directed_graph & H,
+                                                          cpp_vector[cpp_vector[cpp_pair[int, int]]] & all_matches) noexcept:
 
     # local variables
     cdef size_t new_score = 0
@@ -834,6 +971,7 @@ cdef void directed_maximum_connected_extensions(cpp_bool all_extensions,
                                                                    H.in_neighbors,
                                                                    G.out_neighbors,
                                                                    H.out_neighbors)
+
             if(syntactic_feasibility):
                 # evaluate semantic feasibility
                 semantic_feasibility = directed_semantic_feasibility(each_pair.first,
@@ -846,19 +984,20 @@ cdef void directed_maximum_connected_extensions(cpp_bool all_extensions,
                                                                      G.out_neighbors,
                                                                      G.edges,
                                                                      H.edges)
+
                 if(semantic_feasibility):
                     # build new match
                     new_match.clear()
                     new_match = current_match
                     new_match.push_back(each_pair)
                     # extend match
-                    directed_maximum_connected_extensions(all_extensions,
-                                                          expected_order,
-                                                          new_match,
-                                                          G,
-                                                          H,
-                                                          total_order,
-                                                          all_matches)
+                    directed_maximum_connected_extensions_recursive(all_extensions,
+                                                                    expected_order,
+                                                                    new_match,
+                                                                    total_order,
+                                                                    G,
+                                                                    H,
+                                                                    all_matches)
                     # finish if only one complete extension was requested and it was already found
                     if(G.nodes.size() == H.nodes.size()):
                         if(not all_extensions):
