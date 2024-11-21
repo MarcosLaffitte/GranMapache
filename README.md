@@ -30,6 +30,8 @@ Alignments and other Maps between Graphs
 
 > done:: implementing and testing iterative version of the algorithm(s) against current recursive versions.
 
+- working: transition into unordered sets and unordered maps for constat look ups and scalability
+
 - working: making isomorphism routines for unidrected and directed labeled graphs.
 
 - modules: integerization, partial_maps, common_subgraphs, alignment, isomorphism, rebalancing, verbosity, visualization, (maybe) classes, (maybe) tests.
