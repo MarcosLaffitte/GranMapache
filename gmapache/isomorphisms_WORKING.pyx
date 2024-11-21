@@ -154,6 +154,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     cdef int required_limit = 0
     cdef float scalation_value = 0
     cdef size_t expected_order = 0
+    cdef cpp_pair[int, int] each_pair
     cdef cpp_vector[cpp_pair[int, int]] each_isomorphism
     cdef cpp_vector[cpp_pair[int, int]] current_match
     cdef cpp_vector[cpp_vector[cpp_pair[int, int]]] encoded_isomorphisms
@@ -194,9 +195,16 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
         undirected_G.neighbors = {node:list(encoded_graphs[0].neighbors(node)) for node in list(encoded_graphs[0].nodes())}
         undirected_H.neighbors = {node:list(encoded_graphs[1].neighbors(node)) for node in list(encoded_graphs[1].nodes())}
     # get total order for VF2-like analysis
-    for node in list(encoded_graphs[1].nodes()):
-        counter = counter + 1
-        total_order[node] = counter
+    if(nx.is_directed(nx_H)):
+        for each_pair in directed_H.nodes:
+            node = each_pair.first
+            counter = counter + 1
+            total_order[node] = counter
+    else:
+        for node in undirected_H.nodes:
+            node = each_pair.first
+            counter = counter + 1
+            total_order[node] = counter
     # get expected order
     expected_order = nx_G.order()
     # set recursion limit
@@ -286,7 +294,8 @@ cdef void undirected_search_isomorphisms(size_t expected_order,
             current_match_H.push_back(each_pair.second)
             forward_match[each_pair.first] = each_pair.second
         # get candidates information
-        candidates_struct = undirected_candidates(current_match,
+        candidates_struct = undirected_candidates(expected_order,
+                                                  current_match,
                                                   current_match_G,
                                                   current_match_H,
                                                   nodes_G,
@@ -346,7 +355,8 @@ cdef void undirected_search_isomorphisms(size_t expected_order,
 
 
 # function: get candidate pairs for undirected isomorphism search --------------
-cdef isomorphisms_candidates_struct_undirected undirected_candidates(cpp_vector[cpp_pair[int, int]] & current_match,
+cdef isomorphisms_candidates_struct_undirected undirected_candidates(size_t expected_order,
+                                                                     cpp_vector[cpp_pair[int, int]] & current_match,
                                                                      cpp_vector[int] & current_match_G,
                                                                      cpp_vector[int] & current_match_H,
                                                                      cpp_map[int, int] & nodes_G,
@@ -358,93 +368,104 @@ cdef isomorphisms_candidates_struct_undirected undirected_candidates(cpp_vector[
     cdef int node = 0
     cdef int node1 = 0
     cdef int node2 = 0
-    cdef int reference_minimum = -1
+    cdef int reference_minimum = 0
+    cdef cpp_pair[int, int] each_pair
+    cdef cpp_pair[int, int] temp_pair
     cdef cpp_vector[int] ring_G
     cdef cpp_vector[int] ring_H
     cdef cpp_vector[int] valid_G
     cdef cpp_vector[int] valid_H
     cdef cpp_vector[cpp_pair[int, int]] candidate_pairs
     cdef cpp_vector[cpp_pair[int, int]] filtered_candidate_pairs
-    cdef cpp_pair[int, int] each_pair
-    cdef cpp_pair[int, int] temp_pair
     cdef isomorphisms_candidates_struct_undirected candidates_struct
+
+    # initialize reference minimum
+    reference_minimum = 1 + 2*(<int>expected_order)
+
     # get valid sets
     for each_pair in current_match:
         # reinitialize valid neighbors
         valid_G.clear()
         valid_H.clear()
+
         # get valid neighbors in G
         for node in neigh_G[each_pair.first]:
             # if not yet in match
             if(find(current_match_G.begin(), current_match_G.end(), node) == current_match_G.end()):
                 valid_G.push_back(node)
+
         # get valid neighbors in H
         for node in neigh_H[each_pair.second]:
             # if not yet in match
             if(find(current_match_H.begin(), current_match_H.end(), node) == current_match_H.end()):
                 valid_H.push_back(node)
+
         # make product of valid neighbors
         if((not valid_G.empty()) and (not valid_H.empty())):
             for node1 in valid_G:
                 for node2 in valid_H:
-                    temp_pair.first = node1
-                    temp_pair.second = node2
-                    if(find(candidate_pairs.begin(), candidate_pairs.end(), temp_pair) == candidate_pairs.end()):
-                        candidate_pairs.push_back(temp_pair)
+                    # check if pair satisfies minimum total order condition
+                    if(total_order[node2] <= reference_minimum):
+                        temp_pair.first = node1
+                        temp_pair.second = node2
+                        if(find(candidate_pairs.begin(), candidate_pairs.end(), temp_pair) == candidate_pairs.end()):
+                            if(total_order[node2] == reference_minimum):
+                                candidate_pairs.push_back(temp_pair)
+                            if(total_order[node2] < reference_minimum):
+                                reference_minimum = total_order[node2]
+                                candidate_pairs.clear()
+                                candidate_pairs.push_back(temp_pair)
+
         # additionally save neighbors in ring around match in G
         for node in valid_G:
             # save if unrepeated
             if(find(ring_G.begin(), ring_G.end(), node) == ring_G.end()):
                 ring_G.push_back(node)
+
         # additionally save neighbors in ring around match in H
         for node in valid_H:
             # save if unrepeated
             if(find(ring_H.begin(), ring_H.end(), node) == ring_H.end()):
                 ring_H.push_back(node)
+
     # alternatively get all unmatched nodes also not adjacent with match
     if(candidate_pairs.empty()):
         # reinitialize valid neighbors
         valid_G.clear()
         valid_H.clear()
+
         # get alternatives in G
         for each_pair in nodes_G:
             node = each_pair.first
             if(find(current_match_G.begin(), current_match_G.end(), node) == current_match_G.end()):
-                # can only match vertices outside of ring at this point
+                # should only match vertices outside of ring at this point
                 if(find(ring_G.begin(), ring_G.end(), node) == ring_G.end()):
                     valid_G.push_back(node)
+
         # get alternatives in H
         for each_pair in nodes_H:
             node = each_pair.first
             if(find(current_match_H.begin(), current_match_H.end(), node) == current_match_H.end()):
-                # can only match vertices outside of ring at this point
+                # should only match vertices outside of ring at this point
                 if(find(ring_H.begin(), ring_H.end(), node) == ring_H.end()):
                     valid_H.push_back(node)
+
         # make product of valid neighbors
         if((not valid_G.empty()) and (not valid_H.empty())):
             for node1 in valid_G:
                 for node2 in valid_H:
-                    temp_pair.first = node1
-                    temp_pair.second = node2
-                    # during isomorphism search the pair cannot be repeated at this point
-                    candidate_pairs.push_back(temp_pair)
-    # filter candidate pairs
-    if(not candidate_pairs.empty()):
-        # get minimum total order and filter candidates
-        for each_pair in candidate_pairs:
-            node = each_pair.second
-            if(reference_minimum == -1):
-                reference_minimum = total_order[node]
-                filtered_candidate_pairs.push_back(each_pair)
-            else:
-                if(total_order[node] == reference_minimum):
-                    filtered_candidate_pairs.push_back(each_pair)
-                if(total_order[node] < reference_minimum):
-                    reference_minimum = total_order[node]
-                    filtered_candidate_pairs.clear()
-                    filtered_candidate_pairs.push_back(each_pair)
-        # copy just for clean output coding
-        candidate_pairs = filtered_candidate_pairs
+                    # check if pair satisfies minimum total order condition
+                    if(total_order[node2] <= reference_minimum):
+                        temp_pair.first = node1
+                        temp_pair.second = node2
+                        # during isomorphism search the pair cannot be repeated at this point
+                        if(total_order[node2] == reference_minimum):
+                            candidate_pairs.push_back(temp_pair)
+                        if(total_order[node2] < reference_minimum):
+                            reference_minimum = total_order[node2]
+                            candidate_pairs.clear()
+                            candidate_pairs.push_back(temp_pair)
+
     # pack return structure
     candidates_struct.candidates = candidate_pairs
     candidates_struct.ring_G = ring_G
@@ -765,16 +786,11 @@ cdef void directed_search_isomorphisms(size_t expected_order,
     cdef size_t old_score = 0
     cdef cpp_bool semantic_feasibility = False
     cdef cpp_bool syntactic_feasibility = False
-    cdef cpp_vector[int] in_ring_G
-    cdef cpp_vector[int] in_ring_H
-    cdef cpp_vector[int] out_ring_G
-    cdef cpp_vector[int] out_ring_H
+    cdef cpp_pair[int, int] each_pair
     cdef cpp_vector[int] current_match_G
     cdef cpp_vector[int] current_match_H
     cdef cpp_vector[cpp_pair[int, int]] new_match
-    cdef cpp_vector[cpp_pair[int, int]] candidates
     cdef cpp_map[int, int] forward_match
-    cdef cpp_pair[int, int] each_pair
     cdef isomorphisms_candidates_struct_directed candidates_struct
     # save if isomorphism was reached
     # NOTE: in the future we might want score-optimal isomorphisms
@@ -790,27 +806,25 @@ cdef void directed_search_isomorphisms(size_t expected_order,
             current_match_H.push_back(each_pair.second)
             forward_match[each_pair.first] = each_pair.second
         # get candidate pairs
-        candidates_tuple = directed_candidates(current_match,
-                                               current_match_G,
-                                               current_match_H,
-                                               nodes_G,
-                                               nodes_H,
-                                               in_neigh_G,
-                                               in_neigh_H,
-                                               out_neigh_G,
-                                               out_neigh_H,
-                                               total_order)
-        # unpack candidates information
-        candidates = candidates_tuple.first
-        ring_G = candidates_tuple.second.first
-        ring_H = candidates_tuple.second.second
+        candidates_struct = directed_candidates(current_match,
+                                                current_match_G,
+                                                current_match_H,
+                                                nodes_G,
+                                                nodes_H,
+                                                in_neigh_G,
+                                                in_neigh_H,
+                                                out_neigh_G,
+                                                out_neigh_H,
+                                                total_order)
         # evaluate candidates
-        for each_pair in candidates:
+        for each_pair in candidates_struct.candidates:
             # evaluate sintactic feasibility
             syntactic_feasibility = directed_syntactic_feasibility(each_pair.first,
                                                                    each_pair.second,
-                                                                   ring_G,
-                                                                   ring_H,
+                                                                   candidates_struct.in_ring_G,
+                                                                   candidates_struct.in_ring_H,
+                                                                   candidates_struct.out_ring_G,
+                                                                   candidates_struct.out_ring_H,
                                                                    current_match_G,
                                                                    current_match_H,
                                                                    forward_match,
@@ -822,8 +836,10 @@ cdef void directed_search_isomorphisms(size_t expected_order,
                 # evaluate semantic feasibility
                 semantic_feasibility = directed_semantic_feasibility(each_pair.first,
                                                                      each_pair.second,
-                                                                     ring_G,
-                                                                     ring_H,
+                                                                     candidates_struct.in_ring_G,
+                                                                     candidates_struct.in_ring_H,
+                                                                     candidates_struct.out_ring_G,
+                                                                     candidates_struct.out_ring_H,
                                                                      current_match_G,
                                                                      current_match_H,
                                                                      forward_match,
@@ -862,7 +878,7 @@ cdef void directed_search_isomorphisms(size_t expected_order,
 
 
 # function: get candidate pairs for directed isomorphism search ----------------
-cdef isomorphisms_candidates_struct_directed directed_candidates(cpp_vector[cpp_pair[int, int]] current_match,
+cdef isomorphisms_candidates_struct_directed directed_candidates(cpp_vector[cpp_pair[int, int]] & current_match,
                                                                  cpp_vector[int] & current_match_G,
                                                                  cpp_vector[int] & current_match_H,
                                                                  cpp_map[int, int] & nodes_G,
@@ -877,16 +893,16 @@ cdef isomorphisms_candidates_struct_directed directed_candidates(cpp_vector[cpp_
     cdef int node1 = 0
     cdef int node2 = 0
     cdef int reference_minimum = -1
+    cdef cpp_pair[int, int] temp_pair
+    cdef cpp_pair[int, int] each_pair
+    cdef cpp_vector[int] valid_G
+    cdef cpp_vector[int] valid_H
     cdef cpp_vector[int] in_ring_G
     cdef cpp_vector[int] in_ring_H
     cdef cpp_vector[int] out_ring_G
     cdef cpp_vector[int] out_ring_H
-    cdef cpp_vector[int] valid_G
-    cdef cpp_vector[int] valid_H
     cdef cpp_vector[cpp_pair[int, int]] candidate_pairs
     cdef cpp_vector[cpp_pair[int, int]] filtered_candidate_pairs
-    cdef cpp_pair[int, int] temp_pair
-    cdef cpp_pair[int, int] each_pair
     cdef isomorphisms_candidates_struct_directed candidates_struct
     # get valid sets
     for each_pair in current_match:
@@ -902,9 +918,7 @@ cdef isomorphisms_candidates_struct_directed directed_candidates(cpp_vector[cpp_
         for node in in_neigh_H[each_pair.second]:
             # if not yet in match
             if(find(current_match_H.begin(), current_match_H.end(), node) == current_match_H.end()):
-                # if total order greater than in match
-                if(total_order[node] > reference_maximum):
-                    valid_H.push_back(node)
+                valid_H.push_back(node)
         # make product of valid in-neighbors
         if((not valid_G.empty()) and (not valid_H.empty())):
             for node1 in valid_G:
@@ -1008,8 +1022,8 @@ cdef isomorphisms_candidates_struct_directed directed_candidates(cpp_vector[cpp_
 
 
 # function: evaluate syntactic feasability for directed isomorphisms -----------
-cdef cpp_bool directed_syntactic_feasibility(int & node1,
-                                             int & node2,
+cdef cpp_bool directed_syntactic_feasibility(int node1,
+                                             int node2,
                                              cpp_vector[int] & current_match_G,
                                              cpp_vector[int] & current_match_H,
                                              cpp_map[int, int] & forward_match,
@@ -1071,8 +1085,8 @@ cdef cpp_bool directed_syntactic_feasibility(int & node1,
 
 
 # function: evaluate semantic feasability for directed isomorphisms ------------
-cdef cpp_bool directed_semantic_feasibility(int & node1,
-                                            int & node2,
+cdef cpp_bool directed_semantic_feasibility(int node1,
+                                            int node2,
                                             cpp_vector[int] & current_match_G,
                                             cpp_map[int, int] & forward_match,
                                             cpp_map[int, int] & nodes_G,

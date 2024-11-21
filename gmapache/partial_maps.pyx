@@ -593,9 +593,9 @@ cdef void undirected_maximum_connected_extensions_recursive(cpp_bool all_extensi
                                                                       all_matches)
                     # finish if only one complete extension was requested and it was already found
                     if(G.nodes.size() == H.nodes.size()):
-                        if(not all_extensions):
-                            # anchor is always present in vector of all matches at this point
-                            if(all_matches[0].size() == G.nodes.size()):
+                        # a superset of the anchor is always present in vector of all matches at this point
+                        if(all_matches[0].size() == G.nodes.size()):
+                            if(not all_extensions):
                                 return
     # end of function
 
@@ -613,7 +613,7 @@ cdef cpp_vector[cpp_pair[int, int]] undirected_candidates(cpp_vector[cpp_pair[in
     # output holders
     cdef cpp_vector[cpp_pair[int, int]] candidate_pairs
 
-    # local variables
+    # local variables (cython)
     cdef int node = 0
     cdef int node1 = 0
     cdef int node2 = 0
@@ -672,7 +672,7 @@ cdef cpp_bool undirected_syntactic_feasibility(int node1,
                                                cpp_unordered_map[int, cpp_vector[int]] & neigh_G,
                                                cpp_unordered_map[int, cpp_vector[int]] & neigh_H) noexcept:
 
-    # local variables
+    # local variables (cython)
     cdef int node = 0
     cdef int mapped = 0
     cdef cpp_vector[int] neighbors_match_G
@@ -724,7 +724,7 @@ cdef cpp_bool undirected_semantic_feasibility(int node1,
                                               cpp_map[cpp_pair[int, int], int] & edges_G,
                                               cpp_map[cpp_pair[int, int], int] & edges_H) noexcept:
 
-    # local variables
+    # local variables (cython)
     cdef int node = 0
     cdef cpp_pair[int, int] labeled_edge_G
     cdef cpp_pair[int, int] labeled_edge_H
@@ -903,7 +903,7 @@ cdef void directed_maximum_connected_extensions_recursive(cpp_bool all_extension
                                                           partial_maps_directed_graph & H,
                                                           cpp_vector[cpp_vector[cpp_pair[int, int]]] & all_matches) noexcept:
 
-    # local variables
+    # local variables (cython)
     cdef size_t new_score = 0
     cdef size_t old_score = 0
     cdef cpp_bool semantic_feasibility = False
@@ -1000,9 +1000,9 @@ cdef void directed_maximum_connected_extensions_recursive(cpp_bool all_extension
                                                                     all_matches)
                     # finish if only one complete extension was requested and it was already found
                     if(G.nodes.size() == H.nodes.size()):
-                        if(not all_extensions):
-                            # anchor is always present in vector of all matches at this point
-                            if(all_matches[0].size() == G.nodes.size()):
+                        # anchor is always present in vector of all matches at this point
+                        if(all_matches[0].size() == G.nodes.size()):
+                            if(not all_extensions):
                                 return
     # end of function
 
@@ -1021,7 +1021,7 @@ cdef cpp_vector[cpp_pair[int, int]] directed_candidates(cpp_vector[cpp_pair[int,
     # output holders
     cdef cpp_vector[cpp_pair[int, int]] candidate_pairs
 
-    # local variables
+    # local variables (cython)
     cdef int node = 0
     cdef int node1 = 0
     cdef int node2 = 0
@@ -1109,7 +1109,7 @@ cdef cpp_bool directed_syntactic_feasibility(int node1,
                                              cpp_unordered_map[int, cpp_vector[int]] & out_neigh_G,
                                              cpp_unordered_map[int, cpp_vector[int]] & out_neigh_H) noexcept:
 
-    # local variables
+    # local variables (cython)
     cdef int node = 0
     cdef int mapped = 0
     cdef cpp_vector[int] in_neighbors_match_G
@@ -1183,7 +1183,7 @@ cdef cpp_bool directed_semantic_feasibility(int node1,
                                             cpp_map[cpp_pair[int, int], int] & edges_G,
                                             cpp_map[cpp_pair[int, int], int] & edges_H) noexcept:
 
-    # local variables
+    # local variables (cython)
     cdef int node = 0
     cdef cpp_pair[int, int] labeled_edge_G
     cdef cpp_pair[int, int] labeled_edge_H
