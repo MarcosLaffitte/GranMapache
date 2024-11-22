@@ -28,9 +28,9 @@ Alignments and other Maps between Graphs
 
 > done: implemented C++ unordered maps for fast (constant look-ups).
 
-> done:: implementing and testing iterative version of the algorithm(s) against current recursive versions.
+> done: implementing and testing iterative version of the algorithm(s) against current recursive versions.
 
-- working: transition into unordered sets and unordered maps for constat look ups and scalability
+> done: transition into unordered sets and unordered maps for scalability with constat look ups
 
 - working: making isomorphism routines for unidrected and directed labeled graphs.
 
