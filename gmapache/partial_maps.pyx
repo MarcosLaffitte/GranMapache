@@ -151,22 +151,29 @@ def maximum_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
     test_undir = nx.Graph()
     test_dir = nx.DiGraph()
     test_bool = False
+    # check that first argument is networkx graph or digraph
     if(type(nx_G) not in [type(test_undir), type(test_dir)]):
         raise(ValueError("gmapache: first argument must be a networkx graph or digraph."))
+    # check that second argument is networkx graph or digraph
     if(type(nx_H) not in [type(test_undir), type(test_dir)]):
         raise(ValueError("gmapache: second argument must be a networkx graph or digraph."))
+    # check that the input graphs have the same type
     if((nx.is_directed(nx_G)) and (not nx.is_directed(nx_H))):
         raise(ValueError("gmapache: input graphs must be both directed or both undirected."))
     if((not nx.is_directed(nx_G)) and (nx.is_directed(nx_H))):
         raise(ValueError("gmapache: input graphs must be both directed or both undirected."))
+    # check that fourth argument is a boolean variable
     if(type(all_extensions) not in [type(test_bool)]):
         raise(ValueError("gmapache: fourth argument must be a boolean variable."))
+    # check that fifth argument is a boolean variable
     if(type(iterative_search) not in [type(test_bool)]):
         raise(ValueError("gmapache: fifth argument must be a boolean variable."))
+    # check that third argument is a list
     if(not type(input_anchor) in [type(test_list)]):
         raise(ValueError("gmapache: third argument must be a non-empty list of 2-tuples."))
     if(len(input_anchor) == 0):
         raise(ValueError("gmapache: third argument must be a non-empty list of 2-tuples."))
+    # check correctness of entries in third argument
     for test_entry in input_anchor:
         if(not type(test_entry) in [type(test_tuple)]):
             raise(ValueError("gmapache: all elements in input list must be tuples."))
@@ -176,6 +183,7 @@ def maximum_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
             raise(ValueError("gmapache: the input list is matching a vertex not present in the first graph."))
         if(test_entry[1] not in list(nx_H.nodes())):
             raise(ValueError("gmapache: the input list is matching a vertex not present in the second graph."))
+    # check amount of entries in third argument
     if(not len(list(set([x for (x, y) in input_anchor]))) == len(input_anchor)):
         raise(ValueError("gmapache: the input list must be an injective map and without repeated elements."))
     if(not len(list(set([y for (x, y) in input_anchor]))) == len(input_anchor)):
