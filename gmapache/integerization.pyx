@@ -6,7 +6,7 @@
 # - Module: integerization                                                     #
 #                                                                              #
 # - Description: convert node "names", node attributes and edge attributes     #
-#   into integers to simplify their comparison in the other rutines            #
+#   into integers to simplify their comparison in the other routines.          #
 #                                                                              #
 ################################################################################
 
