@@ -32,7 +32,9 @@ Alignments and other Maps between Graphs
 
 > done: transition into unordered sets and unordered maps for scalability with constat look ups
 
-- working: making isomorphism routines for unidrected and directed labeled graphs.
+- working: finishing isomorphism and mcs routines
+
+- working: test isomorphism and mcs routines
 
 - modules: integerization, partial_maps, common_subgraphs, alignment, isomorphism, rebalancing, verbosity, visualization, (maybe) classes, (maybe) tests.
 
