@@ -6,14 +6,14 @@
 # - Module: partial_maps                                                       #
 #                                                                              #
 # - Description: analysis of properties of partial maps, like maximum          #
-#   connected extensions, overlaps, consistency, and others.                   #
+#   connected extension(s), overlaps, consistency, and others.                 #
 #                                                                              #
 ################################################################################
 
 
 
 
-# string encoding ##############################################################
+# C++ string encoding ##########################################################
 # cython: c_string_type=unicode, c_string_encoding=utf8
 
 
@@ -108,6 +108,8 @@ def maximum_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
     anchor producing connected common subgraphs (not necessarily maximum themselves). The
     anchor alone also produces a subgraph, which may not be an induced common subgraph,
     but the subgraph produced by any extension after removing the achor is always induced.
+    An additional boolean variable determines if the search should be done iteratively
+    (by default), or recursively.
 
     > input:
     * nx_G - first networkx (di)graph being matched.
@@ -205,7 +207,6 @@ def maximum_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
     cdef cpp_string comma
     comma.push_back(44)
     cdef cpp_string temp_str
-    cdef cpp_pair[int, int] temp_pair
     cdef cpp_pair[int, cpp_unordered_set[int]] each_pair
     cdef cpp_vector[int] next_level
     cdef cpp_vector[int] current_level
