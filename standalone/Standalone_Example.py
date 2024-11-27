@@ -67,7 +67,10 @@ import matplotlib.pyplot as plt
 import gmapache as gm
 
 
-# example #########################################################################
+# examples #####################################################################
+
+
+# example: maximum connected extensions ----------------------------------------
 
 
 # We build two networkx graphs G and H with arbitrary vertex labels and edge labels, and define
@@ -145,6 +148,8 @@ final_time = time.time()
 
 
 # print results
+print("--------------------------------------------------")
+print("> Maximum Connected Extension")
 print("\n")
 print("***** Given anchor:")
 print(partial_map)
@@ -152,6 +157,87 @@ print("***** Got extensions:")
 print(all_extensions)
 print("***** Was anchor a good partial map?")
 print(good_map)
+print("***** Running time [s]")
+print(final_time - initial_time)
+print("\n")
+
+
+# example: isomorphisms --------------------------------------------------------
+
+
+# We build three networkx graphs G, H and F. They are passed to the method
+# gm.search_isomorphisms(G, H), which determines if there exist at least one isomorphism
+# between these graphs and return them. A boolean variable is also returned indicating
+# if the graphs were ismorphic. This method has an optional boolean argument
+# "all_isomorphisms". When False the function returns only one isomorphism (if any),
+# this is the default behavior since it is faster than enumerating all isomorphism.
+# If set to True the function will search and return all possible isomorphisms,
+# which is an exhaustive and can be more time consuming depending on the input graphs.
+
+
+# buid first test graph for isomorphism search
+G = nx.Graph()
+G.add_edge(1, 2)
+G.add_edge(2, 3)
+G.add_edge(3, 4)
+G.add_edge(4, 5)
+G.add_edge(5, 6)
+G.add_edge(5, 7)
+
+
+# buid second test graph for isomorphism search
+H = nx.Graph()
+H.add_edge("a", "b")
+H.add_edge("b", "c")
+H.add_edge("c", "d")
+H.add_edge("d", "e")
+H.add_edge("e", "f")
+H.add_edge("e", "g")
+
+
+# buid third test graph for isomorphism search
+F = nx.Graph()
+F.add_edge("x1", "x2")
+F.add_edge("x1", "x3")
+F.add_edge("x1", "x4")
+F.add_edge("x1", "x5")
+F.add_edge("x1", "x6")
+F.add_edge("x1", "x7")
+
+
+# testing isomorphisms
+initial_time = time.time()
+isomorphisms, are_isomorphic = gm.search_isomorphisms(G, H, all_isomorphisms = False)
+final_time = time.time()
+
+
+# print resutls
+print("--------------------------------------------------")
+print("> Isomorphism Search (with isomorphic graphs)")
+print("\n")
+print("***** Got isomorphisms:")
+print(isomorphisms)
+print("***** Were graphs isomorphic?")
+print(are_isomorphic)
+print("***** Running time [s]")
+print(final_time - initial_time)
+print("\n")
+
+
+# testing isomorphisms
+initial_time = time.time()
+isomorphisms, are_isomorphic = gm.search_isomorphisms(G, F, all_isomorphisms = False)
+final_time = time.time()
+
+
+# print resutls
+print("--------------------------------------------------")
+print("> Isomorphism Search (with non-isomorphic graphs)")
+print("\n")
+print("***** Got isomorphisms:")
+print(isomorphisms)
+print("***** Were graphs isomorphic?")
+print(are_isomorphic)
 print("***** Running time [s]")
 print(final_time - initial_time)
 print("\n")
