@@ -558,7 +558,7 @@ cdef void undirected_search_isomorphisms_recursive(cpp_bool all_isomorphisms,
 
 
 # function: get candidate pairs for undirected isomorphism search --------------
-cdef isomorphisms_candidates_struct_undirected undirected_candidates(expected_order,
+cdef isomorphisms_candidates_struct_undirected undirected_candidates(size_t expected_order,
                                                                      cpp_vector[cpp_pair[int, int]] & current_match,
                                                                      cpp_unordered_set[int] & current_match_G,
                                                                      cpp_unordered_set[int] & current_match_H,
@@ -982,7 +982,7 @@ cdef void directed_search_isomorphisms_recursive(cpp_bool all_isomorphisms,
 
 
 # function: get candidate pairs for directed isomorphism search ----------------
-cdef isomorphisms_candidates_struct_directed directed_candidates(expected_order,
+cdef isomorphisms_candidates_struct_directed directed_candidates(size_t expected_order,
                                                                  cpp_vector[cpp_pair[int, int]] & current_match,
                                                                  cpp_unordered_set[int] & current_match_G,
                                                                  cpp_unordered_set[int] & current_match_H,

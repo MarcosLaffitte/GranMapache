@@ -32,7 +32,11 @@ Alignments and other Maps between Graphs
 
 > done: transition into unordered sets and unordered maps for scalability with constat look ups
 
-- working: finishing isomorphism and mcs routines
+> done: isomorphism
+
+- working: simplify feasability testing
+
+- working: mcs routines
 
 - working: test isomorphism and mcs routines
 

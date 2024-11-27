@@ -50,7 +50,11 @@ extensions = [
     Extension("gmapache.partial_maps",
               sources = ["gmapache/partial_maps.pyx"],
               language = "c++",
-              extra_compile_args=["-std=c++20"])
+              extra_compile_args=["-std=c++20"]),
+    Extension("gmapache.isomorphisms",
+              sources = ["gmapache/isomorphisms.pyx"],
+              language = "c++",
+              extra_compile_args = ["-std=c++20"]),
     # Extension("package.module",
     #           sources = ["package/module.pyx"],
     #           include_dirs = [numpy.get_include()],
