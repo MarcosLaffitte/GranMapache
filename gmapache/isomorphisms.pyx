@@ -417,7 +417,7 @@ cdef void undirected_search_isomorphisms_iterative(cpp_bool all_isomorphisms,
 
             # evaluate candidates
             for each_pair in candidates_struct.candidates:
-                # evaluate sintactic feasibility
+                # evaluate syntactic feasibility
                 syntactic_feasibility_res = syntactic_feasibility(each_pair.first,
                                                                   each_pair.second,
                                                                   candidates_struct.ring_G,
@@ -506,7 +506,7 @@ cdef void undirected_search_isomorphisms_recursive(cpp_bool all_isomorphisms,
 
         # evaluate candidates
         for each_pair in candidates_struct.candidates:
-            # evaluate sintactic feasibility
+            # evaluate syntactic feasibility
             syntactic_feasibility_res = syntactic_feasibility(each_pair.first,
                                                               each_pair.second,
                                                               candidates_struct.ring_G,
@@ -781,7 +781,7 @@ cdef void directed_search_isomorphisms_iterative(cpp_bool all_isomorphisms,
 
             # evaluate candidates
             for each_pair in candidates_struct.candidates:
-                # evaluate sintactic feasibility of in-neighbors
+                # evaluate syntactic feasibility of in-neighbors
                 in_syntactic_feasibility = syntactic_feasibility(each_pair.first,
                                                                  each_pair.second,
                                                                  candidates_struct.in_ring_G,
@@ -793,7 +793,7 @@ cdef void directed_search_isomorphisms_iterative(cpp_bool all_isomorphisms,
                                                                  H.in_neighbors)
 
                 if(in_syntactic_feasibility):
-                    # evaluate sintactic feasibility of out-neighbors
+                    # evaluate syntactic feasibility of out-neighbors
                     out_syntactic_feasibility = syntactic_feasibility(each_pair.first,
                                                                       each_pair.second,
                                                                       candidates_struct.out_ring_G,
@@ -902,7 +902,7 @@ cdef void directed_search_isomorphisms_recursive(cpp_bool all_isomorphisms,
 
         # evaluate candidates
         for each_pair in candidates_struct.candidates:
-            # evaluate sintactic feasibility of in-neighbors
+            # evaluate syntactic feasibility of in-neighbors
             in_syntactic_feasibility = syntactic_feasibility(each_pair.first,
                                                              each_pair.second,
                                                              candidates_struct.in_ring_G,
@@ -914,7 +914,7 @@ cdef void directed_search_isomorphisms_recursive(cpp_bool all_isomorphisms,
                                                              H.in_neighbors)
 
             if(in_syntactic_feasibility):
-                # evaluate sintactic feasibility of out-neighbors
+                # evaluate syntactic feasibility of out-neighbors
                 out_syntactic_feasibility = syntactic_feasibility(each_pair.first,
                                                                   each_pair.second,
                                                                   candidates_struct.out_ring_G,

@@ -10,7 +10,7 @@ Alignments and other Maps between Graphs
 </p>
 
 
-## ToDo / Working
+## ToDo / Working / Done
 
 > done: integerization
 
@@ -34,9 +34,11 @@ Alignments and other Maps between Graphs
 
 > done: isomorphism
 
-- working: simplify feasability testing
+> done: simplify feasability testing
 
 - working: add examples with isomorphisms to standalone
+
+- working: add options to ignore node labels or/and edge labels
 
 - working: mcs routines
 

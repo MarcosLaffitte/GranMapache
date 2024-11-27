@@ -402,8 +402,8 @@ cdef void undirected_maximum_connected_extensions_iterative(cpp_bool all_extensi
     # local variables (cython)
     cdef size_t new_score = 0
     cdef size_t old_score = 0
-    cdef cpp_bool semantic_feasibility = False
-    cdef cpp_bool syntactic_feasibility = False
+    cdef cpp_bool semantic_feasibility_res = False
+    cdef cpp_bool syntactic_feasibility_res = False
     cdef cpp_pair[int, int] each_pair
     cdef cpp_vector[cpp_pair[int, int]] new_match
     cdef cpp_vector[cpp_pair[int, int]] candidates
@@ -474,28 +474,28 @@ cdef void undirected_maximum_connected_extensions_iterative(cpp_bool all_extensi
             # evaluate candidates
             for each_pair in candidates:
                 # evaluate sintactic feasibility
-                syntactic_feasibility = undirected_syntactic_feasibility(each_pair.first,
-                                                                         each_pair.second,
-                                                                         current_match_G,
-                                                                         current_match_H,
-                                                                         forward_match,
-                                                                         G.neighbors,
-                                                                         H.neighbors)
+                syntactic_feasibility_res = syntactic_feasibility(each_pair.first,
+                                                                  each_pair.second,
+                                                                  current_match_G,
+                                                                  current_match_H,
+                                                                  forward_match,
+                                                                  G.neighbors,
+                                                                  H.neighbors)
 
-                if(syntactic_feasibility):
+                if(syntactic_feasibility_res):
                     # evaluate semantic feasibility
-                    semantic_feasibility = undirected_semantic_feasibility(each_pair.first,
-                                                                           each_pair.second,
-                                                                           current_match_G,
-                                                                           forward_match,
-                                                                           G.nodes,
-                                                                           H.nodes,
-                                                                           G.neighbors,
-                                                                           G.edges,
-                                                                           H.edges)
+                    semantic_feasibility_res = semantic_feasibility(each_pair.first,
+                                                                    each_pair.second,
+                                                                    current_match_G,
+                                                                    forward_match,
+                                                                    G.nodes,
+                                                                    H.nodes,
+                                                                    G.neighbors,
+                                                                    G.edges,
+                                                                    H.edges)
 
                     # push to stack if valid
-                    if(semantic_feasibility):
+                    if(semantic_feasibility_res):
                         # build new match
                         new_match.clear()
                         new_match = current_match
@@ -519,8 +519,8 @@ cdef void undirected_maximum_connected_extensions_recursive(cpp_bool all_extensi
     # local variables (cython)
     cdef size_t new_score = 0
     cdef size_t old_score = 0
-    cdef cpp_bool semantic_feasibility = False
-    cdef cpp_bool syntactic_feasibility = False
+    cdef cpp_bool semantic_feasibility_res = False
+    cdef cpp_bool syntactic_feasibility_res = False
     cdef cpp_pair[int, int] each_pair
     cdef cpp_vector[cpp_pair[int, int]] new_match
     cdef cpp_vector[cpp_pair[int, int]] candidates
@@ -573,27 +573,27 @@ cdef void undirected_maximum_connected_extensions_recursive(cpp_bool all_extensi
         # evaluate candidates
         for each_pair in candidates:
             # evaluate sintactic feasibility
-            syntactic_feasibility = undirected_syntactic_feasibility(each_pair.first,
-                                                                     each_pair.second,
-                                                                     current_match_G,
-                                                                     current_match_H,
-                                                                     forward_match,
-                                                                     G.neighbors,
-                                                                     H.neighbors)
+            syntactic_feasibility_res = syntactic_feasibility(each_pair.first,
+                                                              each_pair.second,
+                                                              current_match_G,
+                                                              current_match_H,
+                                                              forward_match,
+                                                              G.neighbors,
+                                                              H.neighbors)
 
-            if(syntactic_feasibility):
+            if(syntactic_feasibility_res):
                 # evaluate semantic feasibility
-                semantic_feasibility = undirected_semantic_feasibility(each_pair.first,
-                                                                       each_pair.second,
-                                                                       current_match_G,
-                                                                       forward_match,
-                                                                       G.nodes,
-                                                                       H.nodes,
-                                                                       G.neighbors,
-                                                                       G.edges,
-                                                                       H.edges)
+                semantic_feasibility_res = semantic_feasibility(each_pair.first,
+                                                                each_pair.second,
+                                                                current_match_G,
+                                                                forward_match,
+                                                                G.nodes,
+                                                                H.nodes,
+                                                                G.neighbors,
+                                                                G.edges,
+                                                                H.edges)
 
-                if(semantic_feasibility):
+                if(semantic_feasibility_res):
                     # build new match
                     new_match.clear()
                     new_match = current_match
@@ -606,6 +606,7 @@ cdef void undirected_maximum_connected_extensions_recursive(cpp_bool all_extensi
                                                                       G,
                                                                       H,
                                                                       all_matches)
+
                     # finish if only one complete extension was requested and it was already found
                     if(G.nodes.size() == H.nodes.size()):
                         # a superset of the anchor is always present in vector of all matches at this point
@@ -686,105 +687,6 @@ cdef cpp_vector[cpp_pair[int, int]] undirected_candidates(cpp_vector[cpp_pair[in
 
 
 
-# function: evaluate syntactic feasability for undirected extension ------------
-cdef cpp_bool undirected_syntactic_feasibility(int node1,
-                                               int node2,
-                                               cpp_unordered_set[int] & current_match_G,
-                                               cpp_unordered_set[int] & current_match_H,
-                                               cpp_unordered_map[int, int] & forward_match,
-                                               cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_G,
-                                               cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_H) noexcept:
-
-    # local variables (cython)
-    cdef int node = 0
-    cdef int mapped = 0
-    cdef cpp_unordered_set[int] neighbors_match_G
-    cdef cpp_unordered_set[int] neighbors_match_H
-
-    # loop-consistency-test
-    if(neigh_G[node1].find(node1) != neigh_G[node1].end()):
-        if(neigh_H[node2].find(node2) == neigh_H[node2].end()):
-            # node1 has a loop in G but node2 has no loop in H
-            return(False)
-    if(neigh_G[node1].find(node1) == neigh_G[node1].end()):
-        if(neigh_H[node2].find(node2) != neigh_H[node2].end()):
-            # node1 has no loop in G but node2 has a loop in H
-            return(False)
-
-    # look ahead 0: consistency of neighbors in match
-    for node in neigh_G[node1]:
-        if(current_match_G.find(node) != current_match_G.end()):
-            mapped = forward_match[node]
-            neighbors_match_G.insert(mapped)
-
-    for node in neigh_H[node2]:
-        if(current_match_H.find(node) != current_match_H.end()):
-            neighbors_match_H.insert(node)
-
-    if(neighbors_match_G.size() != neighbors_match_H.size()):
-        # one node has more neighbors in the match than the other
-        return(False)
-    else:
-        for mapped in neighbors_match_G:
-            if(neighbors_match_H.find(mapped) == neighbors_match_H.end()):
-                # the neighbors dont respect the match
-                return(False)
-
-    # end of function
-    return(True)
-
-
-
-
-# function: evaluate semantic feasability for undirected extension -------------
-cdef cpp_bool undirected_semantic_feasibility(int node1,
-                                              int node2,
-                                              cpp_unordered_set[int] & current_match_G,
-                                              cpp_unordered_map[int, int] & forward_match,
-                                              cpp_unordered_map[int, int] & nodes_G,
-                                              cpp_unordered_map[int, int] & nodes_H,
-                                              cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_G,
-                                              cpp_unordered_map[cpp_string, int] & edges_G,
-                                              cpp_unordered_map[cpp_string, int] & edges_H) noexcept:
-
-    # local variables (cython)
-    cdef int node = 0
-    cdef cpp_string comma
-    comma.push_back(44)
-    cdef cpp_string labeled_edge_G
-    cdef cpp_string labeled_edge_H
-
-    # compare vertex-labels
-    if(nodes_G[node1] != nodes_H[node2]):
-        return(False)
-
-    # compare loop-labels
-    if(neigh_G[node1].find(node1) != neigh_G[node1].end()):
-        # loop in G
-        labeled_edge_G = to_string(node1) + comma + to_string(node1)
-        # loop in H
-        labeled_edge_H = to_string(node2) + comma + to_string(node2)
-        # compare edge labels
-        if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
-            return(False)
-
-    # compare non-loop edge-labels
-    for node in neigh_G[node1]:
-        if(current_match_G.find(node) != current_match_G.end()):
-            # edge in G with only one end in match
-            labeled_edge_G = to_string(node1) + comma + to_string(node)
-            # edge in H with only one end in match
-            labeled_edge_H = to_string(node2) + comma + to_string(forward_match[node])
-            # compare edge labels
-            if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
-                return(False)
-
-    # end of function
-    return(True)
-
-
-
-
 # functions - maximum connected extensions - directed ##########################
 
 
@@ -805,8 +707,10 @@ cdef void directed_maximum_connected_extensions_iterative(cpp_bool all_extension
     # local variables (cython)
     cdef size_t new_score = 0
     cdef size_t old_score = 0
-    cdef cpp_bool semantic_feasibility = False
-    cdef cpp_bool syntactic_feasibility = False
+    cdef cpp_bool in_semantic_feasibility = False
+    cdef cpp_bool in_syntactic_feasibility = False
+    cdef cpp_bool out_semantic_feasibility = False
+    cdef cpp_bool out_syntactic_feasibility = False
     cdef cpp_pair[int, int] each_pair
     cdef cpp_vector[cpp_pair[int, int]] new_match
     cdef cpp_vector[cpp_pair[int, int]] candidates
@@ -878,38 +782,57 @@ cdef void directed_maximum_connected_extensions_iterative(cpp_bool all_extension
 
             # evaluate candidates
             for each_pair in candidates:
-                # evaluate sintactic feasibility
-                syntactic_feasibility = directed_syntactic_feasibility(each_pair.first,
+                # evaluate syntactic feasibility with in-neighbors
+                in_syntactic_feasibility = syntactic_feasibility(each_pair.first,
+                                                                 each_pair.second,
+                                                                 current_match_G,
+                                                                 current_match_H,
+                                                                 forward_match,
+                                                                 G.in_neighbors,
+                                                                 H.in_neighbors)
+
+                if(in_syntactic_feasibility):
+                    # evaluate syntactic feasibility with out-neighbors
+                    out_syntactic_feasibility = syntactic_feasibility(each_pair.first,
+                                                                      each_pair.second,
+                                                                      current_match_G,
+                                                                      current_match_H,
+                                                                      forward_match,
+                                                                      G.out_neighbors,
+                                                                      H.out_neighbors)
+
+                    if(out_syntactic_feasibility):
+                        # evaluate semantic feasibility with in-neighbors
+                        in_semantic_feasibility = semantic_feasibility(each_pair.first,
                                                                        each_pair.second,
                                                                        current_match_G,
-                                                                       current_match_H,
                                                                        forward_match,
+                                                                       G.nodes,
+                                                                       H.nodes,
                                                                        G.in_neighbors,
-                                                                       H.in_neighbors,
-                                                                       G.out_neighbors,
-                                                                       H.out_neighbors)
+                                                                       G.edges,
+                                                                       H.edges)
 
-                if(syntactic_feasibility):
-                    # evaluate semantic feasibility
-                    semantic_feasibility = directed_semantic_feasibility(each_pair.first,
-                                                                         each_pair.second,
-                                                                         current_match_G,
-                                                                         forward_match,
-                                                                         G.nodes,
-                                                                         H.nodes,
-                                                                         G.in_neighbors,
-                                                                         G.out_neighbors,
-                                                                         G.edges,
-                                                                         H.edges)
+                        if(in_semantic_feasibility):
+                            # evaluate semantic feasibility with out-neighbors
+                            out_semantic_feasibility = semantic_feasibility(each_pair.first,
+                                                                            each_pair.second,
+                                                                            current_match_G,
+                                                                            forward_match,
+                                                                            G.nodes,
+                                                                            H.nodes,
+                                                                            G.out_neighbors,
+                                                                            G.edges,
+                                                                            H.edges)
 
-                    # push to stack if valid
-                    if(semantic_feasibility):
-                        # build new match
-                        new_match.clear()
-                        new_match = current_match
-                        new_match.push_back(each_pair)
-                        # add new valid candidate states
-                        dfs_stack.push(new_match)
+                            # push to stack if valid
+                            if(out_semantic_feasibility):
+                                # build new match
+                                new_match.clear()
+                                new_match = current_match
+                                new_match.push_back(each_pair)
+                                # add new valid candidate states
+                                dfs_stack.push(new_match)
     # end of function
 
 
@@ -927,8 +850,10 @@ cdef void directed_maximum_connected_extensions_recursive(cpp_bool all_extension
     # local variables (cython)
     cdef size_t new_score = 0
     cdef size_t old_score = 0
-    cdef cpp_bool semantic_feasibility = False
-    cdef cpp_bool syntactic_feasibility = False
+    cdef cpp_bool in_semantic_feasibility = False
+    cdef cpp_bool in_syntactic_feasibility = False
+    cdef cpp_bool out_semantic_feasibility = False
+    cdef cpp_bool out_syntactic_feasibility = False
     cdef cpp_pair[int, int] each_pair
     cdef cpp_vector[cpp_pair[int, int]] new_match
     cdef cpp_vector[cpp_pair[int, int]] candidates
@@ -982,49 +907,70 @@ cdef void directed_maximum_connected_extensions_recursive(cpp_bool all_extension
 
         # evaluate candidates
         for each_pair in candidates:
-            # evaluate sintactic feasibility
-            syntactic_feasibility = directed_syntactic_feasibility(each_pair.first,
+            # evaluate syntactic feasibility with in-neighbors
+            in_syntactic_feasibility = syntactic_feasibility(each_pair.first,
+                                                             each_pair.second,
+                                                             current_match_G,
+                                                             current_match_H,
+                                                             forward_match,
+                                                             G.in_neighbors,
+                                                             H.in_neighbors)
+
+            if(in_syntactic_feasibility):
+                # evaluate syntactic feasibility with out-neighbors
+                out_syntactic_feasibility = syntactic_feasibility(each_pair.first,
+                                                                  each_pair.second,
+                                                                  current_match_G,
+                                                                  current_match_H,
+                                                                  forward_match,
+                                                                  G.out_neighbors,
+                                                                  H.out_neighbors)
+
+                if(out_syntactic_feasibility):
+                    # evaluate semantic feasibility with in-neighbors
+                    in_semantic_feasibility = semantic_feasibility(each_pair.first,
                                                                    each_pair.second,
                                                                    current_match_G,
-                                                                   current_match_H,
                                                                    forward_match,
+                                                                   G.nodes,
+                                                                   H.nodes,
                                                                    G.in_neighbors,
-                                                                   H.in_neighbors,
-                                                                   G.out_neighbors,
-                                                                   H.out_neighbors)
+                                                                   G.edges,
+                                                                   H.edges)
 
-            if(syntactic_feasibility):
-                # evaluate semantic feasibility
-                semantic_feasibility = directed_semantic_feasibility(each_pair.first,
-                                                                     each_pair.second,
-                                                                     current_match_G,
-                                                                     forward_match,
-                                                                     G.nodes,
-                                                                     H.nodes,
-                                                                     G.in_neighbors,
-                                                                     G.out_neighbors,
-                                                                     G.edges,
-                                                                     H.edges)
+                    if(in_semantic_feasibility):
+                        # evaluate semantic feasibility with out-neighbors
+                        out_semantic_feasibility = semantic_feasibility(each_pair.first,
+                                                                        each_pair.second,
+                                                                        current_match_G,
+                                                                        forward_match,
+                                                                        G.nodes,
+                                                                        H.nodes,
+                                                                        G.out_neighbors,
+                                                                        G.edges,
+                                                                        H.edges)
 
-                if(semantic_feasibility):
-                    # build new match
-                    new_match.clear()
-                    new_match = current_match
-                    new_match.push_back(each_pair)
-                    # extend match
-                    directed_maximum_connected_extensions_recursive(all_extensions,
-                                                                    expected_order,
-                                                                    new_match,
-                                                                    total_order,
-                                                                    G,
-                                                                    H,
-                                                                    all_matches)
-                    # finish if only one complete extension was requested and it was already found
-                    if(G.nodes.size() == H.nodes.size()):
-                        # anchor is always present in vector of all matches at this point
-                        if(all_matches[0].size() == G.nodes.size()):
-                            if(not all_extensions):
-                                return
+                        # push to stack if valid
+                        if(out_semantic_feasibility):
+                            # build new match
+                            new_match.clear()
+                            new_match = current_match
+                            new_match.push_back(each_pair)
+                            # extend match
+                            directed_maximum_connected_extensions_recursive(all_extensions,
+                                                                            expected_order,
+                                                                            new_match,
+                                                                            total_order,
+                                                                            G,
+                                                                            H,
+                                                                            all_matches)
+
+                            # finish if only one complete extension was requested and it was already found
+                            if(G.nodes.size() == H.nodes.size()):
+                                # anchor is always present in vector of all matches at this point
+                                if(all_matches[0].size() == G.nodes.size()):
+                                    if(not all_extensions):
+                                        return
     # end of function
 
 
@@ -1062,7 +1008,7 @@ cdef cpp_vector[cpp_pair[int, int]] directed_candidates(cpp_vector[cpp_pair[int,
         if(total_order[node] > reference_maximum):
             reference_maximum = total_order[node]
 
-    # get candidates based on valid sets
+    # get candidates based on in-neighbors
     for each_pair in current_match:
         # reinitialize valid neighbors
         valid_G.clear()
@@ -1095,36 +1041,40 @@ cdef cpp_vector[cpp_pair[int, int]] directed_candidates(cpp_vector[cpp_pair[int,
                         # add string version for constant look ups
                         candidate_pairs_member.insert(temp_string)
 
-        # reinitialize valid neighbors
-        valid_G.clear()
-        valid_H.clear()
+    # alternatively get candidate pairs from out-neighbors
+    if(candidate_pairs.empty()):
+        # get candidates based on valid sets
+        for each_pair in current_match:
+            # reinitialize valid neighbors
+            valid_G.clear()
+            valid_H.clear()
 
-        # get valid out-neighbors in G
-        for node in out_neigh_G[each_pair.first]:
-            # if not yet in match
-            if(current_match_G.find(node) == current_match_G.end()):
-                valid_G.push_back(node)
-
-        # get valid out-neighbors in H
-        for node in out_neigh_H[each_pair.second]:
-            # if total order greater than in match
-            if(total_order[node] > reference_maximum):
+            # get valid out-neighbors in G
+            for node in out_neigh_G[each_pair.first]:
                 # if not yet in match
-                if(current_match_H.find(node) == current_match_H.end()):
-                    valid_H.push_back(node)
+                if(current_match_G.find(node) == current_match_G.end()):
+                    valid_G.push_back(node)
 
-        # make product of valid out-neighbors
-        if((not valid_G.empty()) and (not valid_H.empty())):
-            for node1 in valid_G:
-                for node2 in valid_H:
-                    temp_string = to_string(node1) + comma + to_string(node2)
-                    if(candidate_pairs_member.find(temp_string) == candidate_pairs_member.end()):
-                        # add proper pair
-                        temp_pair.first = node1
-                        temp_pair.second = node2
-                        candidate_pairs.push_back(temp_pair)
-                        # add string version for constant look ups
-                        candidate_pairs_member.insert(temp_string)
+            # get valid out-neighbors in H
+            for node in out_neigh_H[each_pair.second]:
+                # if total order greater than in match
+                if(total_order[node] > reference_maximum):
+                    # if not yet in match
+                    if(current_match_H.find(node) == current_match_H.end()):
+                        valid_H.push_back(node)
+
+            # make product of valid out-neighbors
+            if((not valid_G.empty()) and (not valid_H.empty())):
+                for node1 in valid_G:
+                    for node2 in valid_H:
+                        temp_string = to_string(node1) + comma + to_string(node2)
+                        if(candidate_pairs_member.find(temp_string) == candidate_pairs_member.end()):
+                            # add proper pair
+                            temp_pair.first = node1
+                            temp_pair.second = node2
+                            candidate_pairs.push_back(temp_pair)
+                            # add string version for constant look ups
+                            candidate_pairs_member.insert(temp_string)
 
     # end of function
     return(candidate_pairs)
@@ -1132,71 +1082,53 @@ cdef cpp_vector[cpp_pair[int, int]] directed_candidates(cpp_vector[cpp_pair[int,
 
 
 
-# function: evaluate syntactic feasability for directed extension --------------
-cdef cpp_bool directed_syntactic_feasibility(int node1,
-                                             int node2,
-                                             cpp_unordered_set[int] & current_match_G,
-                                             cpp_unordered_set[int] & current_match_H,
-                                             cpp_unordered_map[int, int] & forward_match,
-                                             cpp_unordered_map[int, cpp_unordered_set[int]] & in_neigh_G,
-                                             cpp_unordered_map[int, cpp_unordered_set[int]] & in_neigh_H,
-                                             cpp_unordered_map[int, cpp_unordered_set[int]] & out_neigh_G,
-                                             cpp_unordered_map[int, cpp_unordered_set[int]] & out_neigh_H) noexcept:
+# functions - feasability of matches - undirected and directed #################
+
+
+
+
+# function: evaluate syntactic feasability for connected extension -------------
+cdef cpp_bool syntactic_feasibility(int node1,
+                                    int node2,
+                                    cpp_unordered_set[int] & current_match_G,
+                                    cpp_unordered_set[int] & current_match_H,
+                                    cpp_unordered_map[int, int] & forward_match,
+                                    cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_G,
+                                    cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_H) noexcept:
 
     # local variables (cython)
     cdef int node = 0
     cdef int mapped = 0
-    cdef cpp_unordered_set[int] in_neighbors_match_G
-    cdef cpp_unordered_set[int] in_neighbors_match_H
-    cdef cpp_unordered_set[int] out_neighbors_match_G
-    cdef cpp_unordered_set[int] out_neighbors_match_H
+    cdef cpp_unordered_set[int] neighbors_match_G
+    cdef cpp_unordered_set[int] neighbors_match_H
 
     # loop-consistency-test
-    if(in_neigh_G[node1].find(node1) != in_neigh_G[node1].end()):
-        if(in_neigh_H[node2].find(node2) == in_neigh_H[node2].end()):
+    if(neigh_G[node1].find(node1) != neigh_G[node1].end()):
+        if(neigh_H[node2].find(node2) == neigh_H[node2].end()):
             # node1 has a loop in G but node2 has no loop in H
             return(False)
-    if(in_neigh_G[node1].find(node1) == in_neigh_G[node1].end()):
-        if(in_neigh_H[node2].find(node2) != in_neigh_H[node2].end()):
+    if(neigh_G[node1].find(node1) == neigh_G[node1].end()):
+        if(neigh_H[node2].find(node2) != neigh_H[node2].end()):
             # node1 has no loop in G but node2 has a loop in H
             return(False)
 
-    # look ahead 0: consistency of in-neighbors in match
-    for node in in_neigh_G[node1]:
+    # look ahead 0: consistency of neighbors in match
+    for node in neigh_G[node1]:
         if(current_match_G.find(node) != current_match_G.end()):
             mapped = forward_match[node]
-            in_neighbors_match_G.insert(mapped)
+            neighbors_match_G.insert(mapped)
 
-    for node in in_neigh_H[node2]:
+    for node in neigh_H[node2]:
         if(current_match_H.find(node) != current_match_H.end()):
-            in_neighbors_match_H.insert(node)
+            neighbors_match_H.insert(node)
 
-    if(in_neighbors_match_G.size() != in_neighbors_match_H.size()):
-        # one node has more in-neighbors in the match than the other
+    if(neighbors_match_G.size() != neighbors_match_H.size()):
+        # one node has more neighbors in the match than the other
         return(False)
     else:
-        for mapped in in_neighbors_match_G:
-            if(in_neighbors_match_H.find(mapped) == in_neighbors_match_H.end()):
-                # the in-neighbors dont respect the match
-                return(False)
-
-    # look ahead 0: consistency of out-neighbors in match
-    for node in out_neigh_G[node1]:
-        if(current_match_G.find(node) != current_match_G.end()):
-            mapped = forward_match[node]
-            out_neighbors_match_G.insert(mapped)
-
-    for node in out_neigh_H[node2]:
-        if(current_match_H.find(node) != current_match_H.end()):
-            out_neighbors_match_H.insert(node)
-
-    if(out_neighbors_match_G.size() != out_neighbors_match_H.size()):
-        # one node has more out-neighbors in the match than the other
-        return(False)
-    else:
-        for mapped in out_neighbors_match_G:
-            if(out_neighbors_match_H.find(mapped) == out_neighbors_match_H.end()):
-                # the out-neighbors dont respect the match
+        for mapped in neighbors_match_G:
+            if(neighbors_match_H.find(mapped) == neighbors_match_H.end()):
+                # the neighbors dont respect the match
                 return(False)
 
     # end of function
@@ -1205,17 +1137,16 @@ cdef cpp_bool directed_syntactic_feasibility(int node1,
 
 
 
-# function: evaluate semantic feasability for directed extension ---------------
-cdef cpp_bool directed_semantic_feasibility(int node1,
-                                            int node2,
-                                            cpp_unordered_set[int] & current_match_G,
-                                            cpp_unordered_map[int, int] & forward_match,
-                                            cpp_unordered_map[int, int] & nodes_G,
-                                            cpp_unordered_map[int, int] & nodes_H,
-                                            cpp_unordered_map[int, cpp_unordered_set[int]] & in_neigh_G,
-                                            cpp_unordered_map[int, cpp_unordered_set[int]] & out_neigh_G,
-                                            cpp_unordered_map[cpp_string, int] & edges_G,
-                                            cpp_unordered_map[cpp_string, int] & edges_H) noexcept:
+# function: evaluate semantic feasability for connected extension --------------
+cdef cpp_bool semantic_feasibility(int node1,
+                                   int node2,
+                                   cpp_unordered_set[int] & current_match_G,
+                                   cpp_unordered_map[int, int] & forward_match,
+                                   cpp_unordered_map[int, int] & nodes_G,
+                                   cpp_unordered_map[int, int] & nodes_H,
+                                   cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_G,
+                                   cpp_unordered_map[cpp_string, int] & edges_G,
+                                   cpp_unordered_map[cpp_string, int] & edges_H) noexcept:
 
     # local variables (cython)
     cdef int node = 0
@@ -1229,7 +1160,7 @@ cdef cpp_bool directed_semantic_feasibility(int node1,
         return(False)
 
     # compare loop-labels
-    if(in_neigh_G[node1].find(node1) != in_neigh_G[node1].end()):
+    if(neigh_G[node1].find(node1) != neigh_G[node1].end()):
         # loop in G
         labeled_edge_G = to_string(node1) + comma + to_string(node1)
         # loop in H
@@ -1238,19 +1169,8 @@ cdef cpp_bool directed_semantic_feasibility(int node1,
         if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
             return(False)
 
-    # compare non-loop in-edge-labels
-    for node in in_neigh_G[node1]:
-        if(current_match_G.find(node) != current_match_G.end()):
-            # edge in G with only one end in match
-            labeled_edge_G = to_string(node) + comma + to_string(node1)
-            # edge in H with only one end in match
-            labeled_edge_H = to_string(forward_match[node]) + comma + to_string(node2)
-            # compare edge labels
-            if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
-                return(False)
-
-    # compare non-loop out-edge-labels
-    for node in out_neigh_G[node1]:
+    # compare non-loop edge-labels
+    for node in neigh_G[node1]:
         if(current_match_G.find(node) != current_match_G.end()):
             # edge in G with only one end in match
             labeled_edge_G = to_string(node1) + comma + to_string(node)
