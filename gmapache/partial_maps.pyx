@@ -99,9 +99,9 @@ cdef struct partial_maps_directed_graph:
 def maximum_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
                                  nx_H = nx.Graph(),          # can be nx.DiGraph
                                  input_anchor = [],          # should be non-empty list
+                                 node_labels = True,         # consider node labels when evaluating the extensions
+                                 edge_labels = True,         # consider edge labels when evaluating the extensions
                                  all_extensions = False,     # by default stops when finding one complete extension (if any)
-                                 node_labels = True,         # consider node labels when evaluating the extensions,
-                                 edge_labels = True,         # consider edge labels when evaluating the extensions,
                                  iterative_search = True):   # by default an iterative search is used, otherwise a recursive version is called
     # description
     """
@@ -118,6 +118,10 @@ def maximum_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
     * nx_H - second networkx (di)graph being matched.
     * input_anchor - inyective map as a non-empty list of 2-tuples (x, y) of nodes x
     from G and y from H. An exception is raised if the anchor is empty.
+    * node_labels - boolean indicating if node labels should be considered for the search,
+    which is the default behavior, or if they should be ignored.
+    * edge_labels - boolean indicating if edge labels should be considered for the search,
+    which is the default behavior, or if they should be ignored.
     * all_extensions - boolean indicating if the function should stop as soon as one complete
     extension is found (if any) - this is the default behavior- or if it should search for all
     possible (complete) extensions. NOTE: mathematically speaking, the complete extension of
@@ -127,10 +131,6 @@ def maximum_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
     words, each call to this function can (mathematically) produce only one complete extension,
     but calls with different anchors can produce non-equivalent extensions, even if the anchors
     themselves produce isomorphic partial ITS graphs.
-    * node_labels - boolean indicating if node labels should be considered for the search,
-    which is the default behavior, or if they should be ignored.
-    * edge_labels - boolean indicating if edge labels should be considered for the search,
-    which is the default behavior, or if they should be ignored.
     * iterative_search - boolean indicating if the iterative version of this algorithm should
     be used (the default), or if a recursive version of it should be used instead.
 
@@ -171,13 +171,13 @@ def maximum_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
     if((not nx.is_directed(nx_G)) and (nx.is_directed(nx_H))):
         raise(ValueError("gmapache: input graphs must be both directed or both undirected."))
     # check that fourth argument is a boolean variable
-    if(type(all_extensions) not in [type(test_bool)]):
+    if(type(node_labels) not in [type(test_bool)]):
         raise(ValueError("gmapache: fourth argument must be a boolean variable."))
     # check that fifth argument is a boolean variable
-    if(type(node_labels) not in [type(test_bool)]):
+    if(type(edge_labels) not in [type(test_bool)]):
         raise(ValueError("gmapache: fifth argument must be a boolean variable."))
     # check that sixth argument is a boolean variable
-    if(type(edge_labels) not in [type(test_bool)]):
+    if(type(all_extensions) not in [type(test_bool)]):
         raise(ValueError("gmapache: sixth argument must be a boolean variable."))
     # check that seventh argument is a boolean variable
     if(type(iterative_search) not in [type(test_bool)]):

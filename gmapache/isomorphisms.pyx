@@ -118,6 +118,8 @@ cdef struct isomorphisms_candidates_struct_directed:
 # function: callable wrapper for searching for isomorphisms --------------------
 def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx DiGraph
                         nx_H = nx.Graph(),           # can also be a networkx DiGraph
+                        node_labels = True,          # consider node labels when evaluating isomorphisms
+                        edge_labels = True,          # consider edge labels when evaluating isomorphisms
                         all_isomorphisms = False,    # by default stops when finding one isomorphism (if any)
                         iterative_search = True):    # by default an iterative search is used, otherwise a recursive version is called
     # description
@@ -132,6 +134,10 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     > input:
     * nx_G - first networkx (di)graph being matched.
     * nx_H - second networkx (di)graph being matched.
+    * node_labels - boolean indicating if node labels should be considered for the search,
+    which is the default behavior, or if they should be ignored.
+    * edge_labels - boolean indicating if edge labels should be considered for the search,
+    which is the default behavior, or if they should be ignored.
     * all_isomorphisms - boolean variable indicating if the function should stop as soon
     as one isomorphism is found (if any) - this is the default behavior- or if it should
     search for all possible isomorphisms between the graphs.
@@ -164,11 +170,17 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     if(type(nx_H) not in [type(test_undir), type(test_dir)]):
         raise(ValueError("gmapache: second argument must be a networkx graph or digraph."))
     # check that third argument is networkx graph or digraph
-    if(type(all_isomorphisms) not in [type(test_bool)]):
+    if(type(node_labels) not in [type(test_bool)]):
         raise(ValueError("gmapache: third argument must be a boolean variable."))
     # check that fourth argument is networkx graph or digraph
-    if(type(iterative_search) not in [type(test_bool)]):
+    if(type(edge_labels) not in [type(test_bool)]):
         raise(ValueError("gmapache: fourth argument must be a boolean variable."))
+    # check that fifth argument is networkx graph or digraph
+    if(type(all_isomorphisms) not in [type(test_bool)]):
+        raise(ValueError("gmapache: fifth argument must be a boolean variable."))
+    # check that sixth argument is networkx graph or digraph
+    if(type(iterative_search) not in [type(test_bool)]):
+        raise(ValueError("gmapache: sixth argument must be a boolean variable."))
     # check that input graphs are of the same type
     if((nx.is_directed(nx_G)) and (not nx.is_directed(nx_H))):
         raise(ValueError("gmapache: input graphs must be both directed or both undirected."))
@@ -296,7 +308,9 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     # evaluate isomorphisms
     if(nx.is_directed(nx_G)):
         if(iterative_search):
-            directed_search_isomorphisms_iterative(all_isomorphisms,
+            directed_search_isomorphisms_iterative(node_labels,
+                                                   edge_labels,
+                                                   all_isomorphisms,
                                                    expected_order,
                                                    current_match,
                                                    total_order,
@@ -304,7 +318,9 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                                                    directed_H,
                                                    encoded_isomorphisms)
         else:
-            directed_search_isomorphisms_recursive(all_isomorphisms,
+            directed_search_isomorphisms_recursive(node_labels,
+                                                   edge_labels,
+                                                   all_isomorphisms,
                                                    expected_order,
                                                    current_match,
                                                    total_order,
@@ -313,7 +329,9 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                                                    encoded_isomorphisms)
     else:
         if(iterative_search):
-            undirected_search_isomorphisms_iterative(all_isomorphisms,
+            undirected_search_isomorphisms_iterative(node_labels,
+                                                     edge_labels,
+                                                     all_isomorphisms,
                                                      expected_order,
                                                      current_match,
                                                      total_order,
@@ -321,7 +339,9 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                                                      undirected_H,
                                                      encoded_isomorphisms)
         else:
-            undirected_search_isomorphisms_recursive(all_isomorphisms,
+            undirected_search_isomorphisms_recursive(node_labels,
+                                                     edge_labels,
+                                                     all_isomorphisms,
                                                      expected_order,
                                                      current_match,
                                                      total_order,
@@ -352,7 +372,9 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
 # NOTE: an iterative DFS version of this algorithm can be implemented without a "visited"
 # list, since the total order given to the vertices of the second graph guarantees that
 # the search space is actually a search tree, and thus cannot have repeated states.
-cdef void undirected_search_isomorphisms_iterative(cpp_bool all_isomorphisms,
+cdef void undirected_search_isomorphisms_iterative(cpp_bool node_labels,
+                                                   cpp_bool edge_labels,
+                                                   cpp_bool all_isomorphisms,
                                                    size_t expected_order,
                                                    cpp_vector[cpp_pair[int, int]] input_anchor,
                                                    cpp_unordered_map[int, int] & total_order,
@@ -363,8 +385,8 @@ cdef void undirected_search_isomorphisms_iterative(cpp_bool all_isomorphisms,
     # local variables (cython)
     cdef size_t new_score = 0
     cdef size_t old_score = 0
-    cdef cpp_bool semantic_feasibility_res = False
-    cdef cpp_bool syntactic_feasibility_res = False
+    cdef cpp_bool semantic_feasibility_res = True
+    cdef cpp_bool syntactic_feasibility_res = True
     cdef cpp_pair[int, int] each_pair
     cdef cpp_vector[cpp_pair[int, int]] new_match
     cdef cpp_vector[cpp_pair[int, int]] current_match
@@ -430,19 +452,22 @@ cdef void undirected_search_isomorphisms_iterative(cpp_bool all_isomorphisms,
 
                 if(syntactic_feasibility_res):
                     # evaluate semantic feasibility
-                    semantic_feasibility_res = semantic_feasibility(each_pair.first,
-                                                                    each_pair.second,
-                                                                    candidates_struct.ring_G,
-                                                                    candidates_struct.ring_H,
-                                                                    current_match_G,
-                                                                    current_match_H,
-                                                                    forward_match,
-                                                                    G.nodes,
-                                                                    H.nodes,
-                                                                    G.neighbors,
-                                                                    H.neighbors,
-                                                                    G.edges,
-                                                                    H.edges)
+                    if(node_labels or edge_labels):
+                        semantic_feasibility_res = semantic_feasibility(node_labels,
+                                                                        edge_labels,
+                                                                        each_pair.first,
+                                                                        each_pair.second,
+                                                                        candidates_struct.ring_G,
+                                                                        candidates_struct.ring_H,
+                                                                        current_match_G,
+                                                                        current_match_H,
+                                                                        forward_match,
+                                                                        G.nodes,
+                                                                        H.nodes,
+                                                                        G.neighbors,
+                                                                        H.neighbors,
+                                                                        G.edges,
+                                                                        H.edges)
 
                     # push to stack if valid
                     if(semantic_feasibility_res):
@@ -458,7 +483,9 @@ cdef void undirected_search_isomorphisms_iterative(cpp_bool all_isomorphisms,
 
 
 # function: core routine of VF2-like undirected approach - recursive -----------
-cdef void undirected_search_isomorphisms_recursive(cpp_bool all_isomorphisms,
+cdef void undirected_search_isomorphisms_recursive(cpp_bool node_labels,
+                                                   cpp_bool edge_labels,
+                                                   cpp_bool all_isomorphisms,
                                                    size_t expected_order,
                                                    cpp_vector[cpp_pair[int, int]] current_match,
                                                    cpp_unordered_map[int, int] & total_order,
@@ -469,8 +496,8 @@ cdef void undirected_search_isomorphisms_recursive(cpp_bool all_isomorphisms,
     # local variables (cython)
     cdef size_t new_score = 0
     cdef size_t old_score = 0
-    cdef cpp_bool semantic_feasibility_res = False
-    cdef cpp_bool syntactic_feasibility_res = False
+    cdef cpp_bool semantic_feasibility_res = True
+    cdef cpp_bool syntactic_feasibility_res = True
     cdef cpp_pair[int, int] each_pair
     cdef cpp_vector[cpp_pair[int, int]] new_match
     cdef cpp_unordered_set[int] current_match_G
@@ -519,19 +546,22 @@ cdef void undirected_search_isomorphisms_recursive(cpp_bool all_isomorphisms,
 
             if(syntactic_feasibility_res):
                 # evaluate semantic feasibility
-                semantic_feasibility_res = semantic_feasibility(each_pair.first,
-                                                                each_pair.second,
-                                                                candidates_struct.ring_G,
-                                                                candidates_struct.ring_H,
-                                                                current_match_G,
-                                                                current_match_H,
-                                                                forward_match,
-                                                                G.nodes,
-                                                                H.nodes,
-                                                                G.neighbors,
-                                                                H.neighbors,
-                                                                G.edges,
-                                                                H.edges)
+                if(node_labels or edge_labels):
+                    semantic_feasibility_res = semantic_feasibility(node_labels,
+                                                                    edge_labels,
+                                                                    each_pair.first,
+                                                                    each_pair.second,
+                                                                    candidates_struct.ring_G,
+                                                                    candidates_struct.ring_H,
+                                                                    current_match_G,
+                                                                    current_match_H,
+                                                                    forward_match,
+                                                                    G.nodes,
+                                                                    H.nodes,
+                                                                    G.neighbors,
+                                                                    H.neighbors,
+                                                                    G.edges,
+                                                                    H.edges)
 
                 # push to stack if valid
                 if(semantic_feasibility_res):
@@ -540,7 +570,9 @@ cdef void undirected_search_isomorphisms_recursive(cpp_bool all_isomorphisms,
                     new_match = current_match
                     new_match.push_back(each_pair)
                     # extend match
-                    undirected_search_isomorphisms_recursive(all_isomorphisms,
+                    undirected_search_isomorphisms_recursive(node_labels,
+                                                             edge_labels,
+                                                             all_isomorphisms,
                                                              expected_order,
                                                              new_match,
                                                              total_order,
@@ -712,7 +744,9 @@ cdef isomorphisms_candidates_struct_undirected undirected_candidates(size_t expe
 # NOTE: an iterative DFS version of this algorithm can be implemented without a "visited"
 # list, since the total order given to the vertices of the second graph guarantees that
 # the search space is actually a search tree, and thus cannot have repeated states.
-cdef void directed_search_isomorphisms_iterative(cpp_bool all_isomorphisms,
+cdef void directed_search_isomorphisms_iterative(cpp_bool node_labels,
+                                                 cpp_bool edge_labels,
+                                                 cpp_bool all_isomorphisms,
                                                  size_t expected_order,
                                                  cpp_vector[cpp_pair[int, int]] input_anchor,
                                                  cpp_unordered_map[int, int] & total_order,
@@ -723,10 +757,10 @@ cdef void directed_search_isomorphisms_iterative(cpp_bool all_isomorphisms,
     # local variables (cython)
     cdef size_t new_score = 0
     cdef size_t old_score = 0
-    cdef cpp_bool in_semantic_feasibility = False
-    cdef cpp_bool in_syntactic_feasibility = False
-    cdef cpp_bool out_semantic_feasibility = False
-    cdef cpp_bool out_syntactic_feasibility = False
+    cdef cpp_bool in_semantic_feasibility = True
+    cdef cpp_bool in_syntactic_feasibility = True
+    cdef cpp_bool out_semantic_feasibility = True
+    cdef cpp_bool out_syntactic_feasibility = True
     cdef cpp_pair[int, int] each_pair
     cdef cpp_vector[cpp_pair[int, int]] new_match
     cdef cpp_vector[cpp_pair[int, int]] current_match
@@ -806,35 +840,41 @@ cdef void directed_search_isomorphisms_iterative(cpp_bool all_isomorphisms,
 
                     if(out_syntactic_feasibility):
                         # evaluate semantic feasibility of in-neighors
-                        in_semantic_feasibility = semantic_feasibility(each_pair.first,
-                                                                       each_pair.second,
-                                                                       candidates_struct.in_ring_G,
-                                                                       candidates_struct.in_ring_H,
-                                                                       current_match_G,
-                                                                       current_match_H,
-                                                                       forward_match,
-                                                                       G.nodes,
-                                                                       H.nodes,
-                                                                       G.in_neighbors,
-                                                                       H.in_neighbors,
-                                                                       G.edges,
-                                                                       H.edges)
+                        if(node_labels or edge_labels):
+                            in_semantic_feasibility = semantic_feasibility(node_labels,
+                                                                           edge_labels,
+                                                                           each_pair.first,
+                                                                           each_pair.second,
+                                                                           candidates_struct.in_ring_G,
+                                                                           candidates_struct.in_ring_H,
+                                                                           current_match_G,
+                                                                           current_match_H,
+                                                                           forward_match,
+                                                                           G.nodes,
+                                                                           H.nodes,
+                                                                           G.in_neighbors,
+                                                                           H.in_neighbors,
+                                                                           G.edges,
+                                                                           H.edges)
 
                         if(in_semantic_feasibility):
                             # evaluate semantic feasibility of out-neighors
-                            out_semantic_feasibility = semantic_feasibility(each_pair.first,
-                                                                            each_pair.second,
-                                                                            candidates_struct.out_ring_G,
-                                                                            candidates_struct.out_ring_H,
-                                                                            current_match_G,
-                                                                            current_match_H,
-                                                                            forward_match,
-                                                                            G.nodes,
-                                                                            H.nodes,
-                                                                            G.out_neighbors,
-                                                                            H.out_neighbors,
-                                                                            G.edges,
-                                                                            H.edges)
+                            if(node_labels or edge_labels):
+                                out_semantic_feasibility = semantic_feasibility(node_labels,
+                                                                                edge_labels,
+                                                                                each_pair.first,
+                                                                                each_pair.second,
+                                                                                candidates_struct.out_ring_G,
+                                                                                candidates_struct.out_ring_H,
+                                                                                current_match_G,
+                                                                                current_match_H,
+                                                                                forward_match,
+                                                                                G.nodes,
+                                                                                H.nodes,
+                                                                                G.out_neighbors,
+                                                                                H.out_neighbors,
+                                                                                G.edges,
+                                                                                H.edges)
 
                             # push to stack if valid
                             if(out_semantic_feasibility):
@@ -850,7 +890,9 @@ cdef void directed_search_isomorphisms_iterative(cpp_bool all_isomorphisms,
 
 
 # function: core routine of VF2-like directed approach - recursive -------------
-cdef void directed_search_isomorphisms_recursive(cpp_bool all_isomorphisms,
+cdef void directed_search_isomorphisms_recursive(cpp_bool node_labels,
+                                                 cpp_bool edge_labels,
+                                                 cpp_bool all_isomorphisms,
                                                  size_t expected_order,
                                                  cpp_vector[cpp_pair[int, int]] current_match,
                                                  cpp_unordered_map[int, int] & total_order,
@@ -861,10 +903,10 @@ cdef void directed_search_isomorphisms_recursive(cpp_bool all_isomorphisms,
     # local variables (cython)
     cdef size_t new_score = 0
     cdef size_t old_score = 0
-    cdef cpp_bool in_semantic_feasibility = False
-    cdef cpp_bool in_syntactic_feasibility = False
-    cdef cpp_bool out_semantic_feasibility = False
-    cdef cpp_bool out_syntactic_feasibility = False
+    cdef cpp_bool in_semantic_feasibility = True
+    cdef cpp_bool in_syntactic_feasibility = True
+    cdef cpp_bool out_semantic_feasibility = True
+    cdef cpp_bool out_syntactic_feasibility = True
     cdef cpp_pair[int, int] each_pair
     cdef cpp_vector[cpp_pair[int, int]] new_match
     cdef cpp_unordered_set[int] current_match_G
@@ -927,35 +969,41 @@ cdef void directed_search_isomorphisms_recursive(cpp_bool all_isomorphisms,
 
                 if(out_syntactic_feasibility):
                     # evaluate semantic feasibility of in-neighors
-                    in_semantic_feasibility = semantic_feasibility(each_pair.first,
-                                                                   each_pair.second,
-                                                                   candidates_struct.in_ring_G,
-                                                                   candidates_struct.in_ring_H,
-                                                                   current_match_G,
-                                                                   current_match_H,
-                                                                   forward_match,
-                                                                   G.nodes,
-                                                                   H.nodes,
-                                                                   G.in_neighbors,
-                                                                   H.in_neighbors,
-                                                                   G.edges,
-                                                                   H.edges)
+                    if(node_labels or edge_labels):
+                        in_semantic_feasibility = semantic_feasibility(node_labels,
+                                                                       edge_labels,
+                                                                       each_pair.first,
+                                                                       each_pair.second,
+                                                                       candidates_struct.in_ring_G,
+                                                                       candidates_struct.in_ring_H,
+                                                                       current_match_G,
+                                                                       current_match_H,
+                                                                       forward_match,
+                                                                       G.nodes,
+                                                                       H.nodes,
+                                                                       G.in_neighbors,
+                                                                       H.in_neighbors,
+                                                                       G.edges,
+                                                                       H.edges)
 
                     if(in_semantic_feasibility):
                         # evaluate semantic feasibility of out-neighors
-                        out_semantic_feasibility = semantic_feasibility(each_pair.first,
-                                                                        each_pair.second,
-                                                                        candidates_struct.out_ring_G,
-                                                                        candidates_struct.out_ring_H,
-                                                                        current_match_G,
-                                                                        current_match_H,
-                                                                        forward_match,
-                                                                        G.nodes,
-                                                                        H.nodes,
-                                                                        G.out_neighbors,
-                                                                        H.out_neighbors,
-                                                                        G.edges,
-                                                                        H.edges)
+                        if(node_labels or edge_labels):
+                            out_semantic_feasibility = semantic_feasibility(node_labels,
+                                                                            edge_labels,
+                                                                            each_pair.first,
+                                                                            each_pair.second,
+                                                                            candidates_struct.out_ring_G,
+                                                                            candidates_struct.out_ring_H,
+                                                                            current_match_G,
+                                                                            current_match_H,
+                                                                            forward_match,
+                                                                            G.nodes,
+                                                                            H.nodes,
+                                                                            G.out_neighbors,
+                                                                            H.out_neighbors,
+                                                                            G.edges,
+                                                                            H.edges)
 
                         # push to stack if valid
                         if(out_semantic_feasibility):
@@ -964,7 +1012,9 @@ cdef void directed_search_isomorphisms_recursive(cpp_bool all_isomorphisms,
                             new_match = current_match
                             new_match.push_back(each_pair)
                             # extend match
-                            directed_search_isomorphisms_recursive(all_isomorphisms,
+                            directed_search_isomorphisms_recursive(node_labels,
+                                                                   edge_labels,
+                                                                   all_isomorphisms,
                                                                    expected_order,
                                                                    new_match,
                                                                    total_order,
@@ -1294,7 +1344,9 @@ cdef cpp_bool syntactic_feasibility(int node1,
 
 
 # function: evaluate semantic feasability for isomorphism search ---------------
-cdef cpp_bool semantic_feasibility(int node1,
+cdef cpp_bool semantic_feasibility(cpp_bool node_labels,
+                                   cpp_bool edge_labels,
+                                   int node1,
                                    int node2,
                                    cpp_unordered_set[int] & ring_G,
                                    cpp_unordered_set[int] & ring_H,
@@ -1333,17 +1385,19 @@ cdef cpp_bool semantic_feasibility(int node1,
     cdef cpp_unordered_map[int, int] count_edge_extern_G
     cdef cpp_unordered_map[int, int] count_edge_extern_H
 
-    # compare vertex-labels
-    if(nodes_G[node1] != nodes_H[node2]):
-        return(False)
-
-    # compare loop-labels
-    if(neigh_G[node1].find(node1) != neigh_G[node1].end()):
-        labeled_edge_G = to_string(node1) + comma + to_string(node1)
-        labeled_edge_H = to_string(node2) + comma + to_string(node2)
-        # compare labeled edges
-        if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
+    if(node_labels):
+        # compare vertex-labels
+        if(nodes_G[node1] != nodes_H[node2]):
             return(False)
+
+    if(edge_labels):
+        # compare loop-labels
+        if(neigh_G[node1].find(node1) != neigh_G[node1].end()):
+            labeled_edge_G = to_string(node1) + comma + to_string(node1)
+            labeled_edge_H = to_string(node2) + comma + to_string(node2)
+            # compare labeled edges
+            if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
+                return(False)
 
     # obtain tripartition of neighbors in G
     for node in neigh_G[node1]:
@@ -1357,15 +1411,16 @@ cdef cpp_bool semantic_feasibility(int node1,
                 # save neighbor since we are just comparing numbers later
                 neighbors_extern_G.push_back(node)
 
-    # label look ahead 0: compare non-loop edge-labels in match
-    for node in neighbors_match_G:
-        # edge in G with only one end in match
-        labeled_edge_G = to_string(node1) + comma + to_string(node)
-        # edge in H with only one end in match
-        labeled_edge_H = to_string(node2) + comma + to_string(forward_match[node])
-        # compare labeled edges
-        if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
-            return(False)
+    if(edge_labels):
+        # label look ahead 0: compare non-loop edge-labels in match
+        for node in neighbors_match_G:
+            # edge in G with only one end in match
+            labeled_edge_G = to_string(node1) + comma + to_string(node)
+            # edge in H with only one end in match
+            labeled_edge_H = to_string(node2) + comma + to_string(forward_match[node])
+            # compare labeled edges
+            if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
+                return(False)
 
     # obtain tripartition of neighbors in H
     for node in neigh_H[node2]:
@@ -1381,123 +1436,139 @@ cdef cpp_bool semantic_feasibility(int node1,
     if(not neighbors_ring_G.empty()):
         # count in G
         for node in neighbors_ring_G:
-            # get node label
-            node_label = nodes_G[node]
-            # get edge label (possibly loop label)
-            labeled_edge_G = to_string(node1) + comma + to_string(node)
-            edge_label = edges_G[labeled_edge_G]
-            # count node label
-            if(count_node_ring_G.find(node_label) != count_node_ring_G.end()):
-                count_node_ring_G[node_label] = count_node_ring_G[node_label] + 1
-            else:
-                count_node_ring_G[node_label] = 1
-            # count edge label
-            if(count_edge_ring_G.find(edge_label) != count_edge_ring_G.end()):
-                count_edge_ring_G[edge_label] = count_edge_ring_G[edge_label] + 1
-            else:
-                count_edge_ring_G[edge_label] = 1
+            if(node_labels):
+                # get node label
+                node_label = nodes_G[node]
+                # count node label
+                if(count_node_ring_G.find(node_label) != count_node_ring_G.end()):
+                    count_node_ring_G[node_label] = count_node_ring_G[node_label] + 1
+                else:
+                    count_node_ring_G[node_label] = 1
+            if(edge_labels):
+                # get edge label (possibly loop label)
+                labeled_edge_G = to_string(node1) + comma + to_string(node)
+                edge_label = edges_G[labeled_edge_G]
+                # count edge label
+                if(count_edge_ring_G.find(edge_label) != count_edge_ring_G.end()):
+                    count_edge_ring_G[edge_label] = count_edge_ring_G[edge_label] + 1
+                else:
+                    count_edge_ring_G[edge_label] = 1
 
         # count in H
         for node in neighbors_ring_H:
-            # get node label
-            node_label = nodes_H[node]
-            # get edge label (possibly loop label)
-            labeled_edge_H = to_string(node2) + comma + to_string(node)
-            edge_label = edges_H[labeled_edge_H]
-            # count node label
-            if(count_node_ring_H.find(node_label) != count_node_ring_H.end()):
-                count_node_ring_H[node_label] = count_node_ring_H[node_label] + 1
-            else:
-                count_node_ring_H[node_label] = 1
-            # count edge label
-            if(count_edge_ring_H.find(edge_label) != count_edge_ring_H.end()):
-                count_edge_ring_H[edge_label] = count_edge_ring_H[edge_label] + 1
-            else:
-                count_edge_ring_H[edge_label] = 1
+            if(node_labels):
+                # get node label
+                node_label = nodes_H[node]
+                # count node label
+                if(count_node_ring_H.find(node_label) != count_node_ring_H.end()):
+                    count_node_ring_H[node_label] = count_node_ring_H[node_label] + 1
+                else:
+                    count_node_ring_H[node_label] = 1
+            if(edge_labels):
+                # get edge label (possibly loop label)
+                labeled_edge_H = to_string(node2) + comma + to_string(node)
+                edge_label = edges_H[labeled_edge_H]
+                # count edge label
+                if(count_edge_ring_H.find(edge_label) != count_edge_ring_H.end()):
+                    count_edge_ring_H[edge_label] = count_edge_ring_H[edge_label] + 1
+                else:
+                    count_edge_ring_H[edge_label] = 1
 
         # compare number of types of adjacent nodes
-        if(count_node_ring_G.size() != count_node_ring_H.size()):
-            return(False)
+        if(node_labels):
+            if(count_node_ring_G.size() != count_node_ring_H.size()):
+                return(False)
 
         # compare number of types of incident edges
-        if(count_edge_ring_G.size() != count_edge_ring_H.size()):
-            return(False)
+        if(edge_labels):
+            if(count_edge_ring_G.size() != count_edge_ring_H.size()):
+                return(False)
 
         # compare types of adjacent nodes
-        for each_pair in count_node_ring_G:
-            if(count_node_ring_H.find(each_pair.first) == count_node_ring_H.end()):
-                return(False)
-            else:
-                if(each_pair.second != count_node_ring_H[each_pair.first]):
+        if(node_labels):
+            for each_pair in count_node_ring_G:
+                if(count_node_ring_H.find(each_pair.first) == count_node_ring_H.end()):
                     return(False)
+                else:
+                    if(each_pair.second != count_node_ring_H[each_pair.first]):
+                        return(False)
 
         # compare types of incident edges
-        for each_pair in count_edge_ring_G:
-            if(count_edge_ring_H.find(each_pair.first) == count_edge_ring_H.end()):
-                return(False)
-            else:
-                if(each_pair.second != count_edge_ring_H[each_pair.first]):
+        if(edge_labels):
+            for each_pair in count_edge_ring_G:
+                if(count_edge_ring_H.find(each_pair.first) == count_edge_ring_H.end()):
                     return(False)
+                else:
+                    if(each_pair.second != count_edge_ring_H[each_pair.first]):
+                        return(False)
 
     # label look ahead 2: compare labels of extern neighbors (neither in match nor adjacent to match)
     if(not neighbors_extern_G.empty()):
         for node in neighbors_extern_G:
-            # get node label
-            node_label = nodes_G[node]
-            # get edge label (possibly loop label)
-            labeled_edge_G = to_string(node1) + comma + to_string(node)
-            edge_label = edges_G[labeled_edge_G]
-            # count node label
-            if(count_node_extern_G.find(node_label) != count_node_extern_G.end()):
-                count_node_extern_G[node_label] = count_node_extern_G[node_label] + 1
-            else:
-                count_node_extern_G[node_label] = 1
-            # count edge label
-            if(count_edge_extern_G.find(edge_label) != count_edge_extern_G.end()):
-                count_edge_extern_G[edge_label] = count_edge_extern_G[edge_label] + 1
-            else:
-                count_edge_extern_G[edge_label] = 1
+            if(node_labels):
+                # get node label
+                node_label = nodes_G[node]
+                # count node label
+                if(count_node_extern_G.find(node_label) != count_node_extern_G.end()):
+                    count_node_extern_G[node_label] = count_node_extern_G[node_label] + 1
+                else:
+                    count_node_extern_G[node_label] = 1
+            if(edge_labels):
+                # get edge label (possibly loop label)
+                labeled_edge_G = to_string(node1) + comma + to_string(node)
+                edge_label = edges_G[labeled_edge_G]
+                # count edge label
+                if(count_edge_extern_G.find(edge_label) != count_edge_extern_G.end()):
+                    count_edge_extern_G[edge_label] = count_edge_extern_G[edge_label] + 1
+                else:
+                    count_edge_extern_G[edge_label] = 1
 
         for node in neighbors_extern_H:
-            # get node label
-            node_label = nodes_H[node]
-            # get edge label (possibly loop label)
-            labeled_edge_H = to_string(node2) + comma + to_string(node)
-            edge_label = edges_H[labeled_edge_H]
-            # count node label
-            if(count_node_extern_H.find(node_label) != count_node_extern_H.end()):
-                count_node_extern_H[node_label] = count_node_extern_H[node_label] + 1
-            else:
-                count_node_extern_H[node_label] = 1
-            # count edge label
-            if(count_edge_extern_H.find(edge_label) != count_edge_extern_H.end()):
-                count_edge_extern_H[edge_label] = count_edge_extern_H[edge_label] + 1
-            else:
-                count_edge_extern_H[edge_label] = 1
+            if(node_labels):
+                # get node label
+                node_label = nodes_H[node]
+                # count node label
+                if(count_node_extern_H.find(node_label) != count_node_extern_H.end()):
+                    count_node_extern_H[node_label] = count_node_extern_H[node_label] + 1
+                else:
+                    count_node_extern_H[node_label] = 1
+            if(edge_labels):
+                # get edge label (possibly loop label)
+                labeled_edge_H = to_string(node2) + comma + to_string(node)
+                edge_label = edges_H[labeled_edge_H]
+                # count edge label
+                if(count_edge_extern_H.find(edge_label) != count_edge_extern_H.end()):
+                    count_edge_extern_H[edge_label] = count_edge_extern_H[edge_label] + 1
+                else:
+                    count_edge_extern_H[edge_label] = 1
 
         # compare number of types of adjacent nodes
-        if(count_node_extern_G.size() != count_node_extern_H.size()):
-            return(False)
+        if(node_labels):
+            if(count_node_extern_G.size() != count_node_extern_H.size()):
+                return(False)
 
         # compare number of types of incident edges
-        if(count_edge_extern_G.size() != count_edge_extern_H.size()):
-            return(False)
+        if(edge_labels):
+            if(count_edge_extern_G.size() != count_edge_extern_H.size()):
+                return(False)
 
         # compare types of adjacent nodes
-        for each_pair in count_node_extern_G:
-            if(count_node_extern_H.find(each_pair.first) == count_node_extern_H.end()):
-                return(False)
-            else:
-                if(each_pair.second != count_node_extern_H[each_pair.first]):
+        if(node_labels):
+            for each_pair in count_node_extern_G:
+                if(count_node_extern_H.find(each_pair.first) == count_node_extern_H.end()):
                     return(False)
+                else:
+                    if(each_pair.second != count_node_extern_H[each_pair.first]):
+                        return(False)
 
         # compare types of incident edges
-        for each_pair in count_edge_extern_G:
-            if(count_edge_extern_H.find(each_pair.first) == count_edge_extern_H.end()):
-                return(False)
-            else:
-                if(each_pair.second != count_edge_extern_H[each_pair.first]):
+        if(edge_labels):
+            for each_pair in count_edge_extern_G:
+                if(count_edge_extern_H.find(each_pair.first) == count_edge_extern_H.end()):
                     return(False)
+                else:
+                    if(each_pair.second != count_edge_extern_H[each_pair.first]):
+                        return(False)
 
     # end of function
     return(True)
