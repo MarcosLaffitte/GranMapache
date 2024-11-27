@@ -205,6 +205,23 @@ F.add_edge("x1", "x6")
 F.add_edge("x1", "x7")
 
 
+# buid fourth test graph for isomorphism search
+L = nx.Graph()
+L.add_node(1, color = "blue")
+L.add_node(2, color = "blue")
+L.add_node(3, color = "red")
+L.add_node(4, color = "red")
+L.add_node(5, color = "green")
+L.add_node(6, color = "green")
+L.add_node(7, color = "purple")
+L.add_edge(1, 2, bond = "single")
+L.add_edge(2, 3, bond = "double")
+L.add_edge(3, 4, bond = "single")
+L.add_edge(4, 5, bond = "double")
+L.add_edge(5, 6, bond = "single")
+L.add_edge(5, 7, bond = "double")
+
+
 # testing isomorphisms
 initial_time = time.time()
 isomorphisms, are_isomorphic = gm.search_isomorphisms(G, H, all_isomorphisms = False)
@@ -233,6 +250,25 @@ final_time = time.time()
 # print resutls
 print("--------------------------------------------------")
 print("> Isomorphism Search (with non-isomorphic graphs)")
+print("\n")
+print("***** Got isomorphisms:")
+print(isomorphisms)
+print("***** Were graphs isomorphic?")
+print(are_isomorphic)
+print("***** Running time [s]")
+print(final_time - initial_time)
+print("\n")
+
+
+# testing isomorphisms
+initial_time = time.time()
+isomorphisms, are_isomorphic = gm.search_isomorphisms(G, L, node_labels = False, edge_labels = False)
+final_time = time.time()
+
+
+# print resutls
+print("--------------------------------------------------")
+print("> Isomorphism Search (when ignoring node and edge labels)")
 print("\n")
 print("***** Got isomorphisms:")
 print(isomorphisms)
