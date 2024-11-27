@@ -38,7 +38,9 @@ Alignments and other Maps between Graphs
 
 > done: add examples with isomorphisms to standalone
 
-- working: add options to ignore node labels or/and edge labels
+> done: add options to ignore node labels or/and edge labels in partial maps
+
+- working: add options to ignore node labels or/and edge labels in isomorphism search
 
 - working: mcs routines
 

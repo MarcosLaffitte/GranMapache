@@ -100,6 +100,8 @@ def maximum_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
                                  nx_H = nx.Graph(),          # can be nx.DiGraph
                                  input_anchor = [],          # should be non-empty list
                                  all_extensions = False,     # by default stops when finding one complete extension (if any)
+                                 node_labels = True,         # consider node labels when evaluating the extensions,
+                                 edge_labels = True,         # consider edge labels when evaluating the extensions,
                                  iterative_search = True):   # by default an iterative search is used, otherwise a recursive version is called
     # description
     """
@@ -125,6 +127,10 @@ def maximum_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
     words, each call to this function can (mathematically) produce only one complete extension,
     but calls with different anchors can produce non-equivalent extensions, even if the anchors
     themselves produce isomorphic partial ITS graphs.
+    * node_labels - boolean indicating if node labels should be considered for the search,
+    which is the default behavior, or if they should be ignored.
+    * edge_labels - boolean indicating if edge labels should be considered for the search,
+    which is the default behavior, or if they should be ignored.
     * iterative_search - boolean indicating if the iterative version of this algorithm should
     be used (the default), or if a recursive version of it should be used instead.
 
@@ -168,8 +174,14 @@ def maximum_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
     if(type(all_extensions) not in [type(test_bool)]):
         raise(ValueError("gmapache: fourth argument must be a boolean variable."))
     # check that fifth argument is a boolean variable
-    if(type(iterative_search) not in [type(test_bool)]):
+    if(type(node_labels) not in [type(test_bool)]):
         raise(ValueError("gmapache: fifth argument must be a boolean variable."))
+    # check that sixth argument is a boolean variable
+    if(type(edge_labels) not in [type(test_bool)]):
+        raise(ValueError("gmapache: sixth argument must be a boolean variable."))
+    # check that seventh argument is a boolean variable
+    if(type(iterative_search) not in [type(test_bool)]):
+        raise(ValueError("gmapache: seventh argument must be a boolean variable."))
     # check that third argument is a list
     if(not type(input_anchor) in [type(test_list)]):
         raise(ValueError("gmapache: third argument must be a non-empty list of 2-tuples."))
@@ -336,7 +348,9 @@ def maximum_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
     # get maximum extensions
     if(nx.is_directed(nx_G)):
         if(iterative_search):
-            directed_maximum_connected_extensions_iterative(all_extensions,
+            directed_maximum_connected_extensions_iterative(node_labels,
+                                                            edge_labels,
+                                                            all_extensions,
                                                             expected_order,
                                                             encoded_anchor,
                                                             total_order,
@@ -344,7 +358,9 @@ def maximum_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
                                                             directed_H,
                                                             encoded_extensions)
         else:
-            directed_maximum_connected_extensions_recursive(all_extensions,
+            directed_maximum_connected_extensions_recursive(node_labels,
+                                                            edge_labels,
+                                                            all_extensions,
                                                             expected_order,
                                                             encoded_anchor,
                                                             total_order,
@@ -353,7 +369,9 @@ def maximum_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
                                                             encoded_extensions)
     else:
         if(iterative_search):
-            undirected_maximum_connected_extensions_iterative(all_extensions,
+            undirected_maximum_connected_extensions_iterative(node_labels,
+                                                              edge_labels,
+                                                              all_extensions,
                                                               expected_order,
                                                               encoded_anchor,
                                                               total_order,
@@ -361,7 +379,9 @@ def maximum_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
                                                               undirected_H,
                                                               encoded_extensions)
         else:
-            undirected_maximum_connected_extensions_recursive(all_extensions,
+            undirected_maximum_connected_extensions_recursive(node_labels,
+                                                              edge_labels,
+                                                              all_extensions,
                                                               expected_order,
                                                               encoded_anchor,
                                                               total_order,
@@ -391,7 +411,9 @@ def maximum_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
 # NOTE: an iterative DFS version of this algorithm can be implemented without a "visited"
 # list, since the total order given to the vertices of the second graph guarantees that
 # the search space is actually a search tree, and thus cannot have repeated states.
-cdef void undirected_maximum_connected_extensions_iterative(cpp_bool all_extensions,
+cdef void undirected_maximum_connected_extensions_iterative(cpp_bool node_labels,
+                                                            cpp_bool edge_labels,
+                                                            cpp_bool all_extensions,
                                                             size_t expected_order,
                                                             cpp_vector[cpp_pair[int, int]] input_anchor,
                                                             cpp_unordered_map[int, int] & total_order,
@@ -402,8 +424,8 @@ cdef void undirected_maximum_connected_extensions_iterative(cpp_bool all_extensi
     # local variables (cython)
     cdef size_t new_score = 0
     cdef size_t old_score = 0
-    cdef cpp_bool semantic_feasibility_res = False
-    cdef cpp_bool syntactic_feasibility_res = False
+    cdef cpp_bool semantic_feasibility_res = True
+    cdef cpp_bool syntactic_feasibility_res = True
     cdef cpp_pair[int, int] each_pair
     cdef cpp_vector[cpp_pair[int, int]] new_match
     cdef cpp_vector[cpp_pair[int, int]] candidates
@@ -484,15 +506,18 @@ cdef void undirected_maximum_connected_extensions_iterative(cpp_bool all_extensi
 
                 if(syntactic_feasibility_res):
                     # evaluate semantic feasibility
-                    semantic_feasibility_res = semantic_feasibility(each_pair.first,
-                                                                    each_pair.second,
-                                                                    current_match_G,
-                                                                    forward_match,
-                                                                    G.nodes,
-                                                                    H.nodes,
-                                                                    G.neighbors,
-                                                                    G.edges,
-                                                                    H.edges)
+                    if(node_labels or edge_labels):
+                        semantic_feasibility_res = semantic_feasibility(node_labels,
+                                                                        edge_labels,
+                                                                        each_pair.first,
+                                                                        each_pair.second,
+                                                                        current_match_G,
+                                                                        forward_match,
+                                                                        G.nodes,
+                                                                        H.nodes,
+                                                                        G.neighbors,
+                                                                        G.edges,
+                                                                        H.edges)
 
                     # push to stack if valid
                     if(semantic_feasibility_res):
@@ -508,7 +533,9 @@ cdef void undirected_maximum_connected_extensions_iterative(cpp_bool all_extensi
 
 
 # function: core routine of VF2-like undirected approach - recursive -----------
-cdef void undirected_maximum_connected_extensions_recursive(cpp_bool all_extensions,
+cdef void undirected_maximum_connected_extensions_recursive(cpp_bool node_labels,
+                                                            cpp_bool edge_labels,
+                                                            cpp_bool all_extensions,
                                                             size_t expected_order,
                                                             cpp_vector[cpp_pair[int, int]] current_match,
                                                             cpp_unordered_map[int, int] & total_order,
@@ -519,8 +546,8 @@ cdef void undirected_maximum_connected_extensions_recursive(cpp_bool all_extensi
     # local variables (cython)
     cdef size_t new_score = 0
     cdef size_t old_score = 0
-    cdef cpp_bool semantic_feasibility_res = False
-    cdef cpp_bool syntactic_feasibility_res = False
+    cdef cpp_bool semantic_feasibility_res = True
+    cdef cpp_bool syntactic_feasibility_res = True
     cdef cpp_pair[int, int] each_pair
     cdef cpp_vector[cpp_pair[int, int]] new_match
     cdef cpp_vector[cpp_pair[int, int]] candidates
@@ -583,15 +610,18 @@ cdef void undirected_maximum_connected_extensions_recursive(cpp_bool all_extensi
 
             if(syntactic_feasibility_res):
                 # evaluate semantic feasibility
-                semantic_feasibility_res = semantic_feasibility(each_pair.first,
-                                                                each_pair.second,
-                                                                current_match_G,
-                                                                forward_match,
-                                                                G.nodes,
-                                                                H.nodes,
-                                                                G.neighbors,
-                                                                G.edges,
-                                                                H.edges)
+                if(node_labels or edge_labels):
+                    semantic_feasibility_res = semantic_feasibility(node_labels,
+                                                                    edge_labels,
+                                                                    each_pair.first,
+                                                                    each_pair.second,
+                                                                    current_match_G,
+                                                                    forward_match,
+                                                                    G.nodes,
+                                                                    H.nodes,
+                                                                    G.neighbors,
+                                                                    G.edges,
+                                                                    H.edges)
 
                 if(semantic_feasibility_res):
                     # build new match
@@ -599,7 +629,9 @@ cdef void undirected_maximum_connected_extensions_recursive(cpp_bool all_extensi
                     new_match = current_match
                     new_match.push_back(each_pair)
                     # extend match
-                    undirected_maximum_connected_extensions_recursive(all_extensions,
+                    undirected_maximum_connected_extensions_recursive(node_labels,
+                                                                      edge_labels,
+                                                                      all_extensions,
                                                                       expected_order,
                                                                       new_match,
                                                                       total_order,
@@ -696,7 +728,9 @@ cdef cpp_vector[cpp_pair[int, int]] undirected_candidates(cpp_vector[cpp_pair[in
 # NOTE: an iterative DFS version of this algorithm can be implemented without a "visited"
 # list, since the total order given to the vertices of the second graph guarantees that
 # the search space is actually a search tree, and thus cannot have repeated states.
-cdef void directed_maximum_connected_extensions_iterative(cpp_bool all_extensions,
+cdef void directed_maximum_connected_extensions_iterative(cpp_bool node_labels,
+                                                          cpp_bool edge_labels,
+                                                          cpp_bool all_extensions,
                                                           size_t expected_order,
                                                           cpp_vector[cpp_pair[int, int]] input_anchor,
                                                           cpp_unordered_map[int, int] & total_order,
@@ -707,10 +741,10 @@ cdef void directed_maximum_connected_extensions_iterative(cpp_bool all_extension
     # local variables (cython)
     cdef size_t new_score = 0
     cdef size_t old_score = 0
-    cdef cpp_bool in_semantic_feasibility = False
-    cdef cpp_bool in_syntactic_feasibility = False
-    cdef cpp_bool out_semantic_feasibility = False
-    cdef cpp_bool out_syntactic_feasibility = False
+    cdef cpp_bool in_semantic_feasibility = True
+    cdef cpp_bool in_syntactic_feasibility = True
+    cdef cpp_bool out_semantic_feasibility = True
+    cdef cpp_bool out_syntactic_feasibility = True
     cdef cpp_pair[int, int] each_pair
     cdef cpp_vector[cpp_pair[int, int]] new_match
     cdef cpp_vector[cpp_pair[int, int]] candidates
@@ -803,27 +837,33 @@ cdef void directed_maximum_connected_extensions_iterative(cpp_bool all_extension
 
                     if(out_syntactic_feasibility):
                         # evaluate semantic feasibility with in-neighbors
-                        in_semantic_feasibility = semantic_feasibility(each_pair.first,
-                                                                       each_pair.second,
-                                                                       current_match_G,
-                                                                       forward_match,
-                                                                       G.nodes,
-                                                                       H.nodes,
-                                                                       G.in_neighbors,
-                                                                       G.edges,
-                                                                       H.edges)
+                        if(node_labels or edge_labels):
+                            in_semantic_feasibility = semantic_feasibility(node_labels,
+                                                                           edge_labels,
+                                                                           each_pair.first,
+                                                                           each_pair.second,
+                                                                           current_match_G,
+                                                                           forward_match,
+                                                                           G.nodes,
+                                                                           H.nodes,
+                                                                           G.in_neighbors,
+                                                                           G.edges,
+                                                                           H.edges)
 
                         if(in_semantic_feasibility):
                             # evaluate semantic feasibility with out-neighbors
-                            out_semantic_feasibility = semantic_feasibility(each_pair.first,
-                                                                            each_pair.second,
-                                                                            current_match_G,
-                                                                            forward_match,
-                                                                            G.nodes,
-                                                                            H.nodes,
-                                                                            G.out_neighbors,
-                                                                            G.edges,
-                                                                            H.edges)
+                            if(node_labels or edge_labels):
+                                out_semantic_feasibility = semantic_feasibility(node_labels,
+                                                                                edge_labels,
+                                                                                each_pair.first,
+                                                                                each_pair.second,
+                                                                                current_match_G,
+                                                                                forward_match,
+                                                                                G.nodes,
+                                                                                H.nodes,
+                                                                                G.out_neighbors,
+                                                                                G.edges,
+                                                                                H.edges)
 
                             # push to stack if valid
                             if(out_semantic_feasibility):
@@ -839,7 +879,9 @@ cdef void directed_maximum_connected_extensions_iterative(cpp_bool all_extension
 
 
 # function: core routine of VF2-like directed approach - recursive -------------
-cdef void directed_maximum_connected_extensions_recursive(cpp_bool all_extensions,
+cdef void directed_maximum_connected_extensions_recursive(cpp_bool node_labels,
+                                                          cpp_bool edge_labels,
+                                                          cpp_bool all_extensions,
                                                           size_t expected_order,
                                                           cpp_vector[cpp_pair[int, int]] current_match,
                                                           cpp_unordered_map[int, int] & total_order,
@@ -850,10 +892,10 @@ cdef void directed_maximum_connected_extensions_recursive(cpp_bool all_extension
     # local variables (cython)
     cdef size_t new_score = 0
     cdef size_t old_score = 0
-    cdef cpp_bool in_semantic_feasibility = False
-    cdef cpp_bool in_syntactic_feasibility = False
-    cdef cpp_bool out_semantic_feasibility = False
-    cdef cpp_bool out_syntactic_feasibility = False
+    cdef cpp_bool in_semantic_feasibility = True
+    cdef cpp_bool in_syntactic_feasibility = True
+    cdef cpp_bool out_semantic_feasibility = True
+    cdef cpp_bool out_syntactic_feasibility = True
     cdef cpp_pair[int, int] each_pair
     cdef cpp_vector[cpp_pair[int, int]] new_match
     cdef cpp_vector[cpp_pair[int, int]] candidates
@@ -928,27 +970,33 @@ cdef void directed_maximum_connected_extensions_recursive(cpp_bool all_extension
 
                 if(out_syntactic_feasibility):
                     # evaluate semantic feasibility with in-neighbors
-                    in_semantic_feasibility = semantic_feasibility(each_pair.first,
-                                                                   each_pair.second,
-                                                                   current_match_G,
-                                                                   forward_match,
-                                                                   G.nodes,
-                                                                   H.nodes,
-                                                                   G.in_neighbors,
-                                                                   G.edges,
-                                                                   H.edges)
+                    if(node_labels or edge_labels):
+                        in_semantic_feasibility = semantic_feasibility(node_labels,
+                                                                       edge_labels,
+                                                                       each_pair.first,
+                                                                       each_pair.second,
+                                                                       current_match_G,
+                                                                       forward_match,
+                                                                       G.nodes,
+                                                                       H.nodes,
+                                                                       G.in_neighbors,
+                                                                       G.edges,
+                                                                       H.edges)
 
                     if(in_semantic_feasibility):
                         # evaluate semantic feasibility with out-neighbors
-                        out_semantic_feasibility = semantic_feasibility(each_pair.first,
-                                                                        each_pair.second,
-                                                                        current_match_G,
-                                                                        forward_match,
-                                                                        G.nodes,
-                                                                        H.nodes,
-                                                                        G.out_neighbors,
-                                                                        G.edges,
-                                                                        H.edges)
+                        if(node_labels or edge_labels):
+                            out_semantic_feasibility = semantic_feasibility(node_labels,
+                                                                            edge_labels,
+                                                                            each_pair.first,
+                                                                            each_pair.second,
+                                                                            current_match_G,
+                                                                            forward_match,
+                                                                            G.nodes,
+                                                                            H.nodes,
+                                                                            G.out_neighbors,
+                                                                            G.edges,
+                                                                            H.edges)
 
                         # push to stack if valid
                         if(out_semantic_feasibility):
@@ -957,7 +1005,9 @@ cdef void directed_maximum_connected_extensions_recursive(cpp_bool all_extension
                             new_match = current_match
                             new_match.push_back(each_pair)
                             # extend match
-                            directed_maximum_connected_extensions_recursive(all_extensions,
+                            directed_maximum_connected_extensions_recursive(node_labels,
+                                                                            edge_labels,
+                                                                            all_extensions,
                                                                             expected_order,
                                                                             new_match,
                                                                             total_order,
@@ -1138,7 +1188,9 @@ cdef cpp_bool syntactic_feasibility(int node1,
 
 
 # function: evaluate semantic feasability for connected extension --------------
-cdef cpp_bool semantic_feasibility(int node1,
+cdef cpp_bool semantic_feasibility(cpp_bool node_labels,
+                                   cpp_bool edge_labels,
+                                   int node1,
                                    int node2,
                                    cpp_unordered_set[int] & current_match_G,
                                    cpp_unordered_map[int, int] & forward_match,
@@ -1155,30 +1207,32 @@ cdef cpp_bool semantic_feasibility(int node1,
     cdef cpp_string labeled_edge_G
     cdef cpp_string labeled_edge_H
 
-    # compare vertex-labels
-    if(nodes_G[node1] != nodes_H[node2]):
-        return(False)
-
-    # compare loop-labels
-    if(neigh_G[node1].find(node1) != neigh_G[node1].end()):
-        # loop in G
-        labeled_edge_G = to_string(node1) + comma + to_string(node1)
-        # loop in H
-        labeled_edge_H = to_string(node2) + comma + to_string(node2)
-        # compare edge labels
-        if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
+    if(node_labels):
+        # compare vertex-labels
+        if(nodes_G[node1] != nodes_H[node2]):
             return(False)
 
-    # compare non-loop edge-labels
-    for node in neigh_G[node1]:
-        if(current_match_G.find(node) != current_match_G.end()):
-            # edge in G with only one end in match
-            labeled_edge_G = to_string(node1) + comma + to_string(node)
-            # edge in H with only one end in match
-            labeled_edge_H = to_string(node2) + comma + to_string(forward_match[node])
+    if(edge_labels):
+        # compare loop-labels
+        if(neigh_G[node1].find(node1) != neigh_G[node1].end()):
+            # loop in G
+            labeled_edge_G = to_string(node1) + comma + to_string(node1)
+            # loop in H
+            labeled_edge_H = to_string(node2) + comma + to_string(node2)
             # compare edge labels
             if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
                 return(False)
+
+        # compare non-loop edge-labels
+        for node in neigh_G[node1]:
+            if(current_match_G.find(node) != current_match_G.end()):
+                # edge in G with only one end in match
+                labeled_edge_G = to_string(node1) + comma + to_string(node)
+                # edge in H with only one end in match
+                labeled_edge_H = to_string(node2) + comma + to_string(forward_match[node])
+                # compare edge labels
+                if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
+                    return(False)
 
     # end of function
     return(True)
