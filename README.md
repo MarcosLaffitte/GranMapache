@@ -36,6 +36,8 @@ Alignments and other Maps between Graphs
 
 - working: simplify feasability testing
 
+- working: add examples with isomorphisms to standalone
+
 - working: mcs routines
 
 - working: test isomorphism and mcs routines
