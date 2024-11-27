@@ -36,7 +36,7 @@ Alignments and other Maps between Graphs
 
 > done: simplify feasability testing
 
-- working: add examples with isomorphisms to standalone
+> done: add examples with isomorphisms to standalone
 
 - working: add options to ignore node labels or/and edge labels
 
