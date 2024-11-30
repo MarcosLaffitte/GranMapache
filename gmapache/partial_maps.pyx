@@ -149,8 +149,10 @@ def maximum_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
     * .integerization.decode_graphs
     * .integerization.encode_match
     * .integerization.decode_match
-    * undirected_maximum_connected_extensions
-    * directed_maximum_connected_extensions
+    * undirected_maximum_connected_extensions_iterative
+    * undirected_maximum_connected_extensions_recursive
+    * directed_maximum_connected_extensions_iterative
+    * directed_maximum_connected_extensions_recursive
     """
 
     # exception handling and input correctness
@@ -165,6 +167,9 @@ def maximum_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
     # check that second argument is networkx graph or digraph
     if(type(nx_H) not in [type(test_undir), type(test_dir)]):
         raise(ValueError("gmapache: second argument must be a networkx graph or digraph."))
+    # check that input graphs are not null graphs
+    if((nx_G.order() == 0) or (nx_H.order() == 0)):
+        raise(ValueError("gmapache: input graphs must have at least one node each."))
     # check that the input graphs have the same type
     if((nx.is_directed(nx_G)) and (not nx.is_directed(nx_H))):
         raise(ValueError("gmapache: input graphs must be both directed or both undirected."))

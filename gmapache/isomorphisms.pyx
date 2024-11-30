@@ -155,8 +155,10 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     * .integerization.encode_graphs
     * .integerization.decode_graphs
     * .integerization.decode_match
-    * undirected_search_isomorphisms
-    * directed_search_isomorphisms
+    * undirected_search_isomorphisms_iterative
+    * undirected_search_isomorphisms_recursive
+    * directed_search_isomorphisms_iterative
+    * directed_search_isomorphisms_recursive
     """
 
     # exception handling and input correctness
