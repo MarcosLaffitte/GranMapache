@@ -101,7 +101,7 @@ def maximum_common_induced_subgraphs(nx_G = nx.Graph(),          # can be nx.DiG
                                      node_labels = True,         # consider node labels when evaluating the common subgraphs
                                      edge_labels = True,         # consider edge labels when evaluating the common subgraphs
                                      stop_if_covering = True,    # stops when finding a maximum common subgraph that covers one of the input graphs
-                                     iterative_search = True):   # by default an iterative search is used, otherwise a recursive version is called
+                                     iterative_search = False):  # by default a recursive search is used, otherwise an iterative version is called
     # description
     """
     > description: receives two networkx graphs G and H, and a possibly-empty match
@@ -125,7 +125,7 @@ def maximum_common_induced_subgraphs(nx_G = nx.Graph(),          # can be nx.DiG
     induces a common subgraph, or if it is empty. Setting this to False might result into a
     more time consuming call to this function.
     * iterative_search - boolean indicating if the iterative version of this algorithm should
-    be used (the default), or if a recursive version of it should be used instead.
+    be used instead of the recursive version (default).
 
     > output:
     * mci_subgraphs - list of injective maps each as a list of 2-tuples (x, y) of nodes x
@@ -310,7 +310,7 @@ def maximum_common_induced_subgraphs(nx_G = nx.Graph(),          # can be nx.DiG
     expected_order = min([nx_G.order(), nx_H.order()])
 
     # set recursion limit if recursive version was requested
-    if(not iterative_search):
+    if(iterative_search):
         scalation_value = 1.5
         required_limit = max([nx_G.order(), nx_H.order()])
         current_limit = getrecursionlimit()

@@ -124,7 +124,7 @@ def induced_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
                                  node_labels = True,         # consider node labels when evaluating the extensions
                                  edge_labels = True,         # consider edge labels when evaluating the extensions
                                  all_extensions = False,     # by default stops when finding one complete extension (if any)
-                                 iterative_search = True):   # by default an iterative search is used, otherwise a recursive version is called
+                                 iterative_search = False):  # by default a recursive search is used, otherwise an iterative version is called
     # description
     """
     > description: receives two networkx graphs G and H of the same order, and a match
@@ -157,7 +157,7 @@ def induced_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
     but calls with different anchors can produce non-equivalent extensions, even if the anchors
     themselves produce isomorphic partial ITS graphs.
     * iterative_search - boolean indicating if the iterative version of this algorithm should
-    be used (the default), or if a recursive version of it should be used instead.
+    be used instead of the recursive version (default).
 
     > output:
     * extensions - possibly empty list of injective maps each as a list of 2-tuples (x, y) of
@@ -428,7 +428,7 @@ def induced_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
     expected_order = nx_G.order()
 
     # set recursion limit if recursive version was requested
-    if(not iterative_search):
+    if(iterative_search):
         scalation_value = 1.5
         required_limit = max([nx_G.order(), nx_H.order()])
         current_limit = getrecursionlimit()

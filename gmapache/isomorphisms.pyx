@@ -121,7 +121,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                         node_labels = True,          # consider node labels when evaluating isomorphisms
                         edge_labels = True,          # consider edge labels when evaluating isomorphisms
                         all_isomorphisms = False,    # by default stops when finding one isomorphism (if any)
-                        iterative_search = True):    # by default an iterative search is used, otherwise a recursive version is called
+                        iterative_search = False):   # by default a recursive search is used, otherwise an iterative version is called
     # description
     """
     > description: receives two networkx (di-)graphs G and H both directed or both
@@ -142,7 +142,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     as one isomorphism is found (if any) - this is the default behavior- or if it should
     search for all possible isomorphisms between the graphs.
     * iterative_search - boolean indicating if the iterative version of this algorithm
-    should be used (the default), or if a recursive version of it should be used instead.
+    should be used instead of the recursive version (default).
 
     > output:
     * isomorphisms - (possibly empty) list of isomorphisms, each as a list of 2-tuples
@@ -297,7 +297,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     expected_order = nx_G.order()
 
     # set recursion limit
-    if(not iterative_search):
+    if(iterative_search):
         scalation_value = 1.5
         required_limit = nx_G.order()
         current_limit = getrecursionlimit()
