@@ -44,7 +44,7 @@ Alignments and other Maps between Graphs
 
 > done: add example to ignore node labels or/and edge labels in isomorphism search
 
-- working: updating routine for Extensions to work with isomorphism-like VF2 instead of MCS-like VF2
+> done: updating routine for Extensions to work with isomorphism-like VF2 instead of MCS-like VF2
 
 - working: mcs routines
 

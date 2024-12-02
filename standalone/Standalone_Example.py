@@ -46,6 +46,14 @@
 #     incompatibility warnings and also runtime errors, therefore our          #
 #     recommendation for installing this package inside an environment.        #
 #                                                                              #
+#   * when installing additional packages not required by gmapache, the        #
+#     installers may suggest different python versions, thus always check the  #
+#     compatibility of those version with the required by gmapache             #
+#                                                                              #
+#   * after installing gmapache you can call it from a script in any location  #
+#     in your computer, except for a script inside the parent folder of the    #
+#     gmapache package. This will change once we made the package public.      #
+#                                                                              #
 ################################################################################
 
 
@@ -70,19 +78,19 @@ import gmapache as gm
 # examples #####################################################################
 
 
-# example: maximum connected extensions ----------------------------------------
+# example: induced connected extensions ----------------------------------------
 
 
 # We build two networkx graphs G and H with arbitrary vertex labels and edge labels, and define
 # a "partial map" as an injective match between the graphs, also refered to as "anchor" given
 # as a list of unrepeated 2-tuples (x, y) of vertices x in G and y in H. This data is passed to the
-# method gm.maximum_connected_extensions(G, H, partial_map), which extends the partial map
-# and returns two results: (1) a list of all the possible maximum extensions of the reaction center
+# method gm.induced_connected_extensions(G, H, partial_map), which extends the partial map
+# and returns two results: (1) a list of all the possible induced extensions of the reaction center
 # also expressed as matches, and (2) a boolean value indicating if the extensions form bijections
 # and, equivalentely, if the "anchor" was a good partial map.
 
 
-# buid first test graph for maximum connected extension
+# buid first test graph for induced connected extension
 G = nx.Graph()
 G.add_node("g1", color = "blue", charge = "0")
 G.add_node("g2", color = "blue", charge = "0")
@@ -107,7 +115,7 @@ G.add_edge("g10", "g11", bond = "triple", strength = "weak")
 G.add_edge("g11", "g12", bond = "triple", strength = "weak")
 
 
-# buid second test graph for maximum connected extension
+# buid second test graph for induced connected extension
 H = nx.Graph()
 H.add_node("h1", color = "blue", charge = "0")
 H.add_node("h2", color = "blue", charge = "0")
@@ -132,7 +140,7 @@ H.add_edge("h7", "h8", bond = "triple", strength = "weak")
 H.add_edge("h8", "h9", bond = "triple", strength = "weak")
 
 
-# buid test anchor for maximum connected extension
+# buid test anchor for induced connected extension
 partial_map = [("g1", "h1"),
                ("g2", "h2"),
                ("g3", "h3"),
@@ -141,15 +149,15 @@ partial_map = [("g1", "h1"),
                ("g6", "h6")]
 
 
-# testing maximum connected extension
+# testing induced connected extension
 initial_time = time.time()
-all_extensions, good_map = gm.maximum_connected_extensions(G, H, partial_map)
+all_extensions, good_map = gm.induced_connected_extensions(G, H, partial_map)
 final_time = time.time()
 
 
 # print results
 print("--------------------------------------------------")
-print("> Maximum Connected Extension")
+print("> Induced Connected Extension")
 print("\n")
 print("***** Given anchor:")
 print(partial_map)
