@@ -253,6 +253,7 @@ def induced_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
     cdef cpp_string comma
     comma.push_back(44)
     cdef cpp_string temp_str
+    cdef cpp_pair[int, int] x_y
     cdef cpp_pair[int, int] node_and_label
     cdef cpp_pair[int, int] label_and_count
     cdef cpp_pair[int, cpp_unordered_set[int]] each_pair
@@ -261,6 +262,8 @@ def induced_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
     cdef cpp_vector[cpp_pair[int, int]] encoded_anchor
     cdef cpp_vector[cpp_pair[int, int]] each_extension
     cdef cpp_vector[cpp_vector[cpp_pair[int, int]]] encoded_extensions
+    cdef cpp_unordered_set[int] anchor_G
+    cdef cpp_unordered_set[int] anchor_H
     cdef cpp_unordered_map[int, int] total_order
     cdef cpp_unordered_map[int, cpp_bool] visited
     cdef cpp_unordered_map[int, int] count_node_labels_G
@@ -293,47 +296,60 @@ def induced_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
         undirected_G.nodes = {node:info["GMNL"] for (node, info) in encoded_graphs[0].nodes(data = True)}
         undirected_H.nodes = {node:info["GMNL"] for (node, info) in encoded_graphs[1].nodes(data = True)}
 
-    # check that the graphs share the same number of nodes with each label (only if the search should preserve node labels)
+    # check that the graphs share the same number of nodes with each label outsde the match (only if the search should preserve node labels)
     # NOTE: the direction is not important, this is just choosing the object that was initialize and is now being used
     if(node_labels):
+        # get match in each graph
+        for x_y in encoded_anchor:
+            anchor_G.insert(x_y.first)
+            anchor_H.insert(x_y.second)
+        # count labels and their instances outside the anchor
         if(nx.is_directed(nx_G)):
             # get label count on directed G
             for node_and_label in directed_G.nodes:
-                # get node label
-                label = node_and_label.second
-                # count node label
-                if(count_node_labels_G.find(label) != count_node_labels_G.end()):
-                    count_node_labels_G[label] = count_node_labels_G[label] + 1
-                else:
-                    count_node_labels_G[label] = 1
+                # count only if outside the anchor
+                if(anchor_G.find(node_and_label.first) == anchor_G.end()):
+                    # get node label
+                    label = node_and_label.second
+                    # count node label
+                    if(count_node_labels_G.find(label) != count_node_labels_G.end()):
+                        count_node_labels_G[label] = count_node_labels_G[label] + 1
+                    else:
+                        count_node_labels_G[label] = 1
             # get label count on directed H
             for node_and_label in directed_H.nodes:
-                # get node label
-                label = node_and_label.second
-                # count node label
-                if(count_node_labels_H.find(label) != count_node_labels_H.end()):
-                    count_node_labels_H[label] = count_node_labels_H[label] + 1
-                else:
-                    count_node_labels_H[label] = 1
+                # count only if outside the anchor
+                if(anchor_H.find(node_and_label.first) == anchor_H.end()):
+                    # get node label
+                    label = node_and_label.second
+                    # count node label
+                    if(count_node_labels_H.find(label) != count_node_labels_H.end()):
+                        count_node_labels_H[label] = count_node_labels_H[label] + 1
+                    else:
+                        count_node_labels_H[label] = 1
         else:
             # get label count on undirected G
             for node_and_label in undirected_G.nodes:
-                # get node label
-                label = node_and_label.second
-                # count node label
-                if(count_node_labels_G.find(label) != count_node_labels_G.end()):
-                    count_node_labels_G[label] = count_node_labels_G[label] + 1
-                else:
-                    count_node_labels_G[label] = 1
+                # count only if outside the anchor
+                if(anchor_G.find(node_and_label.first) == anchor_G.end()):
+                    # get node label
+                    label = node_and_label.second
+                    # count node label
+                    if(count_node_labels_G.find(label) != count_node_labels_G.end()):
+                        count_node_labels_G[label] = count_node_labels_G[label] + 1
+                    else:
+                        count_node_labels_G[label] = 1
             # get label count on undirected H
             for node_and_label in undirected_H.nodes:
-                # get node label
-                label = node_and_label.second
-                # count node label
-                if(count_node_labels_H.find(label) != count_node_labels_H.end()):
-                    count_node_labels_H[label] = count_node_labels_H[label] + 1
-                else:
-                    count_node_labels_H[label] = 1
+                # count only if outside the anchor
+                if(anchor_H.find(node_and_label.first) == anchor_H.end()):
+                    # get node label
+                    label = node_and_label.second
+                    # count node label
+                    if(count_node_labels_H.find(label) != count_node_labels_H.end()):
+                        count_node_labels_H[label] = count_node_labels_H[label] + 1
+                    else:
+                        count_node_labels_H[label] = 1
 
         # compare node counts in both graphs per label
         if(count_node_labels_G.size() != count_node_labels_H.size()):

@@ -46,6 +46,8 @@ Alignments and other Maps between Graphs
 
 > done: updating routine for Extensions to work with isomorphism-like VF2 instead of MCS-like VF2
 
+> done: relaxed condition for node labels in the initial anchor / reaction center
+
 - working: mcs routines
 
 - working: test isomorphism and mcs routines
