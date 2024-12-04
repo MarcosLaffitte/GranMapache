@@ -48,6 +48,7 @@ import cython
 
 # function: homogenizes nodes, node labels, and edgelabels of list of graphs ---
 def encode_graphs(input_graphs = []):
+
     # description
     """
     > description: receives a list of inputs networkx (di)graphs, of the same type
@@ -181,6 +182,7 @@ def decode_graphs(encoded_graphs = [],
                   node_name_encoding = dict(),
                   node_label_encoding = dict(),
                   edge_label_encoding = dict()):
+
     # description
     """
     > description: recieves encoded list of networkx (di)graphs, of the same type
@@ -309,6 +311,7 @@ def decode_graphs(encoded_graphs = [],
 # function: encode match given an encoding of node names -----------------------
 def encode_match(input_match = [],
                  node_name_encoding = dict()):
+
     # description
     """
     > description: receives a list of 2-tuples of nodes and a dictionary encoding
@@ -374,6 +377,7 @@ def encode_match(input_match = [],
 # function: decode match given an encoding of node names -----------------------
 def decode_match(encoded_match = [],
                  node_name_encoding = dict()):
+
     # description
     """
     > description: receives a list of 2-tuples of integers and a dictionary mapping
