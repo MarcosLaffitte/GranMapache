@@ -47,7 +47,7 @@ from libcpp.string cimport string as cpp_string
 from libcpp.unordered_set cimport unordered_set as cpp_unordered_set
 from libcpp.unordered_map cimport unordered_map as cpp_unordered_map
 cdef extern from "<algorithm>" namespace "std":
-    # find element in vector
+    # turn int to string
     cpp_string to_string(int value)
 
 
@@ -67,8 +67,12 @@ from .integerization import encode_graphs, decode_graphs, encode_match, decode_m
 # struct: undirected graph ---------------------------------------------------
 # using unordered maps and unordered sets for scalability
 cdef struct partial_maps_undirected_graph:
+    # node data
     cpp_unordered_map[int, int] nodes
+    # edge data
+    cpp_vector[cpp_pair[int, int]] raw_edges
     cpp_unordered_map[cpp_string, int] edges
+    # neighbors data
     cpp_unordered_map[int, cpp_unordered_set[int]] neighbors
 
 
@@ -77,8 +81,12 @@ cdef struct partial_maps_undirected_graph:
 # struct: directed graph -------------------------------------------------------
 # using unordered maps and unordered sets for scalability
 cdef struct partial_maps_directed_graph:
+    # node data
     cpp_unordered_map[int, int] nodes
+    # edge data
+    cpp_vector[cpp_pair[int, int]] raw_edges
     cpp_unordered_map[cpp_string, int] edges
+    # neighbors data
     cpp_unordered_map[int, cpp_unordered_set[int]] in_neighbors
     cpp_unordered_map[int, cpp_unordered_set[int]] out_neighbors
 
@@ -88,7 +96,9 @@ cdef struct partial_maps_directed_graph:
 # structure: container for information of candidate matches undirected ---------
 # using unordered maps and unordered sets for scalability
 cdef struct partial_maps_candidates_struct_undirected:
+    # list of candidate pairs
     cpp_vector[cpp_pair[int, int]] candidates
+    # neighbors of a given match
     cpp_unordered_set[int] ring_G
     cpp_unordered_set[int] ring_H
 
@@ -98,7 +108,9 @@ cdef struct partial_maps_candidates_struct_undirected:
 # structure: container for information of candidate matches directed -----------
 # using unordered maps and unordered sets for scalability
 cdef struct partial_maps_candidates_struct_directed:
+    # list of candidate pairs
     cpp_vector[cpp_pair[int, int]] candidates
+    # neighbors of a given match
     cpp_unordered_set[int] in_ring_G
     cpp_unordered_set[int] in_ring_H
     cpp_unordered_set[int] out_ring_G
@@ -118,13 +130,14 @@ cdef struct partial_maps_candidates_struct_directed:
 
 
 # function: callable wrapper for the induced connected extensions --------------
-def induced_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
-                                 nx_H = nx.Graph(),          # can be nx.DiGraph
-                                 input_anchor = [],          # should be non-empty list
-                                 node_labels = True,         # consider node labels when evaluating the extensions
-                                 edge_labels = True,         # consider edge labels when evaluating the extensions
-                                 all_extensions = False,     # by default stops when finding one complete extension (if any)
-                                 iterative_search = False):  # by default a recursive search is used, otherwise an iterative version is called
+def induced_connected_extensions(nx_G = nx.Graph(),           # can be nx.DiGraph
+                                 nx_H = nx.Graph(),           # can be nx.DiGraph
+                                 input_anchor = [],           # should be non-empty list
+                                 node_labels = True,          # consider node labels when evaluating the extensions
+                                 edge_labels = True,          # consider edge labels when evaluating the extensions
+                                 all_extensions = False,      # by default stops when finding one complete extension (if any)
+                                 iterative_search = False):   # by default a recursive search is used, otherwise an iterative version is called
+
     # description
     """
     > description: receives two networkx graphs G and H of the same order, and a match
@@ -174,67 +187,16 @@ def induced_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
     * .integerization.decode_graphs
     * .integerization.encode_match
     * .integerization.decode_match
+    * induced_connected_extensions_input_correctness
+    * induced_connected_extensions_label_consistency
     * undirected_induced_connected_extensions_iterative
     * undirected_induced_connected_extensions_recursive
     * directed_induced_connected_extensions_iterative
     * directed_induced_connected_extensions_recursive
     """
 
-    # exception handling and input correctness
-    test_list = [0, 0]
-    test_tuple = (0, 0)
-    test_undir = nx.Graph()
-    test_dir = nx.DiGraph()
-    test_bool = False
-    # check that first argument is networkx graph or digraph
-    if(type(nx_G) not in [type(test_undir), type(test_dir)]):
-        raise(ValueError("gmapache: first argument must be a networkx graph or digraph."))
-    # check that second argument is networkx graph or digraph
-    if(type(nx_H) not in [type(test_undir), type(test_dir)]):
-        raise(ValueError("gmapache: second argument must be a networkx graph or digraph."))
-    # check that the input graphs have the same type
-    if((nx.is_directed(nx_G)) and (not nx.is_directed(nx_H))):
-        raise(ValueError("gmapache: input graphs must be both directed or both undirected."))
-    if((not nx.is_directed(nx_G)) and (nx.is_directed(nx_H))):
-        raise(ValueError("gmapache: input graphs must be both directed or both undirected."))
-    # check that input graphs are not null graphs
-    if((nx_G.order() == 0) or (nx_H.order() == 0)):
-        raise(ValueError("gmapache: input graphs must have at least one node each."))
-    # check that input graphs have the same number of vertices
-    if(not nx_G.order() == nx_H.order()):
-        raise(ValueError("gmapache: input graphs must have the same number of vertices."))
-    # check that fourth argument is a boolean variable
-    if(type(node_labels) not in [type(test_bool)]):
-        raise(ValueError("gmapache: fourth argument must be a boolean variable."))
-    # check that fifth argument is a boolean variable
-    if(type(edge_labels) not in [type(test_bool)]):
-        raise(ValueError("gmapache: fifth argument must be a boolean variable."))
-    # check that sixth argument is a boolean variable
-    if(type(all_extensions) not in [type(test_bool)]):
-        raise(ValueError("gmapache: sixth argument must be a boolean variable."))
-    # check that seventh argument is a boolean variable
-    if(type(iterative_search) not in [type(test_bool)]):
-        raise(ValueError("gmapache: seventh argument must be a boolean variable."))
-    # check that third argument is a list
-    if(not type(input_anchor) in [type(test_list)]):
-        raise(ValueError("gmapache: third argument must be a non-empty list of 2-tuples."))
-    if(len(input_anchor) == 0):
-        raise(ValueError("gmapache: third argument must be a non-empty list of 2-tuples."))
-    # check correctness of entries in third argument
-    for test_entry in input_anchor:
-        if(not type(test_entry) in [type(test_tuple)]):
-            raise(ValueError("gmapache: all elements in input list must be tuples."))
-        if(not len(test_entry) == 2):
-            raise(ValueError("gmapache: all tuples in input list must be of lenght 2."))
-        if(test_entry[0] not in list(nx_G.nodes())):
-            raise(ValueError("gmapache: the input list is matching a vertex not present in the first graph."))
-        if(test_entry[1] not in list(nx_H.nodes())):
-            raise(ValueError("gmapache: the input list is matching a vertex not present in the second graph."))
-    # check amount of entries in third argument
-    if(not len(list(set([x for (x, y) in input_anchor]))) == len(input_anchor)):
-        raise(ValueError("gmapache: the input list must be an injective map and without repeated elements."))
-    if(not len(list(set([y for (x, y) in input_anchor]))) == len(input_anchor)):
-        raise(ValueError("gmapache: the input list must be an injective map and without repeated elements."))
+    # test input correctness
+    induced_connected_extensions_input_correctness(nx_G, nx_H, input_anchor, node_labels, edge_labels, all_extensions, iterative_search)
 
     # output holders
     cdef list extensions = []
@@ -253,21 +215,15 @@ def induced_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
     cdef cpp_string comma
     comma.push_back(44)
     cdef cpp_string temp_str
-    cdef cpp_pair[int, int] x_y
-    cdef cpp_pair[int, int] node_and_label
-    cdef cpp_pair[int, int] label_and_count
+    cdef cpp_pair[int, int] each_match
     cdef cpp_pair[int, cpp_unordered_set[int]] each_pair
     cdef cpp_vector[int] next_level
     cdef cpp_vector[int] current_level
     cdef cpp_vector[cpp_pair[int, int]] encoded_anchor
     cdef cpp_vector[cpp_pair[int, int]] each_extension
     cdef cpp_vector[cpp_vector[cpp_pair[int, int]]] encoded_extensions
-    cdef cpp_unordered_set[int] anchor_G
-    cdef cpp_unordered_set[int] anchor_H
     cdef cpp_unordered_map[int, int] total_order
     cdef cpp_unordered_map[int, cpp_bool] visited
-    cdef cpp_unordered_map[int, int] count_node_labels_G
-    cdef cpp_unordered_map[int, int] count_node_labels_H
     cdef cpp_unordered_map[int, cpp_unordered_set[int]] connectivity_neighbors
     cdef partial_maps_directed_graph directed_G
     cdef partial_maps_directed_graph directed_H
@@ -296,75 +252,14 @@ def induced_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
         undirected_G.nodes = {node:info["GMNL"] for (node, info) in encoded_graphs[0].nodes(data = True)}
         undirected_H.nodes = {node:info["GMNL"] for (node, info) in encoded_graphs[1].nodes(data = True)}
 
-    # check that the graphs share the same number of nodes with each label outsde the match (only if the search should preserve node labels)
-    # NOTE: the direction is not important, this is just choosing the object that was initialize and is now being used
-    if(node_labels):
-        # get match in each graph
-        for x_y in encoded_anchor:
-            anchor_G.insert(x_y.first)
-            anchor_H.insert(x_y.second)
-        # count labels and their instances outside the anchor
-        if(nx.is_directed(nx_G)):
-            # get label count on directed G
-            for node_and_label in directed_G.nodes:
-                # count only if outside the anchor
-                if(anchor_G.find(node_and_label.first) == anchor_G.end()):
-                    # get node label
-                    label = node_and_label.second
-                    # count node label
-                    if(count_node_labels_G.find(label) != count_node_labels_G.end()):
-                        count_node_labels_G[label] = count_node_labels_G[label] + 1
-                    else:
-                        count_node_labels_G[label] = 1
-            # get label count on directed H
-            for node_and_label in directed_H.nodes:
-                # count only if outside the anchor
-                if(anchor_H.find(node_and_label.first) == anchor_H.end()):
-                    # get node label
-                    label = node_and_label.second
-                    # count node label
-                    if(count_node_labels_H.find(label) != count_node_labels_H.end()):
-                        count_node_labels_H[label] = count_node_labels_H[label] + 1
-                    else:
-                        count_node_labels_H[label] = 1
-        else:
-            # get label count on undirected G
-            for node_and_label in undirected_G.nodes:
-                # count only if outside the anchor
-                if(anchor_G.find(node_and_label.first) == anchor_G.end()):
-                    # get node label
-                    label = node_and_label.second
-                    # count node label
-                    if(count_node_labels_G.find(label) != count_node_labels_G.end()):
-                        count_node_labels_G[label] = count_node_labels_G[label] + 1
-                    else:
-                        count_node_labels_G[label] = 1
-            # get label count on undirected H
-            for node_and_label in undirected_H.nodes:
-                # count only if outside the anchor
-                if(anchor_H.find(node_and_label.first) == anchor_H.end()):
-                    # get node label
-                    label = node_and_label.second
-                    # count node label
-                    if(count_node_labels_H.find(label) != count_node_labels_H.end()):
-                        count_node_labels_H[label] = count_node_labels_H[label] + 1
-                    else:
-                        count_node_labels_H[label] = 1
-
-        # compare node counts in both graphs per label
-        if(count_node_labels_G.size() != count_node_labels_H.size()):
-            raise(ValueError("gmapache: requested preservation of node labels but input graphs have different sets of node labels."))
-        for label_and_count in count_node_labels_G:
-            if(count_node_labels_H.find(label_and_count.first) == count_node_labels_H.end()):
-                raise(ValueError("gmapache: requested preservation of node labels but input graphs have different sets of node labels."))
-            else:
-                if(label_and_count.second != count_node_labels_H[label_and_count.first]):
-                    raise(ValueError("gmapache: requested preservation of node labels but input graphs have different numbers of nodes for some labels."))
-
     # prepare edges
     if(nx.is_directed(nx_G)):
         directed_G.edges = {str(node1)+","+str(node2):info["GMEL"] for (node1, node2, info) in encoded_graphs[0].edges(data = True)}
         directed_H.edges = {str(node1)+","+str(node2):info["GMEL"] for (node1, node2, info) in encoded_graphs[1].edges(data = True)}
+        # prepare list of edges for consistency check if required
+        if(edge_labels):
+            directed_G.raw_edges = list(encoded_graphs[0].edges())
+            directed_H.raw_edges = list(encoded_graphs[1].edges())
     else:
         # prepare edges of undirected G
         for (node1, node2, info) in encoded_graphs[0].edges(data = True):
@@ -388,6 +283,35 @@ def induced_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
                 undirected_H.edges[temp_str] = info["GMEL"]
                 temp_str = to_string(node2) + comma + to_string(node1)
                 undirected_H.edges[temp_str] = info["GMEL"]
+        # prepare list of edges for consistency check if required
+        if(edge_labels):
+            undirected_G.raw_edges = list(encoded_graphs[0].edges())
+            undirected_H.raw_edges = list(encoded_graphs[1].edges())
+
+    # get anchor in each graph to test consistency of labels if required
+    if(node_labels or edge_labels):
+        # test consistency of node and/or edge labels
+        # NOTE: the direction is not important, this is just choosing the object that was initialize and is now being used
+        if(nx.is_directed(nx_G)):
+            induced_connected_extensions_label_consistency(node_labels,
+                                                           edge_labels,
+                                                           encoded_anchor,
+                                                           directed_G.raw_edges,
+                                                           directed_H.raw_edges,
+                                                           directed_G.nodes,
+                                                           directed_H.nodes,
+                                                           directed_G.edges,
+                                                           directed_H.edges)
+        else:
+            induced_connected_extensions_label_consistency(node_labels,
+                                                           edge_labels,
+                                                           encoded_anchor,
+                                                           undirected_G.raw_edges,
+                                                           undirected_H.raw_edges,
+                                                           undirected_G.nodes,
+                                                           undirected_H.nodes,
+                                                           undirected_G.edges,
+                                                           undirected_H.edges)
 
     # prepare neighbors
     if(nx.is_directed(nx_G)):
@@ -509,6 +433,220 @@ def induced_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
 
 
 
+# functions - input consistency ################################################
+
+
+
+
+# function: test input correctness ---------------------------------------------
+cdef void induced_connected_extensions_input_correctness(nx_G, nx_H, input_anchor, node_labels, edge_labels, all_extensions, iterative_search):
+
+    # local variables
+    test_list = [0, 0]
+    test_tuple = (0, 0)
+    test_undir = nx.Graph()
+    test_dir = nx.DiGraph()
+    test_bool = False
+
+    # check that first argument is networkx graph or digraph
+    if(type(nx_G) not in [type(test_undir), type(test_dir)]):
+        raise(ValueError("gmapache: first argument must be a networkx graph or digraph."))
+
+    # check that second argument is networkx graph or digraph
+    if(type(nx_H) not in [type(test_undir), type(test_dir)]):
+        raise(ValueError("gmapache: second argument must be a networkx graph or digraph."))
+
+    # check that the input graphs have the same type
+    if((nx.is_directed(nx_G)) and (not nx.is_directed(nx_H))):
+        raise(ValueError("gmapache: input graphs must be both directed or both undirected."))
+    if((not nx.is_directed(nx_G)) and (nx.is_directed(nx_H))):
+        raise(ValueError("gmapache: input graphs must be both directed or both undirected."))
+
+    # check that input graphs are not null graphs
+    if((nx_G.order() == 0) or (nx_H.order() == 0)):
+        raise(ValueError("gmapache: input graphs must have at least one node each."))
+
+    # check that input graphs have the same number of nodes
+    if(not nx_G.order() == nx_H.order()):
+        raise(ValueError("gmapache: input graphs must have the same number of nodes."))
+
+    # check that fourth argument is a boolean variable
+    if(type(node_labels) not in [type(test_bool)]):
+        raise(ValueError("gmapache: fourth argument must be a boolean variable."))
+
+    # check that fifth argument is a boolean variable
+    if(type(edge_labels) not in [type(test_bool)]):
+        raise(ValueError("gmapache: fifth argument must be a boolean variable."))
+
+    # check that sixth argument is a boolean variable
+    if(type(all_extensions) not in [type(test_bool)]):
+        raise(ValueError("gmapache: sixth argument must be a boolean variable."))
+
+    # check that seventh argument is a boolean variable
+    if(type(iterative_search) not in [type(test_bool)]):
+        raise(ValueError("gmapache: seventh argument must be a boolean variable."))
+
+    # check that third argument is a list
+    if(not type(input_anchor) in [type(test_list)]):
+        raise(ValueError("gmapache: third argument must be a non-empty list of 2-tuples."))
+    if(len(input_anchor) == 0):
+        raise(ValueError("gmapache: third argument must be a non-empty list of 2-tuples."))
+
+    # check correctness of entries in third argument
+    for test_entry in input_anchor:
+        if(not type(test_entry) in [type(test_tuple)]):
+            raise(ValueError("gmapache: all elements in input list must be tuples."))
+        if(not len(test_entry) == 2):
+            raise(ValueError("gmapache: all tuples in input list must be of lenght 2."))
+        if(test_entry[0] not in list(nx_G.nodes())):
+            raise(ValueError("gmapache: the input list is matching a node not present in the first graph."))
+        if(test_entry[1] not in list(nx_H.nodes())):
+            raise(ValueError("gmapache: the input list is matching a node not present in the second graph."))
+
+    # check amount of entries in third argument
+    if(not len(list(set([x for (x, y) in input_anchor]))) == len(input_anchor)):
+        raise(ValueError("gmapache: the input list must be an injective map and without repeated elements."))
+    if(not len(list(set([y for (x, y) in input_anchor]))) == len(input_anchor)):
+        raise(ValueError("gmapache: the input list must be an injective map and without repeated elements."))
+
+    # end of function
+
+
+
+
+# function: consistency of node or edge labels ---------------------------------
+cdef void induced_connected_extensions_label_consistency(cpp_bool & node_labels,
+                                                         cpp_bool & edge_labels,
+                                                         cpp_vector[cpp_pair[int, int]] & input_anchor,
+                                                         cpp_vector[cpp_pair[int, int]] & raw_edges_G,
+                                                         cpp_vector[cpp_pair[int, int]] & raw_edges_H,
+                                                         cpp_unordered_map[int, int] & nodes_G,
+                                                         cpp_unordered_map[int, int] & nodes_H,
+                                                         cpp_unordered_map[cpp_string, int] & edges_G,
+                                                         cpp_unordered_map[cpp_string, int] & edges_H):
+
+    # local variables (cython)
+    cdef int node1 = 0
+    cdef int node2 = 0
+    cdef cpp_string comma
+    comma.push_back(44)
+    cdef cpp_string some_edge
+    cdef cpp_pair[int, int] each_pair
+    cdef cpp_pair[int, int] node_and_label
+    cdef cpp_pair[int, int] label_and_count
+    cdef cpp_unordered_set[int] anchor_G
+    cdef cpp_unordered_set[int] anchor_H
+    cdef cpp_unordered_map[int, int] count_labels_G
+    cdef cpp_unordered_map[int, int] count_labels_H
+
+    # get nodes in anchor
+    for each_match in input_anchor:
+        anchor_G.insert(each_match.first)
+        anchor_H.insert(each_match.second)
+
+    # consistency of node labels
+    if(node_labels):
+
+        # get node label count on G
+        for node_and_label in nodes_G:
+            # count only if outside the anchor
+            if(anchor_G.find(node_and_label.first) == anchor_G.end()):
+                # get node label
+                label = node_and_label.second
+                # count node label
+                if(count_labels_G.find(label) != count_labels_G.end()):
+                    count_labels_G[label] = count_labels_G[label] + 1
+                else:
+                    count_labels_G[label] = 1
+
+        # get node label count on H
+        for node_and_label in nodes_H:
+            # count only if outside the anchor
+            if(anchor_H.find(node_and_label.first) == anchor_H.end()):
+                # get node label
+                label = node_and_label.second
+                # count node label
+                if(count_labels_H.find(label) != count_labels_H.end()):
+                    count_labels_H[label] = count_labels_H[label] + 1
+                else:
+                    count_labels_H[label] = 1
+
+        # compare node counts in both graphs per label
+        if(count_labels_G.size() != count_labels_H.size()):
+            raise(ValueError("gmapache: requested preservation of node labels but input graphs have different sets of node labels."))
+        for label_and_count in count_labels_G:
+            if(count_labels_H.find(label_and_count.first) == count_labels_H.end()):
+                raise(ValueError("gmapache: requested preservation of node labels but input graphs have different sets of node labels."))
+            else:
+                if(label_and_count.second != count_labels_H[label_and_count.first]):
+                    raise(ValueError("gmapache: requested preservation of node labels but input graphs have different amount of nodes for some labels."))
+
+        # if there is only one node label then turn off node-label checking
+        # NOTE: doing this reduces running time of the search
+        if(count_labels_G.size() == 1):
+            node_labels = False
+
+    # consistency of edge labels
+    if(edge_labels):
+
+        # clear counts
+        count_labels_G.clear()
+        count_labels_H.clear()
+
+        # get edge label count on G
+        for each_pair in raw_edges_G:
+            # unpack nodes
+            node1 = each_pair.first
+            node2 = each_pair.second
+            # count only if outside the anchor
+            if((anchor_G.find(node1) == anchor_G.end()) or (anchor_G.find(node2) == anchor_G.end())):
+                # get edge
+                some_edge = to_string(node1) + comma + to_string(node2)
+                # get edge label
+                label = edges_G[some_edge]
+                # count edge label
+                if(count_labels_G.find(label) != count_labels_G.end()):
+                    count_labels_G[label] = count_labels_G[label] + 1
+                else:
+                    count_labels_G[label] = 1
+
+        # get edge label count on H
+        for each_pair in raw_edges_H:
+            # unpack nodes
+            node1 = each_pair.first
+            node2 = each_pair.second
+            # count only if outside the anchor
+            if((anchor_H.find(node1) == anchor_H.end()) or (anchor_H.find(node2) == anchor_H.end())):
+                # get edge
+                some_edge = to_string(node1) + comma + to_string(node2)
+                # get edge label
+                label = edges_H[some_edge]
+                # count edge label
+                if(count_labels_H.find(label) != count_labels_H.end()):
+                    count_labels_H[label] = count_labels_H[label] + 1
+                else:
+                    count_labels_H[label] = 1
+
+        # compare edge counts in both graphs per label
+        if(count_labels_G.size() != count_labels_H.size()):
+            raise(ValueError("gmapache: requested preservation of edge labels but input graphs have different sets of edge labels."))
+        for label_and_count in count_labels_G:
+            if(count_labels_H.find(label_and_count.first) == count_labels_H.end()):
+                raise(ValueError("gmapache: requested preservation of edge labels but input graphs have different sets of edge labels."))
+            else:
+                if(label_and_count.second != count_labels_H[label_and_count.first]):
+                    raise(ValueError("gmapache: requested preservation of edge labels but input graphs have different amount of edges for some labels."))
+
+        # if there is only one edge label then turn off edge-label checking
+        # NOTE: doing this reduces running time of the search
+        if(count_labels_G.size() == 1):
+            edge_labels = False
+
+    # end of function
+
+
+
+
 # functions - induced connected extensions - undirected ########################
 
 
@@ -516,7 +654,7 @@ def induced_connected_extensions(nx_G = nx.Graph(),          # can be nx.DiGraph
 
 # function: core routine of VF2-like undirected approach - iterative -----------
 # NOTE: an iterative DFS version of this algorithm can be implemented without a "visited"
-# list, since the total order given to the vertices of the second graph guarantees that
+# list, since the total order given to the nodes of the second graph guarantees that
 # the search space is actually a search tree, and thus cannot have repeated states.
 cdef void undirected_induced_connected_extensions_iterative(cpp_bool node_labels,
                                                             cpp_bool edge_labels,
@@ -620,6 +758,7 @@ cdef void undirected_induced_connected_extensions_iterative(cpp_bool node_labels
                         new_match.push_back(each_pair)
                         # add new valid candidate states
                         dfs_stack.push(new_match)
+
     # end of function
 
 
@@ -724,6 +863,7 @@ cdef void undirected_induced_connected_extensions_recursive(cpp_bool node_labels
                     if(not all_matches.empty()):
                         if(not all_extensions):
                             return
+
     # end of function
 
 
@@ -820,20 +960,21 @@ cdef partial_maps_candidates_struct_undirected undirected_candidates(size_t expe
     candidates_struct.candidates = candidate_pairs
     candidates_struct.ring_G = ring_G
     candidates_struct.ring_H = ring_H
+
     # end of function
     return(candidates_struct)
 
 
 
 
-# functions - induced connected extensions - undirected ########################
+# functions - induced connected extensions - directed ##########################
 
 
 
 
 # function: core routine of VF2-like directed approach - iterative -------------
 # NOTE: an iterative DFS version of this algorithm can be implemented without a "visited"
-# list, since the total order given to the vertices of the second graph guarantees that
+# list, since the total order given to the nodes of the second graph guarantees that
 # the search space is actually a search tree, and thus cannot have repeated states.
 cdef void directed_induced_connected_extensions_iterative(cpp_bool node_labels,
                                                           cpp_bool edge_labels,
@@ -972,6 +1113,7 @@ cdef void directed_induced_connected_extensions_iterative(cpp_bool node_labels,
                                 new_match.push_back(each_pair)
                                 # add new valid candidate states
                                 dfs_stack.push(new_match)
+
     # end of function
 
 
@@ -1111,6 +1253,7 @@ cdef void directed_induced_connected_extensions_recursive(cpp_bool node_labels,
                             if(not all_matches.empty()):
                                 if(not all_extensions):
                                     return
+
     # end of function
 
 
@@ -1274,6 +1417,7 @@ cdef partial_maps_candidates_struct_directed directed_candidates(size_t expected
     candidates_struct.in_ring_H = in_ring_H
     candidates_struct.out_ring_G = out_ring_G
     candidates_struct.out_ring_H = out_ring_H
+
     # end of function
     return(candidates_struct)
 
@@ -1408,7 +1552,7 @@ cdef cpp_bool semantic_feasibility(cpp_bool node_labels,
     cdef cpp_unordered_map[int, int] count_edge_extern_H
 
     if(node_labels):
-        # compare vertex-labels
+        # compare node-labels
         if(nodes_G[node1] != nodes_H[node2]):
             return(False)
 
