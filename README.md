@@ -48,6 +48,10 @@ Alignments and other Maps between Graphs
 
 > done: relaxed condition for node labels in the initial anchor / reaction center
 
+> done: super cool optimization no. 1 based on total order
+
+> done: super cool optimization no. 2 based on degrees and bound of degrees of neighbors
+
 - working: mcs routines
 
 - working: test isomorphism and mcs routines

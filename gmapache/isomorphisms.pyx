@@ -24,6 +24,7 @@
 
 
 # already in python ------------------------------------------------------------
+from copy import deepcopy
 from sys import getrecursionlimit, setrecursionlimit
 
 
@@ -65,8 +66,16 @@ from .integerization import encode_graphs, decode_graphs, decode_match
 # struct: undirected graph ---------------------------------------------------
 # using unordered maps and unordered sets for scalability
 cdef struct isomorphisms_undirected_graph:
+    # node data
     cpp_unordered_map[int, int] nodes
+    # edge data
     cpp_unordered_map[cpp_string, int] edges
+    # degree data
+    cpp_unordered_map[int, int] degrees
+    # degree of neighbors data
+    cpp_unordered_map[int, int] deg_neigh_lower
+    cpp_unordered_map[int, int] deg_neigh_upper
+    # neighbors data
     cpp_unordered_map[int, cpp_unordered_set[int]] neighbors
 
 
@@ -75,8 +84,19 @@ cdef struct isomorphisms_undirected_graph:
 # struct: directed graph -------------------------------------------------------
 # using unordered maps and unordered sets for scalability
 cdef struct isomorphisms_directed_graph:
+    # node data
     cpp_unordered_map[int, int] nodes
+    # edge data
     cpp_unordered_map[cpp_string, int] edges
+    # degree data
+    cpp_unordered_map[int, int] in_degrees
+    cpp_unordered_map[int, int] out_degrees
+    # degree of neighbors data
+    cpp_unordered_map[int, int] deg_in_neigh_lower
+    cpp_unordered_map[int, int] deg_in_neigh_upper
+    cpp_unordered_map[int, int] deg_out_neigh_lower
+    cpp_unordered_map[int, int] deg_out_neigh_upper
+    # neighbors data
     cpp_unordered_map[int, cpp_unordered_set[int]] in_neighbors
     cpp_unordered_map[int, cpp_unordered_set[int]] out_neighbors
 
@@ -86,7 +106,9 @@ cdef struct isomorphisms_directed_graph:
 # structure: container for information of candidate matches undirected ---------
 # using unordered maps and unordered sets for scalability
 cdef struct isomorphisms_candidates_struct_undirected:
+    # list of candidate pairs
     cpp_vector[cpp_pair[int, int]] candidates
+    # neighbors of a given match
     cpp_unordered_set[int] ring_G
     cpp_unordered_set[int] ring_H
 
@@ -96,7 +118,9 @@ cdef struct isomorphisms_candidates_struct_undirected:
 # structure: container for information of candidate matches directed -----------
 # using unordered maps and unordered sets for scalability
 cdef struct isomorphisms_candidates_struct_directed:
+    # list of candidate pairs
     cpp_vector[cpp_pair[int, int]] candidates
+    # neighbors of a given match
     cpp_unordered_set[int] in_ring_G
     cpp_unordered_set[int] in_ring_H
     cpp_unordered_set[int] out_ring_G
@@ -122,6 +146,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                         edge_labels = True,          # consider edge labels when evaluating isomorphisms
                         all_isomorphisms = False,    # by default stops when finding one isomorphism (if any)
                         iterative_search = False):   # by default a recursive search is used, otherwise an iterative version is called
+
     # description
     """
     > description: receives two networkx (di-)graphs G and H both directed or both
@@ -139,7 +164,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     * edge_labels - boolean indicating if edge labels should be considered for the search,
     which is the default behavior, or if they should be ignored.
     * all_isomorphisms - boolean variable indicating if the function should stop as soon
-    as one isomorphism is found (if any) - this is the default behavior- or if it should
+    as one isomorphism is found (if any) - this is the default behavior - or if it should
     search for all possible isomorphisms between the graphs.
     * iterative_search - boolean indicating if the iterative version of this algorithm
     should be used instead of the recursive version (default).
@@ -155,66 +180,45 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     * .integerization.encode_graphs
     * .integerization.decode_graphs
     * .integerization.decode_match
+    * search_isomorphisms_input_correctness
+    * search_isomorphisms_label_consistency
     * undirected_search_isomorphisms_iterative
     * undirected_search_isomorphisms_recursive
     * directed_search_isomorphisms_iterative
     * directed_search_isomorphisms_recursive
     """
 
-    # exception handling and input correctness
-    test_undir = nx.Graph()
-    test_dir = nx.DiGraph()
-    test_bool = False
-    # check that first argument is networkx graph or digraph
-    if(type(nx_G) not in [type(test_undir), type(test_dir)]):
-        raise(ValueError("gmapache: first argument must be a networkx graph or digraph."))
-    # check that second argument is networkx graph or digraph
-    if(type(nx_H) not in [type(test_undir), type(test_dir)]):
-        raise(ValueError("gmapache: second argument must be a networkx graph or digraph."))
-    # check that third argument is networkx graph or digraph
-    if(type(node_labels) not in [type(test_bool)]):
-        raise(ValueError("gmapache: third argument must be a boolean variable."))
-    # check that fourth argument is networkx graph or digraph
-    if(type(edge_labels) not in [type(test_bool)]):
-        raise(ValueError("gmapache: fourth argument must be a boolean variable."))
-    # check that fifth argument is networkx graph or digraph
-    if(type(all_isomorphisms) not in [type(test_bool)]):
-        raise(ValueError("gmapache: fifth argument must be a boolean variable."))
-    # check that sixth argument is networkx graph or digraph
-    if(type(iterative_search) not in [type(test_bool)]):
-        raise(ValueError("gmapache: sixth argument must be a boolean variable."))
-    # check that input graphs are of the same type
-    if((nx.is_directed(nx_G)) and (not nx.is_directed(nx_H))):
-        raise(ValueError("gmapache: input graphs must be both directed or both undirected."))
-    if((not nx.is_directed(nx_G)) and (nx.is_directed(nx_H))):
-        raise(ValueError("gmapache: input graphs must be both directed or both undirected."))
-    # check that input graphs are not null graphs
-    if((nx_G.order() == 0) or (nx_H.order() == 0)):
-        raise(ValueError("gmapache: input graphs must have at least one node each."))
-    # check that input graphs have the same number of nodes
-    if(not nx_G.order() == nx_H.order()):
-        raise(ValueError("gmapache: input graphs must have the same number of nodes."))
-    # check that input graphs have the same number of edges
-    if(not nx_G.size() == nx_H.size()):
-        raise(ValueError("gmapache: input graphs must have the same number of edges."))
+    # test input correctness
+    search_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_labels, all_isomorphisms, iterative_search)
 
     # output holders
     cdef list isomorphisms = []
     found_isomorphism = False
 
     # local variables (cython)
+    cdef int v = 0
+    cdef int d = 0
+    cdef int deg = 0
     cdef int node = 0
     cdef int node1 = 0
     cdef int node2 = 0
     cdef int counter = 0
+    cdef int min_deg_neigh = 0
+    cdef int max_deg_neigh = 0
     cdef int current_limit = 0
     cdef int required_limit = 0
     cdef float scalation_value = 0
     cdef size_t expected_order = 0
+    cdef cpp_bool node_labels_param = node_labels
+    cdef cpp_bool edge_labels_param = edge_labels
+    cdef cpp_bool all_isomorphisms_param = all_isomorphisms
+    cdef cpp_bool iterative_search_param = iterative_search
     cdef cpp_string comma
     comma.push_back(44)
     cdef cpp_string temp_str
     cdef cpp_pair[int, int] each_pair
+    cdef cpp_pair[int, cpp_unordered_set[int]] each_neighborhood
+    cdef cpp_vector[int] node_increasing_degree
     cdef cpp_vector[cpp_pair[int, int]] each_isomorphism
     cdef cpp_vector[cpp_pair[int, int]] current_match
     cdef cpp_vector[cpp_vector[cpp_pair[int, int]]] encoded_isomorphisms
@@ -225,11 +229,49 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     cdef isomorphisms_undirected_graph undirected_H
 
     # local variables (python)
+    cdef list deg_G = []
+    cdef list deg_H = []
+    cdef list in_deg_G = []
+    cdef list in_deg_H = []
+    cdef list out_deg_G = []
+    cdef list out_deg_H = []
+    cdef list temp_list = []
+    cdef list temp_degrees = []
+    cdef list temp_neighbors = []
     cdef list encoded_graphs = []
+    cdef list nodes_by_degree = []
     cdef dict info = dict()
     cdef dict encoded_node_names = dict()
     cdef dict encoded_node_label = dict()
     cdef dict encoded_edge_label = dict()
+    node_obj = None
+    undirected_copy_H = None
+
+    # compare degree sequence of input graphs
+    if(nx.is_directed(nx_G)):
+        # get degrees
+        in_deg_G = [deg for (node_obj, deg) in list(nx_G.in_degree())]
+        in_deg_H = [deg for (node_obj, deg) in list(nx_H.in_degree())]
+        out_deg_G = [deg for (node_obj, deg) in list(nx_G.out_degree())]
+        out_deg_H = [deg for (node_obj, deg) in list(nx_H.out_degree())]
+        # sort degrees
+        in_deg_G.sort()
+        in_deg_H.sort()
+        out_deg_G.sort()
+        out_deg_H.sort()
+        # compare degree sequences
+        if((not in_deg_G == in_deg_H) or (not out_deg_G == out_deg_H)):
+            return([], False)
+    else:
+        # get degrees
+        deg_G = [deg for (node_obj, deg) in list(nx_G.degree())]
+        deg_H = [deg for (node_obj, deg) in list(nx_H.degree())]
+        # sort degrees
+        deg_G.sort()
+        deg_H.sort()
+        # compare degree sequences
+        if(not deg_G == deg_H):
+            return([], False)
 
     # encode graphs
     encoded_graphs, encoded_node_names, encoded_node_label, encoded_edge_label = encode_graphs([nx_G, nx_H])
@@ -270,6 +312,25 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                 temp_str = to_string(node2) + comma + to_string(node1)
                 undirected_H.edges[temp_str] = info["GMEL"]
 
+    # test consistency of labels if required
+    if(node_labels_param or edge_labels_param):
+        # test consistency of node and/or edge labels
+        # NOTE: the direction is not important, this is just choosing the object that was initialize and is now being used
+        if(nx.is_directed(nx_G)):
+            search_isomorphisms_label_consistency(node_labels_param,
+                                                  edge_labels_param,
+                                                  directed_G.nodes,
+                                                  directed_H.nodes,
+                                                  directed_G.edges,
+                                                  directed_H.edges)
+        else:
+            search_isomorphisms_label_consistency(node_labels_param,
+                                                  edge_labels_param,
+                                                  undirected_G.nodes,
+                                                  undirected_H.nodes,
+                                                  undirected_G.edges,
+                                                  undirected_H.edges)
+
     # prepare neighbors
     if(nx.is_directed(nx_G)):
         directed_G.in_neighbors = {node:set(encoded_graphs[0].predecessors(node)) for node in list(encoded_graphs[0].nodes())}
@@ -280,24 +341,101 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
         undirected_G.neighbors = {node:set(encoded_graphs[0].neighbors(node)) for node in list(encoded_graphs[0].nodes())}
         undirected_H.neighbors = {node:set(encoded_graphs[1].neighbors(node)) for node in list(encoded_graphs[1].nodes())}
 
-    # get total order for VF2-like analysis
-    # NOTE: really doesn't depend on directedness of the graph, it's just selecting the structure that was initialized
-    if(nx.is_directed(nx_H)):
-        for each_pair in directed_H.nodes:
-            node = each_pair.first
-            counter = counter + 1
-            total_order[node] = counter
+    # prepare degrees
+    if(nx.is_directed(nx_G)):
+        directed_G.in_degrees = {node:deg for (node, deg) in list(encoded_graphs[0].in_degree())}
+        directed_H.in_degrees = {node:deg for (node, deg) in list(encoded_graphs[1].in_degree())}
+        directed_G.out_degrees = {node:deg for (node, deg) in list(encoded_graphs[0].out_degree())}
+        directed_H.out_degrees = {node:deg for (node, deg) in list(encoded_graphs[1].out_degree())}
     else:
-        for each_pair in undirected_H.nodes:
-            node = each_pair.first
-            counter = counter + 1
-            total_order[node] = counter
+        undirected_G.degrees = {node:deg for (node, deg) in list(encoded_graphs[0].degree())}
+        undirected_H.degrees = {node:deg for (node, deg) in list(encoded_graphs[1].degree())}
+
+    # prepare bounds for degrees of neighbors
+    if(nx.is_directed(nx_G)):
+        # directed G
+        for each_pair in directed_G.nodes:
+            # get all neighbors
+            temp_neighbors = list(set(list(directed_G.in_neighbors[each_pair.first]) + list(directed_G.out_neighbors[each_pair.first])))
+            # if no neighbors at all then collapse to zero
+            if(len(temp_neighbors) == 0):
+                directed_G.deg_in_neigh_lower[each_pair.first] = 0
+                directed_G.deg_in_neigh_upper[each_pair.first] = 0
+                directed_G.deg_out_neigh_lower[each_pair.first] = 0
+                directed_G.deg_out_neigh_upper[each_pair.first] = 0
+            else:
+                # bounds for in-degrees of all neighbors
+                temp_list = [d for (v, d) in encoded_graphs[0].in_degree(temp_neighbors)]
+                directed_G.deg_in_neigh_lower[each_pair.first] = min(temp_list)
+                directed_G.deg_in_neigh_upper[each_pair.first] = max(temp_list)
+                # bounds for out-degrees of all neighbors
+                temp_list = [d for (v, d) in encoded_graphs[0].out_degree(temp_neighbors)]
+                directed_G.deg_out_neigh_lower[each_pair.first] = min(temp_list)
+                directed_G.deg_out_neigh_upper[each_pair.first] = max(temp_list)
+        # directed H
+        for each_pair in directed_H.nodes:
+            # get all neighbors
+            temp_neighbors = list(set(list(directed_H.in_neighbors[each_pair.first]) + list(directed_H.out_neighbors[each_pair.first])))
+            # if no neighbors at all then collapse to zero
+            if(len(temp_neighbors) == 0):
+                directed_H.deg_in_neigh_lower[each_pair.first] = 0
+                directed_H.deg_in_neigh_upper[each_pair.first] = 0
+                directed_H.deg_out_neigh_lower[each_pair.first] = 0
+                directed_H.deg_out_neigh_upper[each_pair.first] = 0
+            else:
+                # bounds for in-degrees of all neighbors
+                temp_list = [d for (v, d) in encoded_graphs[1].in_degree(temp_neighbors)]
+                directed_H.deg_in_neigh_lower[each_pair.first] = min(temp_list)
+                directed_H.deg_in_neigh_upper[each_pair.first] = max(temp_list)
+                # bounds for out-degrees of all neighbors
+                temp_list = [d for (v, d) in encoded_graphs[1].out_degree(temp_neighbors)]
+                directed_H.deg_out_neigh_lower[each_pair.first] = min(temp_list)
+                directed_H.deg_out_neigh_upper[each_pair.first] = max(temp_list)
+    else:
+        # undirected G
+        for each_neighborhood in undirected_G.neighbors:
+            if(each_neighborhood.second.size() == 0):
+                undirected_G.deg_neigh_lower[each_neighborhood.first] = 0
+                undirected_G.deg_neigh_upper[each_neighborhood.first] = 0
+            else:
+                temp_list = [d for (v, d) in encoded_graphs[0].degree(list(each_neighborhood.second))]
+                undirected_G.deg_neigh_lower[each_neighborhood.first] = min(temp_list)
+                undirected_G.deg_neigh_upper[each_neighborhood.first] = max(temp_list)
+        # undirected H
+        for each_neighborhood in undirected_H.neighbors:
+            if(each_neighborhood.second.size() == 0):
+                undirected_H.deg_neigh_lower[each_neighborhood.first] = 0
+                undirected_H.deg_neigh_upper[each_neighborhood.first] = 0
+            else:
+                temp_list = [d for (v, d) in encoded_graphs[1].degree(list(each_neighborhood.second))]
+                undirected_H.deg_neigh_lower[each_neighborhood.first] = min(temp_list)
+                undirected_H.deg_neigh_upper[each_neighborhood.first] = max(temp_list)
+
+    # get total order for VF2-like analysis
+    # NOTE: the total order is determined based on the degree and the maximum of the degrees of the neighbors. Applying such startegies
+    # may produce a faster search or at least help "unclogging" the search in most cases, see VF2++ paper for detailed analysis on this
+    undirected_copy_H = deepcopy(encoded_graphs[1])
+    if(nx.is_directed(nx_H)):
+        undirected_copy_H = undirected_copy_H.to_undirected()
+    nodes_by_degree = list(undirected_copy_H.degree())
+    temp_list = []
+    for (node, deg) in nodes_by_degree:
+        if(deg == 0):
+            temp_list.append((node, deg, 0, 0))
+        else:
+            temp_degrees = [d for (v, d) in undirected_copy_H.degree(undirected_copy_H.neighbors(node))]
+            temp_list.append((node, deg, min(temp_degrees), max(temp_degrees)))
+    nodes_by_degree = sorted(temp_list, key = lambda tup: (tup[1], tup[2], tup[3]))
+    node_increasing_degree = [node for (node, deg, min_deg_neigh, max_deg_neigh) in nodes_by_degree]
+    for node in node_increasing_degree:
+        counter = counter + 1
+        total_order[node] = counter
 
     # get expected order
-    expected_order = nx_G.order()
+    expected_order = nx_H.order()
 
     # set recursion limit
-    if(iterative_search):
+    if(iterative_search_param):
         scalation_value = 1.5
         required_limit = nx_G.order()
         current_limit = getrecursionlimit()
@@ -309,10 +447,10 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
 
     # evaluate isomorphisms
     if(nx.is_directed(nx_G)):
-        if(iterative_search):
-            directed_search_isomorphisms_iterative(node_labels,
-                                                   edge_labels,
-                                                   all_isomorphisms,
+        if(iterative_search_param):
+            directed_search_isomorphisms_iterative(node_labels_param,
+                                                   edge_labels_param,
+                                                   all_isomorphisms_param,
                                                    expected_order,
                                                    current_match,
                                                    total_order,
@@ -320,9 +458,9 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                                                    directed_H,
                                                    encoded_isomorphisms)
         else:
-            directed_search_isomorphisms_recursive(node_labels,
-                                                   edge_labels,
-                                                   all_isomorphisms,
+            directed_search_isomorphisms_recursive(node_labels_param,
+                                                   edge_labels_param,
+                                                   all_isomorphisms_param,
                                                    expected_order,
                                                    current_match,
                                                    total_order,
@@ -330,10 +468,10 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                                                    directed_H,
                                                    encoded_isomorphisms)
     else:
-        if(iterative_search):
-            undirected_search_isomorphisms_iterative(node_labels,
-                                                     edge_labels,
-                                                     all_isomorphisms,
+        if(iterative_search_param):
+            undirected_search_isomorphisms_iterative(node_labels_param,
+                                                     edge_labels_param,
+                                                     all_isomorphisms_param,
                                                      expected_order,
                                                      current_match,
                                                      total_order,
@@ -341,9 +479,9 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                                                      undirected_H,
                                                      encoded_isomorphisms)
         else:
-            undirected_search_isomorphisms_recursive(node_labels,
-                                                     edge_labels,
-                                                     all_isomorphisms,
+            undirected_search_isomorphisms_recursive(node_labels_param,
+                                                     edge_labels_param,
+                                                     all_isomorphisms_param,
                                                      expected_order,
                                                      current_match,
                                                      total_order,
@@ -361,6 +499,169 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
 
     # end of function
     return(isomorphisms, found_isomorphism)
+
+
+
+
+# functions - input consistency ################################################
+
+
+
+
+# function: test input correctness ---------------------------------------------
+cdef void search_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_labels, all_isomorphisms, iterative_search):
+
+    # local variables
+    test_undir = nx.Graph()
+    test_dir = nx.DiGraph()
+    test_bool = False
+
+    # check that first argument is networkx graph or digraph
+    if(type(nx_G) not in [type(test_undir), type(test_dir)]):
+        raise(ValueError("gmapache: first argument must be a networkx graph or digraph."))
+
+    # check that second argument is networkx graph or digraph
+    if(type(nx_H) not in [type(test_undir), type(test_dir)]):
+        raise(ValueError("gmapache: second argument must be a networkx graph or digraph."))
+
+    # check that third argument is networkx graph or digraph
+    if(type(node_labels) not in [type(test_bool)]):
+        raise(ValueError("gmapache: third argument must be a boolean variable."))
+
+    # check that fourth argument is networkx graph or digraph
+    if(type(edge_labels) not in [type(test_bool)]):
+        raise(ValueError("gmapache: fourth argument must be a boolean variable."))
+
+    # check that fifth argument is networkx graph or digraph
+    if(type(all_isomorphisms) not in [type(test_bool)]):
+        raise(ValueError("gmapache: fifth argument must be a boolean variable."))
+
+    # check that sixth argument is networkx graph or digraph
+    if(type(iterative_search) not in [type(test_bool)]):
+        raise(ValueError("gmapache: sixth argument must be a boolean variable."))
+
+    # check that input graphs are of the same type
+    if((nx.is_directed(nx_G)) and (not nx.is_directed(nx_H))):
+        raise(ValueError("gmapache: input graphs must be both directed or both undirected."))
+    if((not nx.is_directed(nx_G)) and (nx.is_directed(nx_H))):
+        raise(ValueError("gmapache: input graphs must be both directed or both undirected."))
+
+    # check that input graphs are not null graphs
+    if((nx_G.order() == 0) or (nx_H.order() == 0)):
+        raise(ValueError("gmapache: input graphs must have at least one node each."))
+
+    # check that input graphs have the same number of nodes
+    if(not nx_G.order() == nx_H.order()):
+        raise(ValueError("gmapache: input graphs must have the same number of nodes."))
+
+    # check that input graphs have the same number of edges
+    if(not nx_G.size() == nx_H.size()):
+        raise(ValueError("gmapache: input graphs must have the same number of edges."))
+
+    # end of function
+
+
+
+
+# function: consistency of node or edge labels ---------------------------------
+cdef void search_isomorphisms_label_consistency(cpp_bool & node_labels,
+                                                cpp_bool & edge_labels,
+                                                cpp_unordered_map[int, int] & nodes_G,
+                                                cpp_unordered_map[int, int] & nodes_H,
+                                                cpp_unordered_map[cpp_string, int] & edges_G,
+                                                cpp_unordered_map[cpp_string, int] & edges_H):
+
+    # local variables (cython)
+    cdef int node1 = 0
+    cdef int node2 = 0
+    cdef int label = 0
+    cdef cpp_pair[int, int] node_and_label
+    cdef cpp_pair[int, int] label_and_count
+    cdef cpp_pair[cpp_string, int] edge_and_label
+    cdef cpp_unordered_map[int, int] count_labels_G
+    cdef cpp_unordered_map[int, int] count_labels_H
+
+    # consistency of node labels
+    if(node_labels):
+
+        # get node label count on G
+        for node_and_label in nodes_G:
+            # get node label
+            label = node_and_label.second
+            # count node label
+            if(count_labels_G.find(label) != count_labels_G.end()):
+                count_labels_G[label] = count_labels_G[label] + 1
+            else:
+                count_labels_G[label] = 1
+
+        # get node label count on H
+        for node_and_label in nodes_H:
+            # get node label
+            label = node_and_label.second
+            # count node label
+            if(count_labels_H.find(label) != count_labels_H.end()):
+                count_labels_H[label] = count_labels_H[label] + 1
+            else:
+                count_labels_H[label] = 1
+
+        # compare node counts in both graphs per label
+        if(count_labels_G.size() != count_labels_H.size()):
+            raise(ValueError("gmapache: requested preservation of node labels but input graphs have different sets of node labels."))
+        for label_and_count in count_labels_G:
+            if(count_labels_H.find(label_and_count.first) == count_labels_H.end()):
+                raise(ValueError("gmapache: requested preservation of node labels but input graphs have different sets of node labels."))
+            else:
+                if(label_and_count.second != count_labels_H[label_and_count.first]):
+                    raise(ValueError("gmapache: requested preservation of node labels but input graphs have different amount of nodes for some labels."))
+
+        # if there is only one node label then turn off node-label checking
+        # NOTE: doing this reduces running time of the search
+        if(count_labels_G.size() == 1):
+            node_labels = False
+
+    # consistency of edge labels
+    if(edge_labels):
+
+        # clear counts
+        count_labels_G.clear()
+        count_labels_H.clear()
+
+        # get edge label count on G
+        for edge_and_label in edges_G:
+            # get edge label
+            label = edge_and_label.second
+            # count edge label
+            if(count_labels_G.find(label) != count_labels_G.end()):
+                count_labels_G[label] = count_labels_G[label] + 1
+            else:
+                count_labels_G[label] = 1
+
+        # get edge label count on H
+        for edge_and_label in edges_H:
+            # get edge label
+            label = edge_and_label.second
+            # count edge label
+            if(count_labels_H.find(label) != count_labels_H.end()):
+                count_labels_H[label] = count_labels_H[label] + 1
+            else:
+                count_labels_H[label] = 1
+
+        # compare edge counts in both graphs per label
+        if(count_labels_G.size() != count_labels_H.size()):
+            raise(ValueError("gmapache: requested preservation of edge labels but input graphs have different sets of edge labels."))
+        for label_and_count in count_labels_G:
+            if(count_labels_H.find(label_and_count.first) == count_labels_H.end()):
+                raise(ValueError("gmapache: requested preservation of edge labels but input graphs have different sets of edge labels."))
+            else:
+                if(label_and_count.second != count_labels_H[label_and_count.first]):
+                    raise(ValueError("gmapache: requested preservation of edge labels but input graphs have different amount of edges for some labels."))
+
+        # if there is only one edge label then turn off edge-label checking
+        # NOTE: doing this reduces running time of the search
+        if(count_labels_G.size() == 1):
+            edge_labels = False
+
+    # end of function
 
 
 
@@ -435,6 +736,8 @@ cdef void undirected_search_isomorphisms_iterative(cpp_bool node_labels,
                                                       current_match_H,
                                                       G.nodes,
                                                       H.nodes,
+                                                      G.degrees,
+                                                      H.degrees,
                                                       G.neighbors,
                                                       H.neighbors,
                                                       total_order)
@@ -479,6 +782,7 @@ cdef void undirected_search_isomorphisms_iterative(cpp_bool node_labels,
                         new_match.push_back(each_pair)
                         # add new valid candidate states
                         dfs_stack.push(new_match)
+
     # end of function
 
 
@@ -529,6 +833,8 @@ cdef void undirected_search_isomorphisms_recursive(cpp_bool node_labels,
                                                   current_match_H,
                                                   G.nodes,
                                                   H.nodes,
+                                                  G.degrees,
+                                                  H.degrees,
                                                   G.neighbors,
                                                   H.neighbors,
                                                   total_order)
@@ -586,6 +892,7 @@ cdef void undirected_search_isomorphisms_recursive(cpp_bool node_labels,
                     if(not all_matches.empty()):
                         if(not all_isomorphisms):
                             return
+
     # end of function
 
 
@@ -598,6 +905,8 @@ cdef isomorphisms_candidates_struct_undirected undirected_candidates(size_t expe
                                                                      cpp_unordered_set[int] & current_match_H,
                                                                      cpp_unordered_map[int, int] & nodes_G,
                                                                      cpp_unordered_map[int, int] & nodes_H,
+                                                                     cpp_unordered_map[int, int] & degrees_G,
+                                                                     cpp_unordered_map[int, int] & degrees_H,
                                                                      cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_G,
                                                                      cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_H,
                                                                      cpp_unordered_map[int, int] & total_order) noexcept:
@@ -607,8 +916,8 @@ cdef isomorphisms_candidates_struct_undirected undirected_candidates(size_t expe
 
     # local variables
     cdef int node = 0
-    cdef int node1 = 0
-    cdef int node2 = 0
+    cdef int temp_minimum = 0
+    cdef int minimizing_node = 0
     cdef int reference_minimum = 0
     cdef cpp_string comma
     comma.push_back(44)
@@ -617,71 +926,115 @@ cdef isomorphisms_candidates_struct_undirected undirected_candidates(size_t expe
     cdef cpp_pair[int, int] each_pair
     cdef cpp_vector[int] valid_G
     cdef cpp_vector[int] valid_H
+    cdef cpp_vector[int] matchable_G
     cdef cpp_vector[cpp_pair[int, int]] candidate_pairs
     cdef cpp_unordered_set[int] ring_G
     cdef cpp_unordered_set[int] ring_H
     cdef cpp_unordered_set[cpp_string] candidate_pairs_member
 
     # initialize reference minimum
-    reference_minimum = 1 + 2*(<int>expected_order)
+    reference_minimum = 1 + (<int>expected_order)
 
-    # get valid sets
+    # case 1: get candidates extending match over the same connected component
     for each_pair in current_match:
-        # reinitialize valid neighbors
-        valid_G.clear()
-        valid_H.clear()
 
-        # get valid neighbors in G
-        for node in neigh_G[each_pair.first]:
-            # if not yet in match
-            if(current_match_G.find(node) == current_match_G.end()):
-                valid_G.push_back(node)
+        # skip matches of isolated nodes
+        if(degrees_G[each_pair.first] > 0):
 
-        # get valid neighbors in H
-        for node in neigh_H[each_pair.second]:
-            # if not yet in match
-            if(current_match_H.find(node) == current_match_H.end()):
-                valid_H.push_back(node)
+            # reinitialize valid neighbors
+            valid_G.clear()
+            valid_H.clear()
 
-        # make product of valid neighbors
-        if((not valid_G.empty()) and (not valid_H.empty())):
-            for node1 in valid_G:
-                for node2 in valid_H:
-                    # check if pair satisfies minimum total order condition
-                    if(total_order[node2] <= reference_minimum):
-                        temp_string = to_string(node1) + comma + to_string(node2)
-                        if(candidate_pairs_member.find(temp_string) == candidate_pairs_member.end()):
-                            temp_pair.first = node1
-                            temp_pair.second = node2
-                            if(total_order[node2] == reference_minimum):
+            # get valid neighbors in G
+            for node in neigh_G[each_pair.first]:
+                # if not yet in match
+                if(current_match_G.find(node) == current_match_G.end()):
+                    valid_G.push_back(node)
+
+            # get valid neighbors in H
+            for node in neigh_H[each_pair.second]:
+                # if not yet in match
+                if(current_match_H.find(node) == current_match_H.end()):
+                    valid_H.push_back(node)
+
+            # make product of valid neighbors
+            if((not valid_G.empty()) and (not valid_H.empty())):
+
+                # reinitialize candidate minimum
+                temp_minimum = 1 + (<int>expected_order)
+
+                # get new minimum candidate from the valid nodes in H
+                for node in valid_H:
+                    if(total_order[node] < temp_minimum):
+                        temp_minimum = total_order[node]
+                        minimizing_node = node
+
+                # save new candidates if new minimum respects reference minimum
+                if(temp_minimum == reference_minimum):
+                    for node in valid_G:
+                        # check if candidates have the same degree
+                        if(degrees_G[node] == degrees_H[minimizing_node]):
+                            # check if pair is unrepeated
+                            temp_string = to_string(node) + comma + to_string(minimizing_node)
+                            if(candidate_pairs_member.find(temp_string) == candidate_pairs_member.end()):
+                                # create proper pair
+                                temp_pair.first = node
+                                temp_pair.second = minimizing_node
                                 # add proper pair
                                 candidate_pairs.push_back(temp_pair)
                                 # add string version for constant look ups
                                 candidate_pairs_member.insert(temp_string)
-                            if(total_order[node2] < reference_minimum):
-                                # update control values
-                                reference_minimum = total_order[node2]
-                                candidate_pairs.clear()
-                                candidate_pairs_member.clear()
-                                # add proper pair
-                                candidate_pairs.push_back(temp_pair)
-                                # add string version for constant look ups
-                                candidate_pairs_member.insert(temp_string)
 
-        # additionally save neighbors in ring around match in G
-        for node in valid_G:
-            # save if unrepeated
-            if(ring_G.find(node) == ring_G.end()):
-                ring_G.insert(node)
+                # overwrite candidates if new minimum improves reference minimum
+                if(temp_minimum < reference_minimum):
 
-        # additionally save neighbors in ring around match in H
-        for node in valid_H:
-            # save if unrepeated
-            if(ring_H.find(node) == ring_H.end()):
-                ring_H.insert(node)
+                    # reinitialize matchable
+                    matchable_G.clear()
 
-    # alternatively get all unmatched nodes also not adjacent with match
-    if(candidate_pairs.empty()):
+                    # save nodes as matchable only if they have the same degree and neighborhoods with same degree bounds
+                    for node in valid_G:
+                        # check if candidates have the same degree
+                        if(degrees_G[node] == degrees_H[minimizing_node]):
+                            matchable_G.push_back(node)
+
+                    # update if there are actual matchable nodes
+                    if(not matchable_G.empty()):
+                        # update control values
+                        reference_minimum = temp_minimum
+                        candidate_pairs.clear()
+                        candidate_pairs_member.clear()
+                        # add new pairs
+                        for node in matchable_G:
+                            # create proper pair
+                            temp_pair.first = node
+                            temp_pair.second = minimizing_node
+                            # add proper pair
+                            candidate_pairs.push_back(temp_pair)
+                            # add string version for constant look ups
+                            temp_string = to_string(node) + comma + to_string(minimizing_node)
+                            candidate_pairs_member.insert(temp_string)
+
+            # additionally save neighbors in ring around match in G
+            for node in valid_G:
+                # save if unrepeated
+                if(ring_G.find(node) == ring_G.end()):
+                    ring_G.insert(node)
+
+            # additionally save neighbors in ring around match in H
+            for node in valid_H:
+                # save if unrepeated
+                if(ring_H.find(node) == ring_H.end()):
+                    ring_H.insert(node)
+
+    # case 2: alternatively get candidates extending match over a different connected component
+    # NOTE: The "rings" are the unmatched neighbors of the current match. If the candidates is empty at this
+    # point, but the rings are not, then the match is wrong and thus no candidates should be returned. Only
+    # if the rings are empty we can be shure to map another connected component. This is handled differently
+    # in other VF2 versions, which return the cartesian products of the rings. Doing so produces unfruitful
+    # matches that will be discarded by their syntactic-unfeasability, producing unnnecesary iterations.
+    # Thus case 1 is thought to reduce such matches, but then we need to also check the rings here.
+    if((candidate_pairs.empty()) and (ring_G.empty()) and (ring_H.empty())):
+
         # reinitialize valid neighbors
         valid_G.clear()
         valid_H.clear()
@@ -690,47 +1043,49 @@ cdef isomorphisms_candidates_struct_undirected undirected_candidates(size_t expe
         for each_pair in nodes_G:
             node = each_pair.first
             if(current_match_G.find(node) == current_match_G.end()):
-                # should only match vertices outside of ring at this point
-                if(ring_G.find(node) == ring_G.end()):
-                    valid_G.push_back(node)
+                valid_G.push_back(node)
 
         # get alternatives in H
         for each_pair in nodes_H:
             node = each_pair.first
             if(current_match_H.find(node) == current_match_H.end()):
-                # should only match vertices outside of ring at this point
-                if(ring_H.find(node) == ring_H.end()):
-                    valid_H.push_back(node)
+                valid_H.push_back(node)
 
         # make product of valid neighbors
         if((not valid_G.empty()) and (not valid_H.empty())):
-            for node1 in valid_G:
-                for node2 in valid_H:
-                    # check if pair satisfies minimum total order condition
-                    if(total_order[node2] <= reference_minimum):
-                        temp_string = to_string(node1) + comma + to_string(node2)
-                        if(candidate_pairs_member.find(temp_string) == candidate_pairs_member.end()):
-                            temp_pair.first = node1
-                            temp_pair.second = node2
-                            if(total_order[node2] == reference_minimum):
-                                # add proper pair
-                                candidate_pairs.push_back(temp_pair)
-                                # add string version for constant look ups
-                                candidate_pairs_member.insert(temp_string)
-                            if(total_order[node2] < reference_minimum):
-                                # update control values
-                                reference_minimum = total_order[node2]
-                                candidate_pairs.clear()
-                                candidate_pairs_member.clear()
-                                # add proper pair
-                                candidate_pairs.push_back(temp_pair)
-                                # add string version for constant look ups
-                                candidate_pairs_member.insert(temp_string)
+            # reinitialize candidate minimum
+            temp_minimum = 1 + (<int>expected_order)
+
+            # get new minimum candidate from the valid nodes in H
+            for node in valid_H:
+                if(total_order[node] < temp_minimum):
+                    temp_minimum = total_order[node]
+                    minimizing_node = node
+
+            # overwrite candidates since new minimum should improve reference minimum
+            matchable_G.clear()
+
+            # save nodes as matchable only if they have the same degree and neighborhoods with same degree bounds
+            for node in valid_G:
+                # check if candidates have the same degree
+                if(degrees_G[node] == degrees_H[minimizing_node]):
+                    matchable_G.push_back(node)
+
+            # update if actually matchable
+            if(not matchable_G.empty()):
+                # add new pairs
+                for node in matchable_G:
+                    # create proper pair
+                    temp_pair.first = node
+                    temp_pair.second = minimizing_node
+                    # add proper pair
+                    candidate_pairs.push_back(temp_pair)
 
     # pack return structure
     candidates_struct.candidates = candidate_pairs
     candidates_struct.ring_G = ring_G
     candidates_struct.ring_H = ring_H
+
     # end of function
     return(candidates_struct)
 
@@ -809,6 +1164,10 @@ cdef void directed_search_isomorphisms_iterative(cpp_bool node_labels,
                                                     current_match_H,
                                                     G.nodes,
                                                     H.nodes,
+                                                    G.in_degrees,
+                                                    H.in_degrees,
+                                                    G.out_degrees,
+                                                    H.out_degrees,
                                                     G.in_neighbors,
                                                     H.in_neighbors,
                                                     G.out_neighbors,
@@ -886,6 +1245,7 @@ cdef void directed_search_isomorphisms_iterative(cpp_bool node_labels,
                                 new_match.push_back(each_pair)
                                 # add new valid candidate states
                                 dfs_stack.push(new_match)
+
     # end of function
 
 
@@ -938,6 +1298,10 @@ cdef void directed_search_isomorphisms_recursive(cpp_bool node_labels,
                                                 current_match_H,
                                                 G.nodes,
                                                 H.nodes,
+                                                G.in_degrees,
+                                                H.in_degrees,
+                                                G.out_degrees,
+                                                H.out_degrees,
                                                 G.in_neighbors,
                                                 H.in_neighbors,
                                                 G.out_neighbors,
@@ -1028,6 +1392,7 @@ cdef void directed_search_isomorphisms_recursive(cpp_bool node_labels,
                             if(not all_matches.empty()):
                                 if(not all_isomorphisms):
                                     return
+
     # end of function
 
 
@@ -1040,6 +1405,10 @@ cdef isomorphisms_candidates_struct_directed directed_candidates(size_t expected
                                                                  cpp_unordered_set[int] & current_match_H,
                                                                  cpp_unordered_map[int, int] & nodes_G,
                                                                  cpp_unordered_map[int, int] & nodes_H,
+                                                                 cpp_unordered_map[int, int] & in_degrees_G,
+                                                                 cpp_unordered_map[int, int] & in_degrees_H,
+                                                                 cpp_unordered_map[int, int] & out_degrees_G,
+                                                                 cpp_unordered_map[int, int] & out_degrees_H,
                                                                  cpp_unordered_map[int, cpp_unordered_set[int]] & in_neigh_G,
                                                                  cpp_unordered_map[int, cpp_unordered_set[int]] & in_neigh_H,
                                                                  cpp_unordered_map[int, cpp_unordered_set[int]] & out_neigh_G,
@@ -1069,7 +1438,7 @@ cdef isomorphisms_candidates_struct_directed directed_candidates(size_t expected
     cdef cpp_unordered_set[cpp_string] candidate_pairs_member
 
     # initialize reference minimum
-    reference_minimum = 1 + 2*(<int>expected_order)
+    reference_minimum = 1 + (<int>expected_order)
 
     # get candidate pairs from in-neighbors
     for each_pair in current_match:
@@ -1095,24 +1464,27 @@ cdef isomorphisms_candidates_struct_directed directed_candidates(size_t expected
                 for node2 in valid_H:
                     # check if pair satisfies minimum total order condition
                     if(total_order[node2] <= reference_minimum):
-                        temp_string = to_string(node1) + comma + to_string(node2)
-                        if(candidate_pairs_member.find(temp_string) == candidate_pairs_member.end()):
-                            temp_pair.first = node1
-                            temp_pair.second = node2
-                            if(total_order[node2] == reference_minimum):
-                                # add proper pair
-                                candidate_pairs.push_back(temp_pair)
-                                # add string version for constant look ups
-                                candidate_pairs_member.insert(temp_string)
-                            if(total_order[node2] < reference_minimum):
-                                # update control values
-                                reference_minimum = total_order[node2]
-                                candidate_pairs.clear()
-                                candidate_pairs_member.clear()
-                                # add proper pair
-                                candidate_pairs.push_back(temp_pair)
-                                # add string version for constant look ups
-                                candidate_pairs_member.insert(temp_string)
+                        # check if candidates have the same degree
+                        if((in_degrees_G[node1] == in_degrees_H[node2]) and (out_degrees_G[node1] == out_degrees_H[node2])):
+                            # check if pair is unrepeated
+                            temp_string = to_string(node1) + comma + to_string(node2)
+                            if(candidate_pairs_member.find(temp_string) == candidate_pairs_member.end()):
+                                temp_pair.first = node1
+                                temp_pair.second = node2
+                                if(total_order[node2] == reference_minimum):
+                                    # add proper pair
+                                    candidate_pairs.push_back(temp_pair)
+                                    # add string version for constant look ups
+                                    candidate_pairs_member.insert(temp_string)
+                                if(total_order[node2] < reference_minimum):
+                                    # update control values
+                                    reference_minimum = total_order[node2]
+                                    candidate_pairs.clear()
+                                    candidate_pairs_member.clear()
+                                    # add proper pair
+                                    candidate_pairs.push_back(temp_pair)
+                                    # add string version for constant look ups
+                                    candidate_pairs_member.insert(temp_string)
 
         # additionally save neighbors in in-ring around match in G
         for node in valid_G:
@@ -1180,24 +1552,27 @@ cdef isomorphisms_candidates_struct_directed directed_candidates(size_t expected
                     for node2 in valid_H:
                         # check if pair satisfies minimum total order condition
                         if(total_order[node2] <= reference_minimum):
-                            temp_string = to_string(node1) + comma + to_string(node2)
-                            if(candidate_pairs_member.find(temp_string) == candidate_pairs_member.end()):
-                                temp_pair.first = node1
-                                temp_pair.second = node2
-                                if(total_order[node2] == reference_minimum):
-                                    # add proper pair
-                                    candidate_pairs.push_back(temp_pair)
-                                    # add string version for constant look ups
-                                    candidate_pairs_member.insert(temp_string)
-                                if(total_order[node2] < reference_minimum):
-                                    # update control values
-                                    reference_minimum = total_order[node2]
-                                    candidate_pairs.clear()
-                                    candidate_pairs_member.clear()
-                                    # add proper pair
-                                    candidate_pairs.push_back(temp_pair)
-                                    # add string version for constant look ups
-                                    candidate_pairs_member.insert(temp_string)
+                            # check if candidates have the same degree
+                            if((in_degrees_G[node1] == in_degrees_H[node2]) and (out_degrees_G[node1] == out_degrees_H[node2])):
+                                # check if pair is unrepeated
+                                temp_string = to_string(node1) + comma + to_string(node2)
+                                if(candidate_pairs_member.find(temp_string) == candidate_pairs_member.end()):
+                                    temp_pair.first = node1
+                                    temp_pair.second = node2
+                                    if(total_order[node2] == reference_minimum):
+                                        # add proper pair
+                                        candidate_pairs.push_back(temp_pair)
+                                        # add string version for constant look ups
+                                        candidate_pairs_member.insert(temp_string)
+                                    if(total_order[node2] < reference_minimum):
+                                        # update control values
+                                        reference_minimum = total_order[node2]
+                                        candidate_pairs.clear()
+                                        candidate_pairs_member.clear()
+                                        # add proper pair
+                                        candidate_pairs.push_back(temp_pair)
+                                        # add string version for constant look ups
+                                        candidate_pairs_member.insert(temp_string)
 
     # last alternative is to get all unmatched nodes also not adjacent with match
     if(candidate_pairs.empty()):
@@ -1229,24 +1604,27 @@ cdef isomorphisms_candidates_struct_directed directed_candidates(size_t expected
                 for node2 in valid_H:
                     # check if pair satisfies minimum total order condition
                     if(total_order[node2] <= reference_minimum):
-                        temp_string = to_string(node1) + comma + to_string(node2)
-                        if(candidate_pairs_member.find(temp_string) == candidate_pairs_member.end()):
-                            temp_pair.first = node1
-                            temp_pair.second = node2
-                            if(total_order[node2] == reference_minimum):
-                                # add proper pair
-                                candidate_pairs.push_back(temp_pair)
-                                # add string version for constant look ups
-                                candidate_pairs_member.insert(temp_string)
-                            if(total_order[node2] < reference_minimum):
-                                # update control values
-                                reference_minimum = total_order[node2]
-                                candidate_pairs.clear()
-                                candidate_pairs_member.clear()
-                                # add proper pair
-                                candidate_pairs.push_back(temp_pair)
-                                # add string version for constant look ups
-                                candidate_pairs_member.insert(temp_string)
+                        # check if candidates have the same degree
+                        if((in_degrees_G[node1] == in_degrees_H[node2]) and (out_degrees_G[node1] == out_degrees_H[node2])):
+                            # check if pair is unrepeated
+                            temp_string = to_string(node1) + comma + to_string(node2)
+                            if(candidate_pairs_member.find(temp_string) == candidate_pairs_member.end()):
+                                temp_pair.first = node1
+                                temp_pair.second = node2
+                                if(total_order[node2] == reference_minimum):
+                                    # add proper pair
+                                    candidate_pairs.push_back(temp_pair)
+                                    # add string version for constant look ups
+                                    candidate_pairs_member.insert(temp_string)
+                                if(total_order[node2] < reference_minimum):
+                                    # update control values
+                                    reference_minimum = total_order[node2]
+                                    candidate_pairs.clear()
+                                    candidate_pairs_member.clear()
+                                    # add proper pair
+                                    candidate_pairs.push_back(temp_pair)
+                                    # add string version for constant look ups
+                                    candidate_pairs_member.insert(temp_string)
 
     # pack return structure
     candidates_struct.candidates = candidate_pairs
@@ -1254,6 +1632,7 @@ cdef isomorphisms_candidates_struct_directed directed_candidates(size_t expected
     candidates_struct.in_ring_H = in_ring_H
     candidates_struct.out_ring_G = out_ring_G
     candidates_struct.out_ring_H = out_ring_H
+
     # end of function
     return(candidates_struct)
 
