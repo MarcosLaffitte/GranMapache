@@ -12,45 +12,19 @@ Alignments and other Maps between Graphs
 
 ## ToDo / Working / Done
 
-> done: integerization
-
-> done: good-bad map with maximum extension
-
-> done: add wheel for packages
-
-> done: statically type python objects
-
-> done: statically type counters and bounds in for loops
-
-> done: migrating partial_maps into C++ objects
-
-> done: simplifying code with C++ structs
-
-> done: implemented C++ unordered maps for fast (constant look-ups).
-
-> done: implementing and testing iterative version of the algorithm(s) against current recursive versions.
-
-> done: transition into unordered sets and unordered maps for scalability with constat look ups
-
-> done: isomorphism
-
-> done: simplify feasability testing
-
-> done: add examples with isomorphisms to standalone
-
-> done: add options to ignore node labels or/and edge labels in partial maps
-
-> done: add options to ignore node labels or/and edge labels in isomorphism search
-
-> done: add example to ignore node labels or/and edge labels in isomorphism search
-
-> done: updating routine for Extensions to work with isomorphism-like VF2 instead of MCS-like VF2
-
-> done: relaxed condition for node labels in the initial anchor / reaction center
-
 > done: super cool optimization no. 1 based on total order
 
 > done: super cool optimization no. 2 based on degrees and bound of degrees of neighbors
+
+- ToDo isomorphisms: optimize order in H (and G) with some special measure and BFS
+
+- ToDo isomorphisms: preference of neighbbors in ring (lists)
+
+- ToDo isomorphisms: preference of nodes outside match repsecting orders (lists)
+
+- ToDo isomorphisms: complement graphs instead of input graphs
+
+- ToDo isomorphisms: get total order from input (as an option?)
 
 - working: mcs routines
 
