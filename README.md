@@ -16,15 +16,15 @@ Alignments and other Maps between Graphs
 
 > done: super cool optimization no. 2 based on degrees and bound of degrees of neighbors
 
-- ToDo isomorphisms: optimize order in H (and G) with some special measure and BFS
+> done: preference of neighbbors in ring (lists)
 
-- ToDo isomorphisms: preference of neighbbors in ring (lists)
+> done: preference of nodes outside match repsecting orders (lists)
 
-- ToDo isomorphisms: preference of nodes outside match repsecting orders (lists)
+- ToDo: node threshold for usage of specialized routines
 
-- ToDo isomorphisms: complement graphs instead of input graphs
+- ToDo: complement graphs instead of input graphs
 
-- ToDo isomorphisms: get total order from input (as an option?)
+- ToDo: get total order from input (as an option?)
 
 - working: mcs routines
 
