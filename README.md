@@ -20,11 +20,9 @@ Alignments and other Maps between Graphs
 
 > done: preference of nodes outside match repsecting orders (lists)
 
-- ToDo: node threshold for usage of specialized routines
+> done: get total order from input (as an option?)
 
 - ToDo: complement graphs instead of input graphs
-
-- ToDo: get total order from input (as an option?)
 
 - working: mcs routines
 
