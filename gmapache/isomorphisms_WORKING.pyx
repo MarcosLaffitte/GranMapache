@@ -1,4 +1,4 @@
-################################################################################
+#################################################################################
 #                                                                              #
 # - GranMapache: GRAphs-and-Networks MAPping Applications                      #
 #   with Cython and HEuristics                                                 #
@@ -89,12 +89,12 @@ from .integerization import encode_graphs, decode_graphs, decode_match
 cdef struct isomorphisms_undirected_graph:
     # node data
     cpp_unordered_map[int, int] nodes
-    # loop data
-    cpp_unordered_map[int, cpp_bool] loops
     # edge data
     cpp_unordered_map[cpp_string, int] edges
-    # neighbors data
+    # neighbors data (for constant look-ups)
     cpp_unordered_map[int, cpp_unordered_set[int]] neighbors
+    # ordered neighbors data (for insertion into ring)
+    cpp_unordered_map[int, cpp_vector[int]] neighbors_ordered
 
 
 
@@ -104,13 +104,14 @@ cdef struct isomorphisms_undirected_graph:
 cdef struct isomorphisms_directed_graph:
     # node data
     cpp_unordered_map[int, int] nodes
-    # loop data
-    cpp_unordered_map[int, cpp_bool] loops
     # edge data
     cpp_unordered_map[cpp_string, int] edges
-    # neighbors data
+    # neighbors data (for constant look-ups)
     cpp_unordered_map[int, cpp_unordered_set[int]] in_neighbors
     cpp_unordered_map[int, cpp_unordered_set[int]] out_neighbors
+    # ordered neighbors data (for insertion into ring)
+    cpp_unordered_map[int, cpp_vector[int]] in_neighbors_ordered
+    cpp_unordered_map[int, cpp_vector[int]] out_neighbors_ordered
 
 
 
@@ -182,12 +183,16 @@ cdef struct isomorphisms_state_directed:
 
 # struct: overall search parameters and constant information -------------------
 cdef struct isomorphisms_search_params:
-    # directed or undirected graphs
-    cpp_bool directed_graphs
     # use node labels
     cpp_bool node_labels
     # use edge labels
     cpp_bool edge_labels
+    # directed or undirected graphs
+    cpp_bool directed_graphs
+    # given total order for G
+    cpp_bool got_order_for_G
+    # given total order for H
+    cpp_bool got_order_for_H
     # return all isomorphisms
     cpp_bool all_isomorphisms
     # expected amount of matches
@@ -196,6 +201,9 @@ cdef struct isomorphisms_search_params:
     # total order for VF2-like search
     cpp_unordered_map[int, int] total_order_G
     cpp_unordered_map[int, int] total_order_H
+    # inverse total order for VF2-like search
+    cpp_unordered_map[int, int] inverse_total_order_G
+    cpp_unordered_map[int, int] inverse_total_order_H
 
 
 
@@ -239,7 +247,9 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                         nx_H = nx.Graph(),           # can also be a networkx DiGraph
                         node_labels = True,          # consider node labels when evaluating isomorphisms
                         edge_labels = True,          # consider edge labels when evaluating isomorphisms
-                        all_isomorphisms = False):   # by default stops when finding one isomorphism (if any)
+                        all_isomorphisms = False,    # by default stops when finding one isomorphism (if any)
+                        total_order_A = dict(),      # custom total order for the nodes of first graph (nx_G)
+                        total_order_B = dict()):     # custom total order for the nodes of second graph (nx_H)
 
     # description
     """
@@ -248,7 +258,14 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     with the same number of nodes and edges, and a boolean variable indicating
     if the function should finish when finding only one isomorphism from G to H
     (if any), or if it should search for all possible isomorphisms from G to H
-    and return them.
+    and return them. In addition, the VF2-like search requires a total order for
+    the nodes of one of the input graphs. Traditionally this is assigned arbitrarily,
+    but here we follow the order used by the networkx interface to enumerate the
+    nodes, which usually is the order in which the nodes were added to each graph.
+    Nonetheless a custom total order can be provided for either or both graphs
+    with the optional input dictionaries total_order_A and total_order_B, which
+    can improve the search if these orders encode a bijection almost resembling
+    an isomorphism, obtained, for example, from an canonicalization algorithm.
 
     > input:
     * nx_G - first networkx (di)graph being matched.
@@ -260,6 +277,12 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     * all_isomorphisms - boolean variable indicating if the function should stop
     as soon as one isomorphism is found (if any) -default behavior- or if it
     should search for all possible isomorphisms between the graphs.
+    * total_order_A - dictionary mapping all the nodes of nx_G into different
+    integers from 1 and up to the order of the graphs, representing the custom
+    total order for the nodes of first graph.
+    * total_order_B - dictionary mapping all the nodes of nx_H into different
+    integers from 1 and up to the order of the graphs, representing the custom
+    total order for the nodes of second graph.
 
     > output:
     * isomorphisms - (possibly empty) list of isomorphisms, each as a list of
@@ -274,12 +297,13 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     * gmapache.integerization.decode_match
     * gmapache.isomorphisms.search_isomorphisms_input_correctness
     * gmapache.isomorphisms.search_isomorphisms_label_consistency
+    * gmapache.isomorphisms.search_isomorphisms_order_neighbors
     * gmapache.isomorphisms.search_isomorphisms_undirected
     * gmapache.isomorphisms.search_isomorphisms_directed
     """
 
     # test input correctness
-    search_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_labels, all_isomorphisms)
+    search_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_labels, all_isomorphisms, total_order_A, total_order_B)
 
     # output holders
     found_isomorphism = False
@@ -289,10 +313,12 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     cdef float scalation_value = 1.5
 
     # local variables (cython)
+    cdef int i = 0
     cdef int deg = 0
     cdef int node = 0
     cdef int node1 = 0
     cdef int node2 = 0
+    cdef int counter = 0
     cdef int current_limit = 0
     cdef int required_limit = 0
     cdef cpp_string comma
@@ -305,7 +331,11 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     cdef cpp_vector[int] in_deg_H
     cdef cpp_vector[int] out_deg_G
     cdef cpp_vector[int] out_deg_H
-    cdef cpp_vector[cpp_pair[int, int]] temp_nodes
+    cdef cpp_vector[int] each_vector
+    cdef cpp_vector[cpp_vector[int]] all_edges_G
+    cdef cpp_vector[cpp_vector[int]] all_edges_H
+    cdef cpp_vector[cpp_pair[int, int]] all_nodes_G
+    cdef cpp_vector[cpp_pair[int, int]] all_nodes_H
     cdef cpp_vector[cpp_set[cpp_pair[int, int]]] encoded_isomorphisms
     cdef cpp_set[cpp_pair[int, int]] each_isomorphism
     cdef isomorphisms_search_params params
@@ -317,14 +347,12 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     cdef isomorphisms_state_undirected initial_state_undirected
 
     # local variables (python)
-    cdef list looped_nodes = []
     cdef list encoded_graphs = []
     cdef dict info = dict()
     cdef dict encoded_node_names = dict()
     cdef dict encoded_node_labels = dict()
     cdef dict encoded_edge_labels = dict()
     node_obj = None
-    underlying_graph = None
 
     # quick test by comparing the degree sequences of input graphs
     params.directed_graphs = nx.is_directed(nx_G)
@@ -359,118 +387,167 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     params.all_isomorphisms = all_isomorphisms
     params.expected_order = nx_H.order()
     params.expected_order_int = nx_H.order()
+    params.got_order_for_G = (len(total_order_A) > 0)
+    params.got_order_for_H = (len(total_order_B) > 0)
 
     # encode graphs
     encoded_graphs, encoded_node_names, encoded_node_labels, encoded_edge_labels = encode_graphs([nx_G, nx_H])
 
-    # prepare nodes
+    # prepare nodes, neighbors and total order
     if(params.directed_graphs):
-        # nodes of G
-        temp_nodes.clear()
-        temp_nodes = [(node, info["GMNL"]) for (node, info) in encoded_graphs[0].nodes(data = True)]
-        counter = 0
-        for each_pair in temp_nodes:
-            # save node
-            directed_G.nodes.insert(each_pair)
-            # save total order for the node
-            counter = counter + 1
-            params.total_order_G[each_pair.first] = counter
-            initial_state_directed.unmatched_G.insert(each_pair.first)
-            initial_state_directed.unmatched_G_ordered.push_back(each_pair.first)
-        # nodes of H
-        temp_nodes.clear()
-        temp_nodes = [(node, info["GMNL"]) for (node, info) in encoded_graphs[1].nodes(data = True)]
-        counter = 0
-        for each_pair in temp_nodes:
-            # save node
-            directed_H.nodes.insert(each_pair)
-            # save total order for the node
-            counter = counter + 1
-            params.total_order_H[each_pair.first] = counter
-            initial_state_directed.unmatched_H.insert(each_pair.first)
-            initial_state_directed.unmatched_H_ordered.push_back(each_pair.first)
+        # nodes of directed G
+        all_nodes_G = [(node, info["GMNL"]) for (node, info) in encoded_graphs[0].nodes(data = True)]
+        if(params.got_order_for_G):
+            # get basic information
+            for each_pair in all_nodes_G:
+                # save node
+                directed_G.nodes.insert(each_pair)
+                # neighbors for G
+                directed_G.in_neighbors[each_pair.first] = set(encoded_graphs[0].predecessors(each_pair.first))
+                directed_G.out_neighbors[each_pair.first] = set(encoded_graphs[0].neighbors(each_pair.first))
+                # save total order for the node from input
+                params.total_order_G[each_pair.first] = total_order_A[encoded_node_names[each_pair.first]]
+                params.inverse_total_order_G[params.total_order_G[each_pair.first]] = each_pair.first
+                initial_state_directed.unmatched_G.insert(each_pair.first)
+            # get ordered unmatched nodes for G
+            for i in range(1, params.expected_order_int + 1):
+                initial_state_directed.unmatched_G_ordered.push_back(params.inverse_total_order_G[i])
+        else:
+            counter = 0
+            for each_pair in all_nodes_G:
+                # save node
+                directed_G.nodes.insert(each_pair)
+                # neighbors for G
+                directed_G.in_neighbors[each_pair.first] = set(encoded_graphs[0].predecessors(each_pair.first))
+                directed_G.out_neighbors[each_pair.first] = set(encoded_graphs[0].neighbors(each_pair.first))
+                # save total order for the node
+                counter = counter + 1
+                params.total_order_G[each_pair.first] = counter
+                params.inverse_total_order_G[counter] = each_pair.first
+                initial_state_directed.unmatched_G.insert(each_pair.first)
+                initial_state_directed.unmatched_G_ordered.push_back(each_pair.first)
+        # nodes of directed H
+        all_nodes_H = [(node, info["GMNL"]) for (node, info) in encoded_graphs[1].nodes(data = True)]
+        if(params.got_order_for_H):
+            for each_pair in all_nodes_H:
+                # save node
+                directed_H.nodes.insert(each_pair)
+                # neighbors for H
+                directed_H.in_neighbors[each_pair.first] = set(encoded_graphs[1].predecessors(each_pair.first))
+                directed_H.out_neighbors[each_pair.first] = set(encoded_graphs[1].neighbors(each_pair.first))
+                # save total order for the node from input
+                params.total_order_H[each_pair.first] = total_order_B[encoded_node_names[each_pair.first]]
+                params.inverse_total_order_H[params.total_order_H[each_pair.first]] = each_pair.first
+                initial_state_directed.unmatched_H.insert(each_pair.first)
+            for i in range(1, params.expected_order_int + 1):
+                initial_state_directed.unmatched_H_ordered.push_back(params.inverse_total_order_H[i])
+        else:
+            counter = 0
+            for each_pair in all_nodes_H:
+                # save node
+                directed_H.nodes.insert(each_pair)
+                # neighbors for H
+                directed_H.in_neighbors[each_pair.first] = set(encoded_graphs[1].predecessors(each_pair.first))
+                directed_H.out_neighbors[each_pair.first] = set(encoded_graphs[1].neighbors(each_pair.first))
+                # save total order for the node
+                counter = counter + 1
+                params.total_order_H[each_pair.first] = counter
+                params.inverse_total_order_H[counter] = each_pair.first
+                initial_state_directed.unmatched_H.insert(each_pair.first)
+                initial_state_directed.unmatched_H_ordered.push_back(each_pair.first)
     else:
-        # nodes of G
-        temp_nodes.clear()
-        temp_nodes = [(node, info["GMNL"]) for (node, info) in encoded_graphs[0].nodes(data = True)]
-        counter = 0
-        for each_pair in temp_nodes:
-            # save node
-            undirected_G.nodes.insert(each_pair)
-            # save total order for the node
-            counter = counter + 1
-            params.total_order_G[each_pair.first] = counter
-            initial_state_undirected.unmatched_G.insert(each_pair.first)
-            initial_state_undirected.unmatched_G_ordered.push_back(each_pair.first)
-        # nodes of H
-        temp_nodes.clear()
-        temp_nodes = [(node, info["GMNL"]) for (node, info) in encoded_graphs[1].nodes(data = True)]
-        counter = 0
-        for each_pair in temp_nodes:
-            # save node
-            undirected_H.nodes.insert(each_pair)
-            # save total order for the node
-            counter = counter + 1
-            params.total_order_H[each_pair.first] = counter
-            initial_state_undirected.unmatched_H.insert(each_pair.first)
-            initial_state_undirected.unmatched_H_ordered.push_back(each_pair.first)
+        # nodes of undirected G
+        all_nodes_G = [(node, info["GMNL"]) for (node, info) in encoded_graphs[0].nodes(data = True)]
+        if(params.got_order_for_G):
+            for each_pair in all_nodes_G:
+                # save node
+                undirected_G.nodes.insert(each_pair)
+                # neighbors for G
+                undirected_G.neighbors[each_pair.first] = set(encoded_graphs[0].neighbors(each_pair.first))
+                # save total order for the node from input
+                params.total_order_G[each_pair.first] = total_order_A[encoded_node_names[each_pair.first]]
+                params.inverse_total_order_G[params.total_order_G[each_pair.first]] = each_pair.first
+                initial_state_undirected.unmatched_G.insert(each_pair.first)
+            for i in range(1, params.expected_order_int + 1):
+                initial_state_undirected.unmatched_G_ordered.push_back(params.inverse_total_order_G[i])
+        else:
+            counter = 0
+            for each_pair in all_nodes_G:
+                # save node
+                undirected_G.nodes.insert(each_pair)
+                # neighbors for G
+                undirected_G.neighbors[each_pair.first] = set(encoded_graphs[0].neighbors(each_pair.first))
+                # save total order for the node
+                counter = counter + 1
+                params.total_order_G[each_pair.first] = counter
+                params.inverse_total_order_G[counter] = each_pair.first
+                initial_state_undirected.unmatched_G.insert(each_pair.first)
+                initial_state_undirected.unmatched_G_ordered.push_back(each_pair.first)
+        # nodes of undirected H
+        all_nodes_H = [(node, info["GMNL"]) for (node, info) in encoded_graphs[1].nodes(data = True)]
+        if(params.got_order_for_H):
+            for each_pair in all_nodes_H:
+                # save node
+                undirected_H.nodes.insert(each_pair)
+                # neighbors for H
+                undirected_H.neighbors[each_pair.first] = set(encoded_graphs[1].neighbors(each_pair.first))
+                # save total order for the node from input
+                params.total_order_H[each_pair.first] = total_order_B[encoded_node_names[each_pair.first]]
+                params.inverse_total_order_H[params.total_order_H[each_pair.first]] = each_pair.first
+                initial_state_undirected.unmatched_H.insert(each_pair.first)
+            for i in range(1, params.expected_order_int + 1):
+                initial_state_undirected.unmatched_H_ordered.push_back(params.inverse_total_order_H[i])
+        else:
+            counter = 0
+            for each_pair in all_nodes_H:
+                # save node
+                undirected_H.nodes.insert(each_pair)
+                # neighbors for H
+                undirected_H.neighbors[each_pair.first] = set(encoded_graphs[1].neighbors(each_pair.first))
+                # save total order for the node
+                counter = counter + 1
+                params.total_order_H[each_pair.first] = counter
+                params.inverse_total_order_H[counter] = each_pair.first
+                initial_state_undirected.unmatched_H.insert(each_pair.first)
+                initial_state_undirected.unmatched_H_ordered.push_back(each_pair.first)
 
-    # prepare edges and loops
+    # prepare edges
     if(params.directed_graphs):
-        # prepare all edges
-        directed_G.edges = {str(node1)+","+str(node2):info["GMEL"] for (node1, node2, info) in encoded_graphs[0].edges(data = True)}
-        directed_H.edges = {str(node1)+","+str(node2):info["GMEL"] for (node1, node2, info) in encoded_graphs[1].edges(data = True)}
-        # prepare loops in G
-        looped_nodes = list(nx.nodes_with_selfloops(encoded_graphs[0]))
-        for node in list(encoded_graphs[0].nodes()):
-            if(node in looped_nodes):
-                directed_G.loops[node] = True
-            else:
-                directed_G.loops[node] = False
-        # prepare loops in H
-        looped_nodes = list(nx.nodes_with_selfloops(encoded_graphs[1]))
-        for node in list(encoded_graphs[1].nodes()):
-            if(node in looped_nodes):
-                directed_H.loops[node] = True
-            else:
-                directed_H.loops[node] = False
+        # edges for G
+        all_edges_G = [(node1, node2, info["GMEL"]) for (node1, node2, info) in encoded_graphs[0].edges(data = True)]
+        for each_vector in all_edges_G:
+            temp_str = to_string(each_vector[0]) + comma + to_string(each_vector[1])
+            directed_G.edges[temp_str] = each_vector[2]
+        # edges for H
+        all_edges_H = [(node1, node2, info["GMEL"]) for (node1, node2, info) in encoded_graphs[1].edges(data = True)]
+        for each_vector in all_edges_H:
+            temp_str = to_string(each_vector[0]) + comma + to_string(each_vector[1])
+            directed_H.edges[temp_str] = each_vector[2]
     else:
-        # prepare edges of undirected G
-        for (node1, node2, info) in encoded_graphs[0].edges(data = True):
-            if(node1 == node2):
-                temp_str = to_string(node1) + comma + to_string(node1)
-                undirected_G.edges[temp_str] = info["GMEL"]
+        # edges for G
+        all_edges_G = [(node1, node2, info["GMEL"]) for (node1, node2, info) in encoded_graphs[0].edges(data = True)]
+        for each_vector in all_edges_G:
+            if(each_vector[0] == each_vector[1]):
+                temp_str = to_string(each_vector[0]) + comma + to_string(each_vector[0])
+                undirected_G.edges[temp_str] = each_vector[2]
             else:
                 # save the two label edges to simplify future access
-                temp_str = to_string(node1) + comma + to_string(node2)
-                undirected_G.edges[temp_str] = info["GMEL"]
-                temp_str = to_string(node2) + comma + to_string(node1)
-                undirected_G.edges[temp_str] = info["GMEL"]
-        # prepare edges of undirected H
-        for (node1, node2, info) in encoded_graphs[1].edges(data = True):
-            if(node1 == node2):
-                temp_str = to_string(node1) + comma + to_string(node1)
-                undirected_H.edges[temp_str] = info["GMEL"]
+                temp_str = to_string(each_vector[0]) + comma + to_string(each_vector[1])
+                undirected_G.edges[temp_str] = each_vector[2]
+                temp_str = to_string(each_vector[1]) + comma + to_string(each_vector[0])
+                undirected_G.edges[temp_str] = each_vector[2]
+        # edges for H
+        all_edges_H = [(node1, node2, info["GMEL"]) for (node1, node2, info) in encoded_graphs[1].edges(data = True)]
+        for each_vector in all_edges_H:
+            if(each_vector[0] == each_vector[1]):
+                temp_str = to_string(each_vector[0]) + comma + to_string(each_vector[0])
+                undirected_H.edges[temp_str] = each_vector[2]
             else:
                 # save the two label edges to simplify future access
-                temp_str = to_string(node1) + comma + to_string(node2)
-                undirected_H.edges[temp_str] = info["GMEL"]
-                temp_str = to_string(node2) + comma + to_string(node1)
-                undirected_H.edges[temp_str] = info["GMEL"]
-        # prepare loops in G
-        looped_nodes = list(nx.nodes_with_selfloops(encoded_graphs[0]))
-        for node in list(encoded_graphs[0].nodes()):
-            if(node in looped_nodes):
-                undirected_G.loops[node] = True
-            else:
-                undirected_G.loops[node] = False
-        # prepare loops in H
-        looped_nodes = list(nx.nodes_with_selfloops(encoded_graphs[1]))
-        for node in list(encoded_graphs[1].nodes()):
-            if(node in looped_nodes):
-                undirected_H.loops[node] = True
-            else:
-                undirected_H.loops[node] = False
+                temp_str = to_string(each_vector[0]) + comma + to_string(each_vector[1])
+                undirected_H.edges[temp_str] = each_vector[2]
+                temp_str = to_string(each_vector[1]) + comma + to_string(each_vector[0])
+                undirected_H.edges[temp_str] = each_vector[2]
 
     # test consistency of labels if required
     if(params.node_labels or params.edge_labels):
@@ -484,15 +561,25 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                                                   undirected_G.nodes, undirected_H.nodes,
                                                   undirected_G.edges, undirected_H.edges)
 
-    # prepare neighbors
+    # prepare ordered neighbors
     if(params.directed_graphs):
-        directed_G.in_neighbors = {node:set(encoded_graphs[0].predecessors(node)) for node in list(encoded_graphs[0].nodes())}
-        directed_H.in_neighbors = {node:set(encoded_graphs[1].predecessors(node)) for node in list(encoded_graphs[1].nodes())}
-        directed_G.out_neighbors = {node:set(encoded_graphs[0].neighbors(node)) for node in list(encoded_graphs[0].nodes())}
-        directed_H.out_neighbors = {node:set(encoded_graphs[1].neighbors(node)) for node in list(encoded_graphs[1].nodes())}
+        # order nodes of G
+        search_isomorphisms_order_neighbors(all_nodes_G, directed_G.in_neighbors, directed_G.in_neighbors_ordered,
+                                            params.total_order_G, params.inverse_total_order_G)
+        search_isomorphisms_order_neighbors(all_nodes_G, directed_G.out_neighbors, directed_G.out_neighbors_ordered,
+                                            params.total_order_G, params.inverse_total_order_G)
+        # order nodes of H
+        search_isomorphisms_order_neighbors(all_nodes_H, directed_H.in_neighbors, directed_H.in_neighbors_ordered,
+                                            params.total_order_H, params.inverse_total_order_H)
+        search_isomorphisms_order_neighbors(all_nodes_H, directed_H.out_neighbors, directed_H.out_neighbors_ordered,
+                                            params.total_order_H, params.inverse_total_order_H)
     else:
-        undirected_G.neighbors = {node:set(encoded_graphs[0].neighbors(node)) for node in list(encoded_graphs[0].nodes())}
-        undirected_H.neighbors = {node:set(encoded_graphs[1].neighbors(node)) for node in list(encoded_graphs[1].nodes())}
+        # order nodes of G
+        search_isomorphisms_order_neighbors(all_nodes_G, undirected_G.neighbors, undirected_G.neighbors_ordered,
+                                            params.total_order_G, params.inverse_total_order_G)
+        # order nodes of H
+        search_isomorphisms_order_neighbors(all_nodes_H, undirected_H.neighbors, undirected_H.neighbors_ordered,
+                                            params.total_order_H, params.inverse_total_order_H)
 
     # set recursion limit
     required_limit = nx_G.order()
@@ -528,12 +615,24 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
 
 
 # function: test input correctness ---------------------------------------------
-cdef void search_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_labels, all_isomorphisms):
+cdef void search_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_labels, all_isomorphisms, total_order_A, total_order_B):
 
-    # local variables
+    # local variables (cython)
+    cdef int minimum_order = 0
+    cdef int maximum_order = 0
+    cdef cpp_bool inserted = False
+    cdef cpp_unordered_set[int] all_orders
+
+    # local variables (python)
+    test_int = 0
+    test_bool = False
+    cdef list nodes_G = []
+    cdef list nodes_H = []
+    cdef list all_keys = []
+    cdef dict test_dict = dict()
     test_undir = nx.Graph()
     test_dir = nx.DiGraph()
-    test_bool = False
+    each_node = None
 
     # check that first argument is networkx graph or digraph
     if(type(nx_G) not in [type(test_undir), type(test_dir)]):
@@ -545,15 +644,23 @@ cdef void search_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_la
 
     # check that third argument is networkx graph or digraph
     if(type(node_labels) not in [type(test_bool)]):
-        raise(ValueError("gmapache: third argument must be a boolean variable."))
+        raise(ValueError("gmapache: argument node_labels must be a boolean variable."))
 
     # check that fourth argument is networkx graph or digraph
     if(type(edge_labels) not in [type(test_bool)]):
-        raise(ValueError("gmapache: fourth argument must be a boolean variable."))
+        raise(ValueError("gmapache: argument edge_labels must be a boolean variable."))
 
     # check that fifth argument is networkx graph or digraph
     if(type(all_isomorphisms) not in [type(test_bool)]):
-        raise(ValueError("gmapache: fifth argument must be a boolean variable."))
+        raise(ValueError("gmapache: argument all_isomorphisms must be a boolean variable."))
+
+    # check that sixth argument is a dictionary
+    if(type(total_order_A) not in [type(test_dict)]):
+        raise(ValueError("gmapache: argument total_order_A must be a dictionary."))
+
+    # check that seventh argument is a dictionary
+    if(type(total_order_B) not in [type(test_dict)]):
+        raise(ValueError("gmapache: argument total_order_B must be a dictionary."))
 
     # check that input graphs are of the same type
     if((nx.is_directed(nx_G)) and (not nx.is_directed(nx_H))):
@@ -572,6 +679,64 @@ cdef void search_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_la
     # check that input graphs have the same number of edges
     if(not nx_G.size() == nx_H.size()):
         raise(ValueError("gmapache: input graphs must have the same number of edges."))
+
+    # check consistency of sixth argument
+    if(len(total_order_A) > 0):
+        if(len(total_order_A) < nx_G.order()):
+            raise(ValueError("gmapache: argument total_order_A is missing the map of some nodes from the first graph."))
+        if(len(total_order_A) > nx_G.order()):
+            raise(ValueError("gmapache: argument total_order_A is mapping more elements than nodes in the first graph."))
+        nodes_G = list(nx_G.nodes())
+        all_keys = list(total_order_A.keys())
+        minimum_order = 10 + len(nodes_G)
+        maximum_order = 0
+        all_orders.clear()
+        for each_node in nodes_G:
+            if(each_node not in all_keys):
+                raise(ValueError("gmapache: argument total_order_A is missing the map of some nodes from the first graph."))
+            if(type(total_order_A[each_node]) not in [type(test_int)]):
+                raise(ValueError("gmapache: argument total_order_A must map all the nodes of the first graph to integers."))
+            else:
+                inserted = all_orders.insert(total_order_A[each_node]).second
+                if(not inserted):
+                    raise(ValueError("gmapache: argument total_order_A has repeated maps for some of the nodes from the first graph."))
+                if(total_order_A[each_node] < minimum_order):
+                    minimum_order = total_order_A[each_node]
+                if(total_order_A[each_node] > maximum_order):
+                    maximum_order = total_order_A[each_node]
+        if(minimum_order != 1):
+            raise(ValueError("gmapache: argument total_order_A is not a valid total order for the nodes of the first graph."))
+        if(maximum_order != len(nodes_G)):
+            raise(ValueError("gmapache: argument total_order_A is not a valid total order for the nodes of the first graph."))
+
+    # check consistency of seventh argument
+    if(len(total_order_B) > 0):
+        if(len(total_order_B) < nx_H.order()):
+            raise(ValueError("gmapache: argument total_order_B is missing the map of some nodes from the second graph."))
+        if(len(total_order_B) > nx_H.order()):
+            raise(ValueError("gmapache: argument total_order_B is mapping more elements than nodes in the second graph."))
+        nodes_H = list(nx_H.nodes())
+        all_keys = list(total_order_B.keys())
+        minimum_order = 10 + len(nodes_H)
+        maximum_order = 0
+        all_orders.clear()
+        for each_node in nodes_H:
+            if(each_node not in all_keys):
+                raise(ValueError("gmapache: argument total_order_B is missing the map of some nodes from the second graph."))
+            if(type(total_order_B[each_node]) not in [type(test_int)]):
+                raise(ValueError("gmapache: argument total_order_B must map all the nodes of the second graph to integers."))
+            else:
+                inserted = all_orders.insert(total_order_B[each_node]).second
+                if(not inserted):
+                    raise(ValueError("gmapache: argument total_order_B has repeated maps for some of the nodes from the second graph."))
+                if(total_order_B[each_node] < minimum_order):
+                    minimum_order = total_order_B[each_node]
+                if(total_order_B[each_node] > maximum_order):
+                    maximum_order = total_order_B[each_node]
+        if(minimum_order != 1):
+            raise(ValueError("gmapache: argument total_order_B is not a valid total order for the nodes of the second graph."))
+        if(maximum_order != len(nodes_H)):
+            raise(ValueError("gmapache: argument total_order_B is not a valid total order for the nodes of the second graph."))
 
     # end of function
 
@@ -679,6 +844,45 @@ cdef void search_isomorphisms_label_consistency(cpp_bool & node_labels,
 
 
 
+# functions - input preparation ################################################
+
+
+
+
+
+# function: order neighbors according to the total order -----------------------
+cdef void search_isomorphisms_order_neighbors(cpp_vector[cpp_pair[int, int]] & all_nodes,
+                                              cpp_unordered_map[int, cpp_unordered_set[int]] & all_neighbors,
+                                              cpp_unordered_map[int, cpp_vector[int]] & all_neighbors_ordered,
+                                              cpp_unordered_map[int, int] & total_order,
+                                              cpp_unordered_map[int, int] & inverse_total_order) noexcept:
+
+    # local variables
+    cdef int each_order = 0
+    cdef int each_neighbor = 0
+    cdef cpp_vector[int] temp_vector
+    cdef cpp_vector[int] empty_vector
+    cdef cpp_pair[int, int] each_pair
+
+    # order nodes
+    for each_pair in all_nodes:
+        # get total orders
+        temp_vector.clear()
+        for each_neighbor in all_neighbors[each_pair.first]:
+            temp_vector.push_back(total_order[each_neighbor])
+        # sort total orders increasingly
+        sort(temp_vector.begin(), temp_vector.end())
+        # get ordered neighbors
+        all_neighbors_ordered[each_pair.first] = empty_vector
+        for each_order in temp_vector:
+            all_neighbors_ordered[each_pair.first].push_back(inverse_total_order[each_order])
+
+    # end of function
+
+
+
+
+
 # functions - search isomorphisms - undirected #################################
 
 
@@ -747,8 +951,6 @@ cdef void search_isomorphisms_undirected(isomorphisms_search_params & params,
                                                               current_state.match_H,
                                                               current_state.forward_match,
                                                               current_state.inverse_match,
-                                                              G.loops,
-                                                              H.loops,
                                                               G.neighbors,
                                                               H.neighbors)
 
@@ -766,7 +968,6 @@ cdef void search_isomorphisms_undirected(isomorphisms_search_params & params,
                                                                     current_state.forward_match,
                                                                     G.nodes,
                                                                     H.nodes,
-                                                                    G.loops,
                                                                     G.neighbors,
                                                                     H.neighbors,
                                                                     G.edges,
@@ -810,7 +1011,7 @@ cdef cpp_pair[int, cpp_bool] candidates_info_undirected(isomorphisms_search_para
     cdef int minimum_node = -1
     cdef int minimum_value = 0
 
-    # initialize with impossible minimum (ranges from 1 to expected_order)
+    # initialize with impossible minimum (total order ranges from 1 to expected_order)
     minimum_value = 10 + params.expected_order_int
 
     # build candidates either with nodes in the rings or with unmatched nodes
@@ -897,7 +1098,7 @@ cdef isomorphisms_change_in_state_undirected extend_match_undirected(int node1,
         change_in_state.removed_node_ring_H = current_state.ring_H.erase(node2)
 
     # add unmatched neighbors to ring in G if not already there
-    for node in G.neighbors[node1]:
+    for node in G.neighbors_ordered[node1]:
         if(current_state.match_G.find(node) == current_state.match_G.end()):
             inserted = (current_state.ring_G.insert(node)).second
             if(inserted):
@@ -905,7 +1106,7 @@ cdef isomorphisms_change_in_state_undirected extend_match_undirected(int node1,
                 change_in_state.added_neighbors_ring_G.push(node)
 
     # add unmatched neighbors to ring in H if not already there
-    for node in H.neighbors[node2]:
+    for node in H.neighbors_ordered[node2]:
         if(current_state.match_H.find(node) == current_state.match_H.end()):
             inserted = (current_state.ring_H.insert(node)).second
             if(inserted):
@@ -1389,8 +1590,6 @@ cdef cpp_bool syntactic_feasibility(int node1,
                                     cpp_unordered_set[int] & current_match_H,
                                     cpp_unordered_map[int, int] & forward_match,
                                     cpp_unordered_map[int, int] & inverse_match,
-                                    cpp_unordered_map[int, cpp_bool] & loops_G,
-                                    cpp_unordered_map[int, cpp_bool] & loops_H,
                                     cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_G,
                                     cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_H) noexcept:
 
@@ -1403,12 +1602,14 @@ cdef cpp_bool syntactic_feasibility(int node1,
     cdef int neighbors_extern_H = 0
 
     # loop-consistency-test
-    if(loops_G[node1] and (not loops_H[node2])):
-        # node1 has a loop in G but node2 has no loop in H
-        return(False)
-    if((not loops_G[node1]) and loops_H[node2]):
-        # node1 has no loop in G but node2 has a loop in H
-        return(False)
+    if(neigh_G[node1].find(node1) != neigh_G[node1].end()):
+        if(neigh_H[node2].find(node2) == neigh_H[node2].end()):
+            # node1 has a loop in G but node2 has no loop in H
+            return(False)
+    if(neigh_G[node1].find(node1) == neigh_G[node1].end()):
+        if(neigh_H[node2].find(node2) != neigh_H[node2].end()):
+            # node1 has no loop in G but node2 has a loop in H
+            return(False)
 
     # look ahead 0: consistency of neighbors in match, while doing tripartition of neighbors
     for node in neigh_G[node1]:
@@ -1466,7 +1667,6 @@ cdef cpp_bool semantic_feasibility(cpp_bool node_labels,
                                    cpp_unordered_map[int, int] & forward_match,
                                    cpp_unordered_map[int, int] & nodes_G,
                                    cpp_unordered_map[int, int] & nodes_H,
-                                   cpp_unordered_map[int, cpp_bool] & loops_G,
                                    cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_G,
                                    cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_H,
                                    cpp_unordered_map[cpp_string, int] & edges_G,
@@ -1504,7 +1704,7 @@ cdef cpp_bool semantic_feasibility(cpp_bool node_labels,
 
     if(edge_labels):
         # compare loop-labels
-        if(loops_G[node1]):
+        if(neigh_G[node1].find(node1) != neigh_G[node1].end()):
             labeled_edge_G = to_string(node1) + comma + to_string(node1)
             labeled_edge_H = to_string(node2) + comma + to_string(node2)
             # compare labeled edges
