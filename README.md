@@ -22,7 +22,7 @@ Alignments and other Maps between Graphs
 
 > done: get total order from input (as an option?)
 
-- ToDo: complement graphs instead of input graphs
+> done:: complement graphs instead of input graphs
 
 - working: mcs routines
 
