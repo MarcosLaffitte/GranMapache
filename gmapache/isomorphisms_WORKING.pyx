@@ -431,8 +431,9 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                 # save node
                 directed_G.nodes.insert(each_pair)
                 # neighbors for G
-                directed_G.in_neighbors[each_pair.first] = set(encoded_graphs[0].predecessors(each_pair.first))
-                directed_G.out_neighbors[each_pair.first] = set(encoded_graphs[0].neighbors(each_pair.first))
+                if(params.node_labels or params.edge_labels or (not params.complement)):
+                    directed_G.in_neighbors[each_pair.first] = set(encoded_graphs[0].predecessors(each_pair.first))
+                    directed_G.out_neighbors[each_pair.first] = set(encoded_graphs[0].neighbors(each_pair.first))
                 # neighbors for complement of G
                 if(params.complement):
                     directed_G.in_neighbors_complement[each_pair.first] = set(complement_G.predecessors(each_pair.first))
@@ -450,8 +451,9 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                 # save node
                 directed_G.nodes.insert(each_pair)
                 # neighbors for G
-                directed_G.in_neighbors[each_pair.first] = set(encoded_graphs[0].predecessors(each_pair.first))
-                directed_G.out_neighbors[each_pair.first] = set(encoded_graphs[0].neighbors(each_pair.first))
+                if(params.node_labels or params.edge_labels or (not params.complement)):
+                    directed_G.in_neighbors[each_pair.first] = set(encoded_graphs[0].predecessors(each_pair.first))
+                    directed_G.out_neighbors[each_pair.first] = set(encoded_graphs[0].neighbors(each_pair.first))
                 # neighbors for complement of G
                 if(params.complement):
                     directed_G.in_neighbors_complement[each_pair.first] = set(complement_G.predecessors(each_pair.first))
@@ -470,8 +472,9 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                 # save node
                 directed_H.nodes.insert(each_pair)
                 # neighbors for H
-                directed_H.in_neighbors[each_pair.first] = set(encoded_graphs[1].predecessors(each_pair.first))
-                directed_H.out_neighbors[each_pair.first] = set(encoded_graphs[1].neighbors(each_pair.first))
+                if(params.node_labels or params.edge_labels or (not params.complement)):
+                    directed_H.in_neighbors[each_pair.first] = set(encoded_graphs[1].predecessors(each_pair.first))
+                    directed_H.out_neighbors[each_pair.first] = set(encoded_graphs[1].neighbors(each_pair.first))
                 # neighbors for complement of H
                 if(params.complement):
                     directed_H.in_neighbors_complement[each_pair.first] = set(complement_H.predecessors(each_pair.first))
@@ -488,8 +491,9 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                 # save node
                 directed_H.nodes.insert(each_pair)
                 # neighbors for H
-                directed_H.in_neighbors[each_pair.first] = set(encoded_graphs[1].predecessors(each_pair.first))
-                directed_H.out_neighbors[each_pair.first] = set(encoded_graphs[1].neighbors(each_pair.first))
+                if(params.node_labels or params.edge_labels or (not params.complement)):
+                    directed_H.in_neighbors[each_pair.first] = set(encoded_graphs[1].predecessors(each_pair.first))
+                    directed_H.out_neighbors[each_pair.first] = set(encoded_graphs[1].neighbors(each_pair.first))
                 # neighbors for complement of H
                 if(params.complement):
                     directed_H.in_neighbors_complement[each_pair.first] = set(complement_H.predecessors(each_pair.first))
@@ -509,7 +513,8 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                 # save node
                 undirected_G.nodes.insert(each_pair)
                 # neighbors for G
-                undirected_G.neighbors[each_pair.first] = set(encoded_graphs[0].neighbors(each_pair.first))
+                if(params.node_labels or params.edge_labels or (not params.complement)):
+                    undirected_G.neighbors[each_pair.first] = set(encoded_graphs[0].neighbors(each_pair.first))
                 # neighbors for complement of G
                 if(params.complement):
                     undirected_G.neighbors_complement[each_pair.first] = set(complement_G.neighbors(each_pair.first))
@@ -525,7 +530,8 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                 # save node
                 undirected_G.nodes.insert(each_pair)
                 # neighbors for G
-                undirected_G.neighbors[each_pair.first] = set(encoded_graphs[0].neighbors(each_pair.first))
+                if(params.node_labels or params.edge_labels or (not params.complement)):
+                    undirected_G.neighbors[each_pair.first] = set(encoded_graphs[0].neighbors(each_pair.first))
                 # neighbors for complement of G
                 if(params.complement):
                     undirected_G.neighbors_complement[each_pair.first] = set(complement_G.neighbors(each_pair.first))
@@ -543,7 +549,8 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                 # save node
                 undirected_H.nodes.insert(each_pair)
                 # neighbors for H
-                undirected_H.neighbors[each_pair.first] = set(encoded_graphs[1].neighbors(each_pair.first))
+                if(params.node_labels or params.edge_labels or (not params.complement)):
+                    undirected_H.neighbors[each_pair.first] = set(encoded_graphs[1].neighbors(each_pair.first))
                 # neighbors for complement of H
                 if(params.complement):
                     undirected_H.neighbors_complement[each_pair.first] = set(complement_H.neighbors(each_pair.first))
@@ -559,7 +566,8 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                 # save node
                 undirected_H.nodes.insert(each_pair)
                 # neighbors for H
-                undirected_H.neighbors[each_pair.first] = set(encoded_graphs[1].neighbors(each_pair.first))
+                if(params.node_labels or params.edge_labels or (not params.complement)):
+                    undirected_H.neighbors[each_pair.first] = set(encoded_graphs[1].neighbors(each_pair.first))
                 # neighbors for complement of H
                 if(params.complement):
                     undirected_H.neighbors_complement[each_pair.first] = set(complement_H.neighbors(each_pair.first))

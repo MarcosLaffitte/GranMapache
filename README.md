@@ -22,7 +22,11 @@ Alignments and other Maps between Graphs
 
 > done: get total order from input (as an option?)
 
-> done:: complement graphs instead of input graphs
+> done: complement graphs instead of input graphs
+
+> done: finished super cool optimizations for isomorphisms
+
+- working: degree maps and vertices by decreasing degree in isomorphism
 
 - working: mcs routines
 
