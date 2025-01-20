@@ -26,7 +26,11 @@ Alignments and other Maps between Graphs
 
 > done: finished super cool optimizations for isomorphisms
 
-- working: degree maps and vertices by decreasing degree in isomorphism
+> done: degree maps and vertices by decreasing degree in isomorphism
+
+> done: finished isomorphism for undirected graphs
+
+- working: isomorphism for directed graphs (its faster because is based on the undirected routines)
 
 - working: mcs routines
 

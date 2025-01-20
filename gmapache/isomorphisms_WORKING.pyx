@@ -273,13 +273,13 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     function should finish when finding only one isomorphism from G to H (if any),
     or if it should search for all possible isomorphisms from G to H and return them.
     In addition, the VF2-like search requires a total order for the nodes of one of
-    the input graphs. Traditionally this is assigned arbitrarily, but here we follow
-    the order used by the networkx interface to enumerate the nodes, which usually
-    is the order in which the nodes were added to each graph. Nonetheless a custom
-    total order can be provided for either or both graphs with the optional input
-    dictionaries total_order_A and total_order_B, which can improve the search if
-    these orders encode a bijection almost resembling an isomorphism, obtained,
-    for example, from a canonicalization algorithm.
+    the input graphs. In principle this can be an arbitrary total order, though it
+    has beem shown (see VF2++) that certain orders improve the search. Here we order
+    the nodes based on their (out) degree in descending order by default. Moreover,
+    a custom total order can be provided for either or both graphs with the optional
+    input dictionaries total_order_A and total_order_B, which might help the search
+    whenever such orders encode a bijection almost resembling an isomorphism, obtained,
+    for example, from a canonicalization or construction algorithm.
 
     > input:
     * nx_G - first networkx (di)graph being matched.
@@ -325,7 +325,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
 
     # fixed threshold parameters
     cdef float limit_edges = 0.5
-    cdef float bigger_graphs = 50
+    cdef float bigger_graphs = 15
     cdef float scalation_value = 1.5
 
     # local variables (cython)
@@ -348,12 +348,16 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     cdef cpp_vector[int] out_deg_G
     cdef cpp_vector[int] out_deg_H
     cdef cpp_vector[int] each_vector
+    cdef cpp_vector[int] all_degrees
     cdef cpp_vector[cpp_vector[int]] all_edges_G
     cdef cpp_vector[cpp_vector[int]] all_edges_H
+    cdef cpp_vector[cpp_pair[int, int]] temp_nodes
     cdef cpp_vector[cpp_pair[int, int]] all_nodes_G
     cdef cpp_vector[cpp_pair[int, int]] all_nodes_H
+    cdef cpp_vector[cpp_pair[int, int]] temp_vector
     cdef cpp_vector[cpp_set[cpp_pair[int, int]]] encoded_isomorphisms
     cdef cpp_set[cpp_pair[int, int]] each_isomorphism
+    cdef cpp_unordered_map[int, cpp_vector[cpp_pair[int, int]]] nodes_by_degree
     cdef isomorphisms_search_params params
     cdef isomorphisms_directed_graph directed_G
     cdef isomorphisms_directed_graph directed_H
@@ -408,9 +412,9 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     params.got_order_for_G = (len(total_order_A) > 0)
     params.got_order_for_H = (len(total_order_B) > 0)
     if(params.directed_graphs):
-        params.complement = (nx_G.size() > ceil(((params.expected_order * (params.expected_order-1)) + params.expected_order) * limit_edges)) and (params.expected_order > bigger_graphs)
+        params.complement = (nx_G.size() > (ceil((params.expected_order * (params.expected_order-1)) * limit_edges) + params.expected_order)) and (params.expected_order >= bigger_graphs)
     else:
-        params.complement = (nx_G.size() > ceil(((params.expected_order * (params.expected_order-1)/2) + params.expected_order) * limit_edges)) and (params.expected_order > bigger_graphs)
+        params.complement = (nx_G.size() > (ceil((params.expected_order * (params.expected_order-1)/2) * limit_edges) + params.expected_order)) and (params.expected_order >= bigger_graphs)
 
     # encode graphs
     encoded_graphs, encoded_node_names, encoded_node_labels, encoded_edge_labels = encode_graphs([nx_G, nx_H])
@@ -420,10 +424,101 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
         complement_G = nx.complement(encoded_graphs[0])
         complement_H = nx.complement(encoded_graphs[1])
 
+    # order nodes by decreasing degree
+    if(params.directed_graphs):
+        # order for directed G
+        if(not params.got_order_for_G):
+            all_degrees.clear()
+            nodes_by_degree.clear()
+            temp_nodes = [(node, info["GMNL"]) for (node, info) in encoded_graphs[0].nodes(data = True)]
+            for each_pair in temp_nodes:
+                if(params.complement):
+                    deg = complement_G.out_degree[each_pair.first]
+                else:
+                    deg = encoded_graphs[0].out_degree[each_pair.first]
+                if(nodes_by_degree.find(deg) != nodes_by_degree.end()):
+                    nodes_by_degree[deg].push_back(each_pair)
+                else:
+                    all_degrees.push_back(deg)
+                    temp_vector.clear()
+                    temp_vector.push_back(each_pair)
+                    nodes_by_degree[deg] = temp_vector
+            sort(all_degrees.begin(), all_degrees.end())
+            reverse(all_degrees.begin(), all_degrees.end())
+            for deg in all_degrees:
+                for each_pair in nodes_by_degree[deg]:
+                    all_nodes_G.push_back(each_pair)
+        # order for directed H
+        if(not params.got_order_for_H):
+            all_degrees.clear()
+            nodes_by_degree.clear()
+            temp_nodes = [(node, info["GMNL"]) for (node, info) in encoded_graphs[1].nodes(data = True)]
+            for each_pair in temp_nodes:
+                if(params.complement):
+                    deg = complement_H.out_degree[each_pair.first]
+                else:
+                    deg = encoded_graphs[1].out_degree[each_pair.first]
+                if(nodes_by_degree.find(deg) != nodes_by_degree.end()):
+                    nodes_by_degree[deg].push_back(each_pair)
+                else:
+                    all_degrees.push_back(deg)
+                    temp_vector.clear()
+                    temp_vector.push_back(each_pair)
+                    nodes_by_degree[deg] = temp_vector
+            sort(all_degrees.begin(), all_degrees.end())
+            reverse(all_degrees.begin(), all_degrees.end())
+            for deg in all_degrees:
+                for each_pair in nodes_by_degree[deg]:
+                    all_nodes_H.push_back(each_pair)
+    else:
+        # order for undirected G
+        if(not params.got_order_for_G):
+            all_degrees.clear()
+            nodes_by_degree.clear()
+            temp_nodes = [(node, info["GMNL"]) for (node, info) in encoded_graphs[0].nodes(data = True)]
+            for each_pair in temp_nodes:
+                if(params.complement):
+                    deg = complement_G.degree[each_pair.first]
+                else:
+                    deg = encoded_graphs[0].degree[each_pair.first]
+                if(nodes_by_degree.find(deg) != nodes_by_degree.end()):
+                    nodes_by_degree[deg].push_back(each_pair)
+                else:
+                    all_degrees.push_back(deg)
+                    temp_vector.clear()
+                    temp_vector.push_back(each_pair)
+                    nodes_by_degree[deg] = temp_vector
+            sort(all_degrees.begin(), all_degrees.end())
+            reverse(all_degrees.begin(), all_degrees.end())
+            for deg in all_degrees:
+                for each_pair in nodes_by_degree[deg]:
+                    all_nodes_G.push_back(each_pair)
+        # order for undirected H
+        if(not params.got_order_for_H):
+            all_degrees.clear()
+            nodes_by_degree.clear()
+            temp_nodes = [(node, info["GMNL"]) for (node, info) in encoded_graphs[1].nodes(data = True)]
+            for each_pair in temp_nodes:
+                if(params.complement):
+                    deg = complement_H.degree[each_pair.first]
+                else:
+                    deg = encoded_graphs[1].degree[each_pair.first]
+                if(nodes_by_degree.find(deg) != nodes_by_degree.end()):
+                    nodes_by_degree[deg].push_back(each_pair)
+                else:
+                    all_degrees.push_back(deg)
+                    temp_vector.clear()
+                    temp_vector.push_back(each_pair)
+                    nodes_by_degree[deg] = temp_vector
+            sort(all_degrees.begin(), all_degrees.end())
+            reverse(all_degrees.begin(), all_degrees.end())
+            for deg in all_degrees:
+                for each_pair in nodes_by_degree[deg]:
+                    all_nodes_H.push_back(each_pair)
+
     # prepare nodes, neighbors and total order
     if(params.directed_graphs):
         # nodes of directed G
-        all_nodes_G = [(node, info["GMNL"]) for (node, info) in encoded_graphs[0].nodes(data = True)]
         directed_G.loops = list(nx.nodes_with_selfloops(encoded_graphs[0]))
         if(params.got_order_for_G):
             # get basic information
@@ -465,7 +560,6 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                 initial_state_directed.unmatched_G.insert(each_pair.first)
                 initial_state_directed.unmatched_G_ordered.push_back(each_pair.first)
         # nodes of directed H
-        all_nodes_H = [(node, info["GMNL"]) for (node, info) in encoded_graphs[1].nodes(data = True)]
         directed_H.loops = list(nx.nodes_with_selfloops(encoded_graphs[1]))
         if(params.got_order_for_H):
             for each_pair in all_nodes_H:
@@ -506,7 +600,6 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                 initial_state_directed.unmatched_H_ordered.push_back(each_pair.first)
     else:
         # nodes of undirected G
-        all_nodes_G = [(node, info["GMNL"]) for (node, info) in encoded_graphs[0].nodes(data = True)]
         undirected_G.loops = list(nx.nodes_with_selfloops(encoded_graphs[0]))
         if(params.got_order_for_G):
             for each_pair in all_nodes_G:
@@ -542,7 +635,6 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                 initial_state_undirected.unmatched_G.insert(each_pair.first)
                 initial_state_undirected.unmatched_G_ordered.push_back(each_pair.first)
         # nodes of undirected H
-        all_nodes_H = [(node, info["GMNL"]) for (node, info) in encoded_graphs[1].nodes(data = True)]
         undirected_H.loops = list(nx.nodes_with_selfloops(encoded_graphs[1]))
         if(params.got_order_for_H):
             for each_pair in all_nodes_H:
@@ -1313,6 +1405,10 @@ cdef cpp_bool syntactic_feasibility(int node1,
     cdef int neighbors_ring_H = 0
     cdef int neighbors_extern_G = 0
     cdef int neighbors_extern_H = 0
+
+    # consistency of degree
+    if(neigh_G[node1].size() != neigh_H[node2].size()):
+        return(False)
 
     # loop-consistency-test
     if(loops_G.find(node1) != loops_G.end()):
