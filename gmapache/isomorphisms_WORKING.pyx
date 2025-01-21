@@ -258,8 +258,8 @@ cdef struct isomorphisms_change_in_state_undirected:
 # function: callable wrapper for searching for isomorphisms --------------------
 def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx DiGraph
                         nx_H = nx.Graph(),           # can also be a networkx DiGraph
-                        node_labels = True,          # consider node labels when evaluating isomorphisms
-                        edge_labels = True,          # consider edge labels when evaluating isomorphisms
+                        node_labels = False,         # consider node labels when evaluating isomorphisms
+                        edge_labels = False,         # consider edge labels when evaluating isomorphisms
                         all_isomorphisms = False,    # by default stops when finding one isomorphism (if any)
                         total_order_A = dict(),      # custom total order for the nodes of first graph (nx_G)
                         total_order_B = dict()):     # custom total order for the nodes of second graph (nx_H)
@@ -274,20 +274,20 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     or if it should search for all possible isomorphisms from G to H and return them.
     In addition, the VF2-like search requires a total order for the nodes of one of
     the input graphs. In principle this can be an arbitrary total order, though it
-    has beem shown (see VF2++) that certain orders improve the search. Here we order
-    the nodes based on their (out) degree in descending order by default. Moreover,
-    a custom total order can be provided for either or both graphs with the optional
-    input dictionaries total_order_A and total_order_B, which might help the search
-    whenever such orders encode a bijection almost resembling an isomorphism, obtained,
-    for example, from a canonicalization or construction algorithm.
+    has been shown that certain orders may improve the search (see VF2++). Here we
+    order the nodes based on their (out) degree in descending order by default.
+    Moreover, a custom total order can be provided for either or both graphs with the
+    optional input dictionaries total_order_A and total_order_B, which might help the
+    search whenever such orders encode a bijection almost resembling an isomorphism,
+    obtained, for example, from a canonicalization or construction algorithm.
 
     > input:
     * nx_G - first networkx (di)graph being matched.
     * nx_H - second networkx (di)graph being matched.
-    * node_labels - boolean indicating if node labels should be considered for
-    the search, which is the default behavior, or if they should be ignored.
-    * edge_labels - boolean indicating if edge labels should be considered for
-    the search, which is the default behavior, or if they should be ignored.
+    * node_labels - boolean indicating if all node labels should be considered for
+    the search or if they should be ignored (default).
+    * edge_labels - boolean indicating if all edge labels should be considered for
+    the search or if they should be ignored (default).
     * all_isomorphisms - boolean variable indicating if the function should stop
     as soon as one isomorphism is found (if any) -default behavior- or if it
     should search for all possible isomorphisms between the graphs.
@@ -337,6 +337,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     cdef int counter = 0
     cdef int current_limit = 0
     cdef int required_limit = 0
+    cdef cpp_bool consistent_labels = True
     cdef cpp_string comma
     comma.push_back(44)
     cdef cpp_string temp_str
@@ -526,7 +527,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                 # save node
                 directed_G.nodes.insert(each_pair)
                 # neighbors for G
-                if(params.node_labels or params.edge_labels or (not params.complement)):
+                if((not params.complement) or params.node_labels or params.edge_labels):
                     directed_G.in_neighbors[each_pair.first] = set(encoded_graphs[0].predecessors(each_pair.first))
                     directed_G.out_neighbors[each_pair.first] = set(encoded_graphs[0].neighbors(each_pair.first))
                 # neighbors for complement of G
@@ -546,7 +547,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                 # save node
                 directed_G.nodes.insert(each_pair)
                 # neighbors for G
-                if(params.node_labels or params.edge_labels or (not params.complement)):
+                if((not params.complement) or params.node_labels or params.edge_labels):
                     directed_G.in_neighbors[each_pair.first] = set(encoded_graphs[0].predecessors(each_pair.first))
                     directed_G.out_neighbors[each_pair.first] = set(encoded_graphs[0].neighbors(each_pair.first))
                 # neighbors for complement of G
@@ -566,7 +567,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                 # save node
                 directed_H.nodes.insert(each_pair)
                 # neighbors for H
-                if(params.node_labels or params.edge_labels or (not params.complement)):
+                if((not params.complement) or params.node_labels or params.edge_labels):
                     directed_H.in_neighbors[each_pair.first] = set(encoded_graphs[1].predecessors(each_pair.first))
                     directed_H.out_neighbors[each_pair.first] = set(encoded_graphs[1].neighbors(each_pair.first))
                 # neighbors for complement of H
@@ -585,7 +586,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                 # save node
                 directed_H.nodes.insert(each_pair)
                 # neighbors for H
-                if(params.node_labels or params.edge_labels or (not params.complement)):
+                if((not params.complement) or params.node_labels or params.edge_labels):
                     directed_H.in_neighbors[each_pair.first] = set(encoded_graphs[1].predecessors(each_pair.first))
                     directed_H.out_neighbors[each_pair.first] = set(encoded_graphs[1].neighbors(each_pair.first))
                 # neighbors for complement of H
@@ -606,7 +607,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                 # save node
                 undirected_G.nodes.insert(each_pair)
                 # neighbors for G
-                if(params.node_labels or params.edge_labels or (not params.complement)):
+                if((not params.complement) or params.node_labels or params.edge_labels):
                     undirected_G.neighbors[each_pair.first] = set(encoded_graphs[0].neighbors(each_pair.first))
                 # neighbors for complement of G
                 if(params.complement):
@@ -623,7 +624,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                 # save node
                 undirected_G.nodes.insert(each_pair)
                 # neighbors for G
-                if(params.node_labels or params.edge_labels or (not params.complement)):
+                if((not params.complement) or params.node_labels or params.edge_labels):
                     undirected_G.neighbors[each_pair.first] = set(encoded_graphs[0].neighbors(each_pair.first))
                 # neighbors for complement of G
                 if(params.complement):
@@ -641,7 +642,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                 # save node
                 undirected_H.nodes.insert(each_pair)
                 # neighbors for H
-                if(params.node_labels or params.edge_labels or (not params.complement)):
+                if((not params.complement) or params.node_labels or params.edge_labels):
                     undirected_H.neighbors[each_pair.first] = set(encoded_graphs[1].neighbors(each_pair.first))
                 # neighbors for complement of H
                 if(params.complement):
@@ -658,7 +659,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                 # save node
                 undirected_H.nodes.insert(each_pair)
                 # neighbors for H
-                if(params.node_labels or params.edge_labels or (not params.complement)):
+                if((not params.complement) or params.node_labels or params.edge_labels):
                     undirected_H.neighbors[each_pair.first] = set(encoded_graphs[1].neighbors(each_pair.first))
                 # neighbors for complement of H
                 if(params.complement):
@@ -713,13 +714,16 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     if(params.node_labels or params.edge_labels):
         # test consistency of node and/or edge labels
         if(params.directed_graphs):
-            search_isomorphisms_label_consistency(params.node_labels, params.edge_labels,
-                                                  directed_G.nodes, directed_H.nodes,
-                                                  directed_G.edges, directed_H.edges)
+            consistent_labels = search_isomorphisms_label_consistency(params.node_labels, params.edge_labels,
+                                                                      directed_G.nodes, directed_H.nodes,
+                                                                      directed_G.edges, directed_H.edges)
         else:
-            search_isomorphisms_label_consistency(params.node_labels, params.edge_labels,
-                                                  undirected_G.nodes, undirected_H.nodes,
-                                                  undirected_G.edges, undirected_H.edges)
+            consistent_labels = search_isomorphisms_label_consistency(params.node_labels, params.edge_labels,
+                                                                      undirected_G.nodes, undirected_H.nodes,
+                                                                      undirected_G.edges, undirected_H.edges)
+        # if labels are not consistent then the graphs cannot be isomorphic
+        if(not consistent_labels):
+            return([], False)
 
     # prepare ordered neighbors
     if(params.complement):
@@ -822,15 +826,15 @@ cdef void search_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_la
     if(type(nx_H) not in [type(test_undir), type(test_dir)]):
         raise(ValueError("gmapache: second argument must be a networkx graph or digraph."))
 
-    # check that third argument is networkx graph or digraph
+    # check that third argument is boolean
     if(type(node_labels) not in [type(test_bool)]):
         raise(ValueError("gmapache: argument node_labels must be a boolean variable."))
 
-    # check that fourth argument is networkx graph or digraph
+    # check that fourth argument is boolean
     if(type(edge_labels) not in [type(test_bool)]):
         raise(ValueError("gmapache: argument edge_labels must be a boolean variable."))
 
-    # check that fifth argument is networkx graph or digraph
+    # check that fifth argument is boolean
     if(type(all_isomorphisms) not in [type(test_bool)]):
         raise(ValueError("gmapache: argument all_isomorphisms must be a boolean variable."))
 
@@ -925,12 +929,12 @@ cdef void search_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_la
 
 
 # function: consistency of node or edge labels ---------------------------------
-cdef void search_isomorphisms_label_consistency(cpp_bool & node_labels,
-                                                cpp_bool & edge_labels,
-                                                cpp_unordered_map[int, int] & nodes_G,
-                                                cpp_unordered_map[int, int] & nodes_H,
-                                                cpp_unordered_map[cpp_string, int] & edges_G,
-                                                cpp_unordered_map[cpp_string, int] & edges_H):
+cdef cpp_bool search_isomorphisms_label_consistency(cpp_bool & node_labels,
+                                                    cpp_bool & edge_labels,
+                                                    cpp_unordered_map[int, int] & nodes_G,
+                                                    cpp_unordered_map[int, int] & nodes_H,
+                                                    cpp_unordered_map[cpp_string, int] & edges_G,
+                                                    cpp_unordered_map[cpp_string, int] & edges_H) noexcept:
 
     # local variables
     cdef int label = 0
@@ -965,13 +969,13 @@ cdef void search_isomorphisms_label_consistency(cpp_bool & node_labels,
 
         # compare node counts in both graphs per label
         if(count_labels_G.size() != count_labels_H.size()):
-            raise(ValueError("gmapache: requested preservation of node labels but input graphs have different sets of node labels."))
+            return(False)
         for label_and_count in count_labels_G:
             if(count_labels_H.find(label_and_count.first) == count_labels_H.end()):
-                raise(ValueError("gmapache: requested preservation of node labels but input graphs have different sets of node labels."))
+                return(False)
             else:
                 if(label_and_count.second != count_labels_H[label_and_count.first]):
-                    raise(ValueError("gmapache: requested preservation of node labels but input graphs have different amount of nodes for some labels."))
+                    return(False)
 
         # if there is only one node label then turn off node-label checking
         if(count_labels_G.size() == 1):
@@ -1006,20 +1010,20 @@ cdef void search_isomorphisms_label_consistency(cpp_bool & node_labels,
 
         # compare edge counts in both graphs per label
         if(count_labels_G.size() != count_labels_H.size()):
-            raise(ValueError("gmapache: requested preservation of edge labels but input graphs have different sets of edge labels."))
+            return(False)
         for label_and_count in count_labels_G:
             if(count_labels_H.find(label_and_count.first) == count_labels_H.end()):
-                raise(ValueError("gmapache: requested preservation of edge labels but input graphs have different sets of edge labels."))
+                return(False)
             else:
                 if(label_and_count.second != count_labels_H[label_and_count.first]):
-                    raise(ValueError("gmapache: requested preservation of edge labels but input graphs have different amount of edges for some labels."))
+                    return(False)
 
         # if there is only one edge label then turn off edge-label checking
         if(count_labels_G.size() == 1):
             edge_labels = False
 
     # end of function
-
+    return(True)
 
 
 
