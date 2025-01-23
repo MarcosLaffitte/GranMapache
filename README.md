@@ -12,25 +12,7 @@ Alignments and other Maps between Graphs
 
 ## ToDo / Working / Done
 
-> done: super cool optimization no. 1 based on total order
-
-> done: super cool optimization no. 2 based on degrees and bound of degrees of neighbors
-
-> done: preference of neighbbors in ring (lists)
-
-> done: preference of nodes outside match repsecting orders (lists)
-
-> done: get total order from input (as an option?)
-
-> done: complement graphs instead of input graphs
-
-> done: finished super cool optimizations for isomorphisms
-
-> done: degree maps and vertices by decreasing degree in isomorphism
-
-> done: finished isomorphism for undirected graphs
-
-- working: isomorphism for directed graphs (its faster because is based on the undirected routines)
+> done: finished isomorphisms for directed and undirected (labeld) graphs
 
 - working: mcs routines
 
