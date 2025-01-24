@@ -204,7 +204,6 @@ def induced_connected_extensions(nx_G = nx.Graph(),           # can be nx.DiGrap
 
     # local variables (cython)
     cdef int node = 0
-    cdef int label = 0
     cdef int node1 = 0
     cdef int node2 = 0
     cdef int counter = 0
@@ -288,7 +287,7 @@ def induced_connected_extensions(nx_G = nx.Graph(),           # can be nx.DiGrap
             undirected_G.raw_edges = list(encoded_graphs[0].edges())
             undirected_H.raw_edges = list(encoded_graphs[1].edges())
 
-    # get anchor in each graph to test consistency of labels if required
+    # test consistency of labels if required
     if(node_labels or edge_labels):
         # test consistency of node and/or edge labels
         # NOTE: the direction is not important, this is just choosing the object that was initialize and is now being used
@@ -528,6 +527,7 @@ cdef void induced_connected_extensions_label_consistency(cpp_bool & node_labels,
     # local variables (cython)
     cdef int node1 = 0
     cdef int node2 = 0
+    cdef int label = 0
     cdef cpp_string comma
     comma.push_back(44)
     cdef cpp_string some_edge

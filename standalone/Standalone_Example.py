@@ -173,14 +173,22 @@ print("\n")
 # example: isomorphisms --------------------------------------------------------
 
 
-# We build three networkx graphs G, H and F. They are passed to the method
-# gm.search_isomorphisms(G, H), which determines if there exist at least one isomorphism
-# between these graphs and return them. A boolean variable is also returned indicating
-# if the graphs were ismorphic. This method has an optional boolean argument
-# "all_isomorphisms". When False the function returns only one isomorphism (if any),
-# this is the default behavior since it is faster than enumerating all isomorphism.
-# If set to True the function will search and return all possible isomorphisms,
-# which is an exhaustive and can be more time consuming depending on the input graphs.
+# We build four networkx graphs G, H, F and L. They are passed to the method
+# gm.search_isomorphisms(G, H), which determines if there exist at least one
+# isomorphism between these graphs and returns it. A boolean variable is also
+# returned indicating if the graphs were indeed ismorphic. This method has an
+# optional boolean argument "all_isomorphisms". When False the function returns
+# only one isomorphism (if any), this is the default behavior since it is faster
+# than enumerating all isomorphism. If set to True the function will search and
+# return all possible isomorphisms, which is an exhaustive and can be more time
+# consuming depending on the input graphs. Moreover, the function can take into
+# acount all the node-labels and/or edge-labels of the graphs. This is controlled
+# by the booleand variables node_labels and edge_labels which by default are set
+# to False thus ignoring labels. The function can optionally also take into account
+# a total order for the nodes of the graphs. This is required by the all the VF2-like
+# algorithms to carry on the search. If this is not provided then the functions
+# computes a totoal order internally, based on the degrees of the nodes in the
+# underlying (unlabled) versions of the inout graphs.
 
 
 # buid first test graph for isomorphism search
@@ -220,25 +228,25 @@ L.add_node(2, color = "blue")
 L.add_node(3, color = "red")
 L.add_node(4, color = "red")
 L.add_node(5, color = "green")
-L.add_node(6, color = "green")
+L.add_node(6, color = "purple")
 L.add_node(7, color = "purple")
 L.add_edge(1, 2, bond = "single")
 L.add_edge(2, 3, bond = "double")
 L.add_edge(3, 4, bond = "single")
 L.add_edge(4, 5, bond = "double")
 L.add_edge(5, 6, bond = "single")
-L.add_edge(5, 7, bond = "double")
+L.add_edge(5, 7, bond = "triple")
 
 
 # testing isomorphisms
 initial_time = time.time()
-isomorphisms, are_isomorphic = gm.search_isomorphisms(G, H, all_isomorphisms = False)
+isomorphisms, are_isomorphic = gm.search_isomorphisms(G, H, all_isomorphisms = True)
 final_time = time.time()
 
 
 # print resutls
 print("--------------------------------------------------")
-print("> Isomorphism Search (with isomorphic graphs)")
+print("> Isomorphism Search (underlying isomorphic)")
 print("\n")
 print("***** Got isomorphisms:")
 print(isomorphisms)
@@ -251,13 +259,13 @@ print("\n")
 
 # testing isomorphisms
 initial_time = time.time()
-isomorphisms, are_isomorphic = gm.search_isomorphisms(G, F, all_isomorphisms = False)
+isomorphisms, are_isomorphic = gm.search_isomorphisms(G, F)
 final_time = time.time()
 
 
 # print resutls
 print("--------------------------------------------------")
-print("> Isomorphism Search (with non-isomorphic graphs)")
+print("> Isomorphism Search (underlying non-isomorphic)")
 print("\n")
 print("***** Got isomorphisms:")
 print(isomorphisms)
@@ -270,13 +278,70 @@ print("\n")
 
 # testing isomorphisms
 initial_time = time.time()
-isomorphisms, are_isomorphic = gm.search_isomorphisms(G, L, node_labels = False, edge_labels = False)
+isomorphisms, are_isomorphic = gm.search_isomorphisms(G, L, all_isomorphisms = True)
 final_time = time.time()
 
 
 # print resutls
 print("--------------------------------------------------")
-print("> Isomorphism Search (when ignoring node and edge labels)")
+print("> Isomorphism Search (underlying isomorphic and ignoring labels)")
+print("\n")
+print("***** Got isomorphisms:")
+print(isomorphisms)
+print("***** Were graphs isomorphic?")
+print(are_isomorphic)
+print("***** Running time [s]")
+print(final_time - initial_time)
+print("\n")
+
+
+# testing isomorphisms
+initial_time = time.time()
+isomorphisms, are_isomorphic = gm.search_isomorphisms(G, L, node_labels = True, edge_labels = True, all_isomorphisms = True)
+final_time = time.time()
+
+
+# print resutls
+print("--------------------------------------------------")
+print("> Isomorphism Search (underlying isomorphic but not isomorphic when considering labels)")
+print("\n")
+print("***** Got isomorphisms:")
+print(isomorphisms)
+print("***** Were graphs isomorphic?")
+print(are_isomorphic)
+print("***** Running time [s]")
+print(final_time - initial_time)
+print("\n")
+
+
+# testing isomorphisms
+initial_time = time.time()
+isomorphisms, are_isomorphic = gm.search_isomorphisms(L, L, node_labels = True, edge_labels = True, all_isomorphisms = True)
+final_time = time.time()
+
+
+# print resutls
+print("--------------------------------------------------")
+print("> Isomorphism Search (A - underlying have two isomorphisms but with labels only one because of edge labels)")
+print("\n")
+print("***** Got isomorphisms:")
+print(isomorphisms)
+print("***** Were graphs isomorphic?")
+print(are_isomorphic)
+print("***** Running time [s]")
+print(final_time - initial_time)
+print("\n")
+
+
+# testing isomorphisms
+initial_time = time.time()
+isomorphisms, are_isomorphic = gm.search_isomorphisms(L, L, node_labels = True, edge_labels = False, all_isomorphisms = True)
+final_time = time.time()
+
+
+# print resutls
+print("--------------------------------------------------")
+print("> Isomorphism Search (B - underlying have two isomorphisms but with labels only one because of edge labels; ignoring here only edge labels)")
 print("\n")
 print("***** Got isomorphisms:")
 print(isomorphisms)
