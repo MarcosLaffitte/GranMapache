@@ -1047,6 +1047,7 @@ cdef cpp_bool search_isomorphisms_label_consistency(cpp_bool & node_labels,
 
 
 
+
 # functions - input preparation ################################################
 
 
@@ -1103,8 +1104,8 @@ cdef void search_isomorphisms_undirected(isomorphisms_search_params & params,
     cdef int node = 0
     cdef int viable_node_G = 0
     cdef int target_node_H = 0
-    cdef cpp_bool semantic_feasibility_res = True
-    cdef cpp_bool syntactic_feasibility_res = True
+    cdef cpp_bool semantic_feasibility = True
+    cdef cpp_bool syntactic_feasibility = True
     cdef cpp_pair[int, int] candidates_info
     cdef cpp_list[int] ordered_candidates
     cdef cpp_list[int] ring_G_ordered_backup
@@ -1147,54 +1148,50 @@ cdef void search_isomorphisms_undirected(isomorphisms_search_params & params,
 
             # evaluate syntactic feasibility (possibly over complement graph)
             if(params.complement):
-                syntactic_feasibility_res = syntactic_feasibility(viable_node_G,
-                                                                  target_node_H,
-                                                                  current_state.ring_G,
-                                                                  current_state.ring_H,
-                                                                  current_state.match_G,
-                                                                  current_state.match_H,
-                                                                  G.loops,
-                                                                  H.loops,
-                                                                  current_state.forward_match,
-                                                                  current_state.inverse_match,
-                                                                  G.neighbors_complement,
-                                                                  H.neighbors_complement)
+                syntactic_feasibility = syntactic_feasibility_undirected(viable_node_G,
+                                                                         target_node_H,
+                                                                         current_state.ring_G,
+                                                                         current_state.ring_H,
+                                                                         current_state.match_G,
+                                                                         current_state.match_H,
+                                                                         G.loops,
+                                                                         H.loops,
+                                                                         current_state.forward_match,
+                                                                         current_state.inverse_match,
+                                                                         G.neighbors_complement,
+                                                                         H.neighbors_complement)
             else:
-                syntactic_feasibility_res = syntactic_feasibility(viable_node_G,
-                                                                  target_node_H,
-                                                                  current_state.ring_G,
-                                                                  current_state.ring_H,
-                                                                  current_state.match_G,
-                                                                  current_state.match_H,
-                                                                  G.loops,
-                                                                  H.loops,
-                                                                  current_state.forward_match,
-                                                                  current_state.inverse_match,
-                                                                  G.neighbors,
-                                                                  H.neighbors)
+                syntactic_feasibility = syntactic_feasibility_undirected(viable_node_G,
+                                                                         target_node_H,
+                                                                         current_state.ring_G,
+                                                                         current_state.ring_H,
+                                                                         current_state.match_G,
+                                                                         current_state.match_H,
+                                                                         G.loops,
+                                                                         H.loops,
+                                                                         current_state.forward_match,
+                                                                         current_state.inverse_match,
+                                                                         G.neighbors,
+                                                                         H.neighbors)
 
             # evaluate semantic feasibility (always over original graphs)
-            if(syntactic_feasibility_res):
+            if(syntactic_feasibility):
                 if(params.node_labels or params.edge_labels):
-                    semantic_feasibility_res = semantic_feasibility(params.node_labels,
-                                                                    params.edge_labels,
-                                                                    viable_node_G,
-                                                                    target_node_H,
-                                                                    current_state.ring_G,
-                                                                    current_state.ring_H,
-                                                                    current_state.match_G,
-                                                                    current_state.match_H,
-                                                                    G.loops,
-                                                                    current_state.forward_match,
-                                                                    G.nodes,
-                                                                    H.nodes,
-                                                                    G.neighbors,
-                                                                    H.neighbors,
-                                                                    G.edges,
-                                                                    H.edges)
+                    semantic_feasibility = semantic_feasibility_undirected(params.node_labels,
+                                                                           params.edge_labels,
+                                                                           viable_node_G,
+                                                                           target_node_H,
+                                                                           current_state.match_G,
+                                                                           G.loops,
+                                                                           current_state.forward_match,
+                                                                           G.nodes,
+                                                                           H.nodes,
+                                                                           G.neighbors,
+                                                                           G.edges,
+                                                                           H.edges)
 
                 # push to stack if valid
-                if(semantic_feasibility_res):
+                if(semantic_feasibility):
                     # extend match with the new pair
                     change_in_state = extend_match_undirected(candidates_info.second, viable_node_G, target_node_H, G, H, current_state)
                     # recursive call
@@ -1396,6 +1393,142 @@ cdef void restore_match_undirected(int node1,
 
 
 
+# function: evaluate syntactic feasability for isomorphism search --------------
+cdef cpp_bool syntactic_feasibility_undirected(int node1,
+                                               int node2,
+                                               cpp_unordered_set[int] & ring_G,
+                                               cpp_unordered_set[int] & ring_H,
+                                               cpp_unordered_set[int] & current_match_G,
+                                               cpp_unordered_set[int] & current_match_H,
+                                               cpp_unordered_set[int] & loops_G,
+                                               cpp_unordered_set[int] & loops_H,
+                                               cpp_unordered_map[int, int] & forward_match,
+                                               cpp_unordered_map[int, int] & inverse_match,
+                                               cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_G,
+                                               cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_H) noexcept:
+
+    # local variables
+    cdef int node = 0
+    cdef int mapped = 0
+    cdef int neighbors_ring_G = 0
+    cdef int neighbors_ring_H = 0
+    cdef int neighbors_extern_G = 0
+    cdef int neighbors_extern_H = 0
+
+    # consistency of degree
+    if(neigh_G[node1].size() != neigh_H[node2].size()):
+        return(False)
+
+    # loop-consistency-test
+    if(loops_G.find(node1) != loops_G.end()):
+        if(loops_H.find(node2) == loops_H.end()):
+            # node1 has a loop in G but node2 has no loop in H
+            return(False)
+    if(loops_G.find(node1) == loops_G.end()):
+        if(loops_H.find(node2) != loops_H.end()):
+            # node1 has no loop in G but node2 has a loop in H
+            return(False)
+
+    # look ahead 0: consistency of neighbors in match, while doing tripartition of neighbors
+    for node in neigh_G[node1]:
+        if(current_match_G.find(node) != current_match_G.end()):
+            # check that the mapping is also the corresponding neighbor
+            mapped = forward_match[node]
+            if(neigh_H[node2].find(mapped) == neigh_H[node2].end()):
+                return(False)
+        else:
+            if(ring_G.find(node) != ring_G.end()):
+                # save neighbor since we are just comparing numbers later
+                neighbors_ring_G = neighbors_ring_G + 1
+            else:
+                # save neighbor since we are just comparing numbers later
+                neighbors_extern_G = neighbors_extern_G + 1
+
+    for node in neigh_H[node2]:
+        if(current_match_H.find(node) != current_match_H.end()):
+            # check that the mapping is also the corresponding neighbor
+            mapped = inverse_match[node]
+            if(neigh_G[node1].find(mapped) == neigh_G[node1].end()):
+                return(False)
+        else:
+            if(ring_H.find(node) != ring_H.end()):
+                # save neighbor since we are just comparing numbers later
+                neighbors_ring_H = neighbors_ring_H + 1
+            else:
+                # save neighbor since we are just comparing numbers later
+                neighbors_extern_H = neighbors_extern_H + 1
+
+    # look ahead 1: consistency of neighbors in ring (not in match but adjacent to match)
+    if(neighbors_ring_G != neighbors_ring_H):
+        return(False)
+
+    # look ahead 2: consistency of extern neighbors (neither in match nor adjacent to match)
+    if(neighbors_extern_G != neighbors_extern_H):
+        return(False)
+
+    # end of function
+    return(True)
+
+
+
+
+
+# function: evaluate semantic feasability for isomorphism search ---------------
+cdef cpp_bool semantic_feasibility_undirected(cpp_bool node_labels,
+                                              cpp_bool edge_labels,
+                                              int node1,
+                                              int node2,
+                                              cpp_unordered_set[int] & current_match_G,
+                                              cpp_unordered_set[int] & loops_G,
+                                              cpp_unordered_map[int, int] & forward_match,
+                                              cpp_unordered_map[int, int] & nodes_G,
+                                              cpp_unordered_map[int, int] & nodes_H,
+                                              cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_G,
+                                              cpp_unordered_map[cpp_string, int] & edges_G,
+                                              cpp_unordered_map[cpp_string, int] & edges_H) noexcept:
+
+    # local variables
+    cdef int node = 0
+    cdef cpp_string comma
+    comma.push_back(44)
+    cdef cpp_string labeled_edge_G
+    cdef cpp_string labeled_edge_H
+
+    # compare node-labels
+    if(node_labels):
+
+        if(nodes_G[node1] != nodes_H[node2]):
+            return(False)
+
+    # compare edge-labels
+    if(edge_labels):
+
+        # compare loop-labels
+        if(loops_G.find(node1) != loops_G.end()):
+            labeled_edge_G = to_string(node1) + comma + to_string(node1)
+            labeled_edge_H = to_string(node2) + comma + to_string(node2)
+            # compare labeled edges
+            if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
+                return(False)
+
+        # compare non-loop labels
+        for node in neigh_G[node1]:
+            if(current_match_G.find(node) != current_match_G.end()):
+                # edge in G with only one end in match
+                labeled_edge_G = to_string(node1) + comma + to_string(node)
+                # edge in H with only one end in match
+                labeled_edge_H = to_string(node2) + comma + to_string(forward_match[node])
+                # compare labeled edges
+                if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
+                    return(False)
+
+    # end of function
+    return(True)
+
+
+
+
+
 # functions - search isomorphisms - directed ###################################
 
 
@@ -1413,10 +1546,9 @@ cdef void search_isomorphisms_directed(isomorphisms_search_params & params,
     cdef int node = 0
     cdef int viable_node_G = 0
     cdef int target_node_H = 0
-    cdef cpp_bool in_semantic_feasibility_res = True
-    cdef cpp_bool out_semantic_feasibility_res = True
-    cdef cpp_bool in_syntactic_feasibility_res = True
-    cdef cpp_bool out_syntactic_feasibility_res = True
+    cdef cpp_bool semantic_feasibility = True
+    cdef cpp_bool in_syntactic_feasibility = True
+    cdef cpp_bool out_syntactic_feasibility = True
     cdef cpp_pair[int, int] candidates_info
     cdef cpp_list[int] ordered_candidates
     cdef cpp_list[int] in_ring_G_ordered_backup
@@ -1466,100 +1598,87 @@ cdef void search_isomorphisms_directed(isomorphisms_search_params & params,
 
             # evaluate in syntactic feasibility (possibly over complement graph)
             if(params.complement):
-                in_syntactic_feasibility_res = syntactic_feasibility(viable_node_G,
-                                                                     target_node_H,
-                                                                     current_state.in_ring_G,
-                                                                     current_state.in_ring_H,
-                                                                     current_state.match_G,
-                                                                     current_state.match_H,
-                                                                     G.loops,
-                                                                     H.loops,
-                                                                     current_state.forward_match,
-                                                                     current_state.inverse_match,
-                                                                     G.in_neighbors_complement,
-                                                                     H.in_neighbors_complement)
+                in_syntactic_feasibility = syntactic_feasibility_directed(viable_node_G,
+                                                                          target_node_H,
+                                                                          current_state.in_ring_G,
+                                                                          current_state.in_ring_H,
+                                                                          current_state.out_ring_G,
+                                                                          current_state.out_ring_H,
+                                                                          current_state.match_G,
+                                                                          current_state.match_H,
+                                                                          G.loops,
+                                                                          H.loops,
+                                                                          current_state.forward_match,
+                                                                          current_state.inverse_match,
+                                                                          G.in_neighbors_complement,
+                                                                          H.in_neighbors_complement)
             else:
-                in_syntactic_feasibility_res = syntactic_feasibility(viable_node_G,
-                                                                     target_node_H,
-                                                                     current_state.in_ring_G,
-                                                                     current_state.in_ring_H,
-                                                                     current_state.match_G,
-                                                                     current_state.match_H,
-                                                                     G.loops,
-                                                                     H.loops,
-                                                                     current_state.forward_match,
-                                                                     current_state.inverse_match,
-                                                                     G.in_neighbors,
-                                                                     H.in_neighbors)
+                in_syntactic_feasibility = syntactic_feasibility_directed(viable_node_G,
+                                                                          target_node_H,
+                                                                          current_state.in_ring_G,
+                                                                          current_state.in_ring_H,
+                                                                          current_state.out_ring_G,
+                                                                          current_state.out_ring_H,
+                                                                          current_state.match_G,
+                                                                          current_state.match_H,
+                                                                          G.loops,
+                                                                          H.loops,
+                                                                          current_state.forward_match,
+                                                                          current_state.inverse_match,
+                                                                          G.in_neighbors,
+                                                                          H.in_neighbors)
 
             # evaluate out syntactic feasibility (possibly over complement graph)
-            if(in_syntactic_feasibility_res):
+            if(in_syntactic_feasibility):
                 if(params.complement):
-                    out_syntactic_feasibility_res = syntactic_feasibility(viable_node_G,
-                                                                          target_node_H,
-                                                                          current_state.out_ring_G,
-                                                                          current_state.out_ring_H,
-                                                                          current_state.match_G,
-                                                                          current_state.match_H,
-                                                                          G.loops,
-                                                                          H.loops,
-                                                                          current_state.forward_match,
-                                                                          current_state.inverse_match,
-                                                                          G.out_neighbors_complement,
-                                                                          H.out_neighbors_complement)
+                    out_syntactic_feasibility = syntactic_feasibility_directed(viable_node_G,
+                                                                               target_node_H,
+                                                                               current_state.in_ring_G,
+                                                                               current_state.in_ring_H,
+                                                                               current_state.out_ring_G,
+                                                                               current_state.out_ring_H,
+                                                                               current_state.match_G,
+                                                                               current_state.match_H,
+                                                                               G.loops,
+                                                                               H.loops,
+                                                                               current_state.forward_match,
+                                                                               current_state.inverse_match,
+                                                                               G.out_neighbors_complement,
+                                                                               H.out_neighbors_complement)
                 else:
-                    out_syntactic_feasibility_res = syntactic_feasibility(viable_node_G,
-                                                                          target_node_H,
-                                                                          current_state.out_ring_G,
-                                                                          current_state.out_ring_H,
-                                                                          current_state.match_G,
-                                                                          current_state.match_H,
-                                                                          G.loops,
-                                                                          H.loops,
-                                                                          current_state.forward_match,
-                                                                          current_state.inverse_match,
-                                                                          G.out_neighbors,
-                                                                          H.out_neighbors)
+                    out_syntactic_feasibility = syntactic_feasibility_directed(viable_node_G,
+                                                                               target_node_H,
+                                                                               current_state.in_ring_G,
+                                                                               current_state.in_ring_H,
+                                                                               current_state.out_ring_G,
+                                                                               current_state.out_ring_H,
+                                                                               current_state.match_G,
+                                                                               current_state.match_H,
+                                                                               G.loops,
+                                                                               H.loops,
+                                                                               current_state.forward_match,
+                                                                               current_state.inverse_match,
+                                                                               G.out_neighbors,
+                                                                               H.out_neighbors)
 
                 # evaluate semantic feasibility (always over original graphs)
-                if(out_syntactic_feasibility_res):
+                if(out_syntactic_feasibility):
                     if(params.node_labels or params.edge_labels):
-                        in_semantic_feasibility_res = semantic_feasibility(params.node_labels,
-                                                                           params.edge_labels,
-                                                                           viable_node_G,
-                                                                           target_node_H,
-                                                                           current_state.in_ring_G,
-                                                                           current_state.in_ring_H,
-                                                                           current_state.match_G,
-                                                                           current_state.match_H,
-                                                                           G.loops,
-                                                                           current_state.forward_match,
-                                                                           G.nodes,
-                                                                           H.nodes,
-                                                                           G.in_neighbors,
-                                                                           H.in_neighbors,
-                                                                           G.edges,
-                                                                           H.edges)
-                        if(in_semantic_feasibility_res):
-                            out_semantic_feasibility_res = semantic_feasibility(params.node_labels,
-                                                                                params.edge_labels,
-                                                                                viable_node_G,
-                                                                                target_node_H,
-                                                                                current_state.out_ring_G,
-                                                                                current_state.out_ring_H,
-                                                                                current_state.match_G,
-                                                                                current_state.match_H,
-                                                                                G.loops,
-                                                                                current_state.forward_match,
-                                                                                G.nodes,
-                                                                                H.nodes,
-                                                                                G.out_neighbors,
-                                                                                H.out_neighbors,
-                                                                                G.edges,
-                                                                                H.edges)
-
+                        semantic_feasibility = semantic_feasibility_directed(params.node_labels,
+                                                                             params.edge_labels,
+                                                                             viable_node_G,
+                                                                             target_node_H,
+                                                                             current_state.match_G,
+                                                                             G.loops,
+                                                                             current_state.forward_match,
+                                                                             G.nodes,
+                                                                             H.nodes,
+                                                                             G.in_neighbors,
+                                                                             G.out_neighbors,
+                                                                             G.edges,
+                                                                             H.edges)
                     # push to stack if valid
-                    if(in_semantic_feasibility_res and out_semantic_feasibility_res):
+                    if(semantic_feasibility):
                         # extend match with the new pair
                         change_in_state = extend_match_directed(candidates_info.second, viable_node_G, target_node_H, G, H, current_state)
                         # recursive call
@@ -1820,35 +1939,34 @@ cdef void restore_match_directed(int node1,
 
 
 
-# functions - feasability of matches - undirected and directed #################
-
-
-
-
-
 # function: evaluate syntactic feasability for isomorphism search --------------
-cdef cpp_bool syntactic_feasibility(int node1,
-                                    int node2,
-                                    cpp_unordered_set[int] & ring_G,
-                                    cpp_unordered_set[int] & ring_H,
-                                    cpp_unordered_set[int] & current_match_G,
-                                    cpp_unordered_set[int] & current_match_H,
-                                    cpp_unordered_set[int] & loops_G,
-                                    cpp_unordered_set[int] & loops_H,
-                                    cpp_unordered_map[int, int] & forward_match,
-                                    cpp_unordered_map[int, int] & inverse_match,
-                                    cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_G,
-                                    cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_H) noexcept:
+cdef cpp_bool syntactic_feasibility_directed(int node1,
+                                             int node2,
+                                             cpp_unordered_set[int] & in_ring_G,
+                                             cpp_unordered_set[int] & in_ring_H,
+                                             cpp_unordered_set[int] & out_ring_G,
+                                             cpp_unordered_set[int] & out_ring_H,
+                                             cpp_unordered_set[int] & current_match_G,
+                                             cpp_unordered_set[int] & current_match_H,
+                                             cpp_unordered_set[int] & loops_G,
+                                             cpp_unordered_set[int] & loops_H,
+                                             cpp_unordered_map[int, int] & forward_match,
+                                             cpp_unordered_map[int, int] & inverse_match,
+                                             cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_G,
+                                             cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_H) noexcept:
 
     # local variables
+    cdef cpp_bool ring_neighbor = False
     cdef int node = 0
     cdef int mapped = 0
-    cdef int neighbors_ring_G = 0
-    cdef int neighbors_ring_H = 0
+    cdef int neighbors_in_ring_G = 0
+    cdef int neighbors_in_ring_H = 0
+    cdef int neighbors_out_ring_G = 0
+    cdef int neighbors_out_ring_H = 0
     cdef int neighbors_extern_G = 0
     cdef int neighbors_extern_H = 0
 
-    # consistency of degree
+    # consistency of degrees
     if(neigh_G[node1].size() != neigh_H[node2].size()):
         return(False)
 
@@ -1870,11 +1988,18 @@ cdef cpp_bool syntactic_feasibility(int node1,
             if(neigh_H[node2].find(mapped) == neigh_H[node2].end()):
                 return(False)
         else:
-            if(ring_G.find(node) != ring_G.end()):
-                # save neighbor since we are just comparing numbers later
-                neighbors_ring_G = neighbors_ring_G + 1
-            else:
-                # save neighbor since we are just comparing numbers later
+            # reinitialize flag
+            ring_neighbor = False
+            # neighbor in in-ring
+            if(in_ring_G.find(node) != in_ring_G.end()):
+                neighbors_in_ring_G = neighbors_in_ring_G + 1
+                ring_neighbor = True
+            # neighbor (possibly also) in out-ring
+            if(out_ring_G.find(node) != out_ring_G.end()):
+                neighbors_out_ring_G = neighbors_out_ring_G + 1
+                ring_neighbor = True
+            # neighbor not in any ring nor in match
+            if(not ring_neighbor):
                 neighbors_extern_G = neighbors_extern_G + 1
 
     for node in neigh_H[node2]:
@@ -1884,15 +2009,24 @@ cdef cpp_bool syntactic_feasibility(int node1,
             if(neigh_G[node1].find(mapped) == neigh_G[node1].end()):
                 return(False)
         else:
-            if(ring_H.find(node) != ring_H.end()):
-                # save neighbor since we are just comparing numbers later
-                neighbors_ring_H = neighbors_ring_H + 1
-            else:
-                # save neighbor since we are just comparing numbers later
+            # reinitialize flag
+            ring_neighbor = False
+            # neighbor in in-ring
+            if(in_ring_H.find(node) != in_ring_H.end()):
+                neighbors_in_ring_H = neighbors_in_ring_H + 1
+                ring_neighbor = True
+            # neighbor (possibly also) in out-ring
+            if(out_ring_H.find(node) != out_ring_H.end()):
+                neighbors_out_ring_H = neighbors_out_ring_H + 1
+                ring_neighbor = True
+            # neighbor not in any ring nor in match
+            if(not ring_neighbor):
                 neighbors_extern_H = neighbors_extern_H + 1
 
-    # look ahead 1: consistency of neighbors in ring (not in match but adjacent to match)
-    if(neighbors_ring_G != neighbors_ring_H):
+    # look ahead 1: consistency of neighbors in rings (not in match but adjacent to match)
+    if(neighbors_in_ring_G != neighbors_in_ring_H):
+        return(False)
+    if(neighbors_out_ring_G != neighbors_out_ring_H):
         return(False)
 
     # look ahead 2: consistency of extern neighbors (neither in match nor adjacent to match)
@@ -1907,55 +2041,36 @@ cdef cpp_bool syntactic_feasibility(int node1,
 
 
 # function: evaluate semantic feasability for isomorphism search ---------------
-cdef cpp_bool semantic_feasibility(cpp_bool node_labels,
-                                   cpp_bool edge_labels,
-                                   int node1,
-                                   int node2,
-                                   cpp_unordered_set[int] & ring_G,
-                                   cpp_unordered_set[int] & ring_H,
-                                   cpp_unordered_set[int] & current_match_G,
-                                   cpp_unordered_set[int] & current_match_H,
-                                   cpp_unordered_set[int] & loops_G,
-                                   cpp_unordered_map[int, int] & forward_match,
-                                   cpp_unordered_map[int, int] & nodes_G,
-                                   cpp_unordered_map[int, int] & nodes_H,
-                                   cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_G,
-                                   cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_H,
-                                   cpp_unordered_map[cpp_string, int] & edges_G,
-                                   cpp_unordered_map[cpp_string, int] & edges_H) noexcept:
+cdef cpp_bool semantic_feasibility_directed(cpp_bool node_labels,
+                                            cpp_bool edge_labels,
+                                            int node1,
+                                            int node2,
+                                            cpp_unordered_set[int] & current_match_G,
+                                            cpp_unordered_set[int] & loops_G,
+                                            cpp_unordered_map[int, int] & forward_match,
+                                            cpp_unordered_map[int, int] & nodes_G,
+                                            cpp_unordered_map[int, int] & nodes_H,
+                                            cpp_unordered_map[int, cpp_unordered_set[int]] & in_neigh_G,
+                                            cpp_unordered_map[int, cpp_unordered_set[int]] & out_neigh_G,
+                                            cpp_unordered_map[cpp_string, int] & edges_G,
+                                            cpp_unordered_map[cpp_string, int] & edges_H) noexcept:
 
     # local variables
     cdef int node = 0
-    cdef int mapped = 0
-    cdef int node_label = 0
-    cdef int edge_label = 0
     cdef cpp_string comma
     comma.push_back(44)
     cdef cpp_string labeled_edge_G
     cdef cpp_string labeled_edge_H
-    cdef cpp_pair[int, int] each_pair
-    cdef cpp_vector[int] neighbors_ring_G
-    cdef cpp_vector[int] neighbors_ring_H
-    cdef cpp_vector[int] neighbors_match_G
-    cdef cpp_vector[int] neighbors_match_H
-    cdef cpp_vector[int] neighbors_extern_G
-    cdef cpp_vector[int] neighbors_extern_H
-    cdef cpp_unordered_map[int, int] count_node_ring_G
-    cdef cpp_unordered_map[int, int] count_node_ring_H
-    cdef cpp_unordered_map[int, int] count_edge_ring_G
-    cdef cpp_unordered_map[int, int] count_edge_ring_H
-    cdef cpp_unordered_map[int, int] count_node_extern_G
-    cdef cpp_unordered_map[int, int] count_node_extern_H
-    cdef cpp_unordered_map[int, int] count_edge_extern_G
-    cdef cpp_unordered_map[int, int] count_edge_extern_H
 
     # compare node-labels
     if(node_labels):
         if(nodes_G[node1] != nodes_H[node2]):
             return(False)
 
-    # compare loop-labels
+    # compare edge-labels
     if(edge_labels):
+
+        # compare loop-labels
         if(loops_G.find(node1) != loops_G.end()):
             labeled_edge_G = to_string(node1) + comma + to_string(node1)
             labeled_edge_H = to_string(node2) + comma + to_string(node2)
@@ -1963,176 +2078,27 @@ cdef cpp_bool semantic_feasibility(cpp_bool node_labels,
             if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
                 return(False)
 
-    # obtain tripartition of neighbors in G
-    for node in neigh_G[node1]:
-        if(current_match_G.find(node) != current_match_G.end()):
-            neighbors_match_G.push_back(node)
-        else:
-            if(ring_G.find(node) != ring_G.end()):
-                # save neighbor since we are just comparing numbers later
-                neighbors_ring_G.push_back(node)
-            else:
-                # save neighbor since we are just comparing numbers later
-                neighbors_extern_G.push_back(node)
+        # compare non-loop edge labels with in-neighbors
+        for node in in_neigh_G[node1]:
+            if(current_match_G.find(node) != current_match_G.end()):
+                # edge in G with in-neighbor in match
+                labeled_edge_G = to_string(node) + comma + to_string(node1)
+                # edge in H with out-neighbor in match
+                labeled_edge_H = to_string(forward_match[node]) + comma + to_string(node2)
+                # compare labeled edges
+                if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
+                    return(False)
 
-    # label look ahead 0: compare non-loop edge-labels in match
-    if(edge_labels):
-        for node in neighbors_match_G:
-            # edge in G with only one end in match
-            labeled_edge_G = to_string(node1) + comma + to_string(node)
-            # edge in H with only one end in match
-            labeled_edge_H = to_string(node2) + comma + to_string(forward_match[node])
-            # compare labeled edges
-            if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
-                return(False)
-
-    # obtain tripartition of neighbors in H
-    for node in neigh_H[node2]:
-        if(current_match_H.find(node) != current_match_H.end()):
-            neighbors_match_H.push_back(node)
-        else:
-            if(ring_H.find(node) != ring_H.end()):
-                neighbors_ring_H.push_back(node)
-            else:
-                neighbors_extern_H.push_back(node)
-
-    # label look ahead 1: compare labels of neighbors in ring (not in match but adjacent to match)
-    if(not neighbors_ring_G.empty()):
-        # count in G
-        for node in neighbors_ring_G:
-            if(node_labels):
-                # get node label
-                node_label = nodes_G[node]
-                # count node label
-                if(count_node_ring_G.find(node_label) != count_node_ring_G.end()):
-                    count_node_ring_G[node_label] = count_node_ring_G[node_label] + 1
-                else:
-                    count_node_ring_G[node_label] = 1
-            if(edge_labels):
-                # get edge label (possibly loop label)
+        # compare non-loop edge labels with out-neighbors
+        for node in out_neigh_G[node1]:
+            if(current_match_G.find(node) != current_match_G.end()):
+                # edge in G with out-neighbor in match
                 labeled_edge_G = to_string(node1) + comma + to_string(node)
-                edge_label = edges_G[labeled_edge_G]
-                # count edge label
-                if(count_edge_ring_G.find(edge_label) != count_edge_ring_G.end()):
-                    count_edge_ring_G[edge_label] = count_edge_ring_G[edge_label] + 1
-                else:
-                    count_edge_ring_G[edge_label] = 1
-
-        # count in H
-        for node in neighbors_ring_H:
-            if(node_labels):
-                # get node label
-                node_label = nodes_H[node]
-                # count node label
-                if(count_node_ring_H.find(node_label) != count_node_ring_H.end()):
-                    count_node_ring_H[node_label] = count_node_ring_H[node_label] + 1
-                else:
-                    count_node_ring_H[node_label] = 1
-            if(edge_labels):
-                # get edge label (possibly loop label)
-                labeled_edge_H = to_string(node2) + comma + to_string(node)
-                edge_label = edges_H[labeled_edge_H]
-                # count edge label
-                if(count_edge_ring_H.find(edge_label) != count_edge_ring_H.end()):
-                    count_edge_ring_H[edge_label] = count_edge_ring_H[edge_label] + 1
-                else:
-                    count_edge_ring_H[edge_label] = 1
-
-        # compare number of types of adjacent nodes
-        if(node_labels):
-            if(count_node_ring_G.size() != count_node_ring_H.size()):
-                return(False)
-
-        # compare number of types of incident edges
-        if(edge_labels):
-            if(count_edge_ring_G.size() != count_edge_ring_H.size()):
-                return(False)
-
-        # compare types of adjacent nodes
-        if(node_labels):
-            for each_pair in count_node_ring_G:
-                if(count_node_ring_H.find(each_pair.first) == count_node_ring_H.end()):
+                # edge in H with out-neighbor in match
+                labeled_edge_H = to_string(node2) + comma + to_string(forward_match[node])
+                # compare labeled edges
+                if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
                     return(False)
-                else:
-                    if(each_pair.second != count_node_ring_H[each_pair.first]):
-                        return(False)
-
-        # compare types of incident edges
-        if(edge_labels):
-            for each_pair in count_edge_ring_G:
-                if(count_edge_ring_H.find(each_pair.first) == count_edge_ring_H.end()):
-                    return(False)
-                else:
-                    if(each_pair.second != count_edge_ring_H[each_pair.first]):
-                        return(False)
-
-    # label look ahead 2: compare labels of extern neighbors (neither in match nor adjacent to match)
-    if(not neighbors_extern_G.empty()):
-        for node in neighbors_extern_G:
-            if(node_labels):
-                # get node label
-                node_label = nodes_G[node]
-                # count node label
-                if(count_node_extern_G.find(node_label) != count_node_extern_G.end()):
-                    count_node_extern_G[node_label] = count_node_extern_G[node_label] + 1
-                else:
-                    count_node_extern_G[node_label] = 1
-            if(edge_labels):
-                # get edge label (possibly loop label)
-                labeled_edge_G = to_string(node1) + comma + to_string(node)
-                edge_label = edges_G[labeled_edge_G]
-                # count edge label
-                if(count_edge_extern_G.find(edge_label) != count_edge_extern_G.end()):
-                    count_edge_extern_G[edge_label] = count_edge_extern_G[edge_label] + 1
-                else:
-                    count_edge_extern_G[edge_label] = 1
-
-        for node in neighbors_extern_H:
-            if(node_labels):
-                # get node label
-                node_label = nodes_H[node]
-                # count node label
-                if(count_node_extern_H.find(node_label) != count_node_extern_H.end()):
-                    count_node_extern_H[node_label] = count_node_extern_H[node_label] + 1
-                else:
-                    count_node_extern_H[node_label] = 1
-            if(edge_labels):
-                # get edge label (possibly loop label)
-                labeled_edge_H = to_string(node2) + comma + to_string(node)
-                edge_label = edges_H[labeled_edge_H]
-                # count edge label
-                if(count_edge_extern_H.find(edge_label) != count_edge_extern_H.end()):
-                    count_edge_extern_H[edge_label] = count_edge_extern_H[edge_label] + 1
-                else:
-                    count_edge_extern_H[edge_label] = 1
-
-        # compare number of types of adjacent nodes
-        if(node_labels):
-            if(count_node_extern_G.size() != count_node_extern_H.size()):
-                return(False)
-
-        # compare number of types of incident edges
-        if(edge_labels):
-            if(count_edge_extern_G.size() != count_edge_extern_H.size()):
-                return(False)
-
-        # compare types of adjacent nodes
-        if(node_labels):
-            for each_pair in count_node_extern_G:
-                if(count_node_extern_H.find(each_pair.first) == count_node_extern_H.end()):
-                    return(False)
-                else:
-                    if(each_pair.second != count_node_extern_H[each_pair.first]):
-                        return(False)
-
-        # compare types of incident edges
-        if(edge_labels):
-            for each_pair in count_edge_extern_G:
-                if(count_edge_extern_H.find(each_pair.first) == count_edge_extern_H.end()):
-                    return(False)
-                else:
-                    if(each_pair.second != count_edge_extern_H[each_pair.first]):
-                        return(False)
 
     # end of function
     return(True)
