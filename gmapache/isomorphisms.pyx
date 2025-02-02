@@ -335,9 +335,6 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     * gmapache.isomorphisms.search_isomorphisms_directed
     """
 
-    # test input correctness
-    search_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_labels, all_isomorphisms, total_order_A, total_order_B)
-
     # output holders
     found_isomorphism = False
     cdef list isomorphisms = []
@@ -356,6 +353,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     cdef int counter = 0
     cdef int current_limit = 0
     cdef int required_limit = 0
+    cdef cpp_bool input_correctness = True
     cdef cpp_bool consistent_labels = True
     cdef cpp_string comma
     comma.push_back(44)
@@ -395,6 +393,11 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     node_obj = None
     complement_G = None
     complement_H = None
+
+    # test input correctness
+    input_correctness = search_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_labels, all_isomorphisms, total_order_A, total_order_B)
+    if(not input_correctness):
+        return([], False)
 
     # quick test by comparing the degree sequences of input graphs
     params.directed_graphs = nx.is_directed(nx_G)
@@ -818,7 +821,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
 
 
 # function: test input correctness ---------------------------------------------
-cdef void search_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_labels, all_isomorphisms, total_order_A, total_order_B):
+cdef cpp_bool search_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_labels, all_isomorphisms, total_order_A, total_order_B):
 
     # local variables (cython)
     cdef int minimum_order = 0
@@ -877,11 +880,11 @@ cdef void search_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_la
 
     # check that input graphs have the same number of nodes
     if(not nx_G.order() == nx_H.order()):
-        raise(ValueError("gmapache: input graphs must have the same number of nodes."))
+        return(False)
 
     # check that input graphs have the same number of edges
     if(not nx_G.size() == nx_H.size()):
-        raise(ValueError("gmapache: input graphs must have the same number of edges."))
+        return(False)
 
     # check consistency of sixth argument
     if(len(total_order_A) > 0):
@@ -942,6 +945,7 @@ cdef void search_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_la
             raise(ValueError("gmapache: argument total_order_B is not a valid total order for the nodes of the second graph."))
 
     # end of function
+    return(True)
 
 
 
@@ -1496,7 +1500,6 @@ cdef cpp_bool semantic_feasibility_undirected(cpp_bool node_labels,
 
     # compare node-labels
     if(node_labels):
-
         if(nodes_G[node1] != nodes_H[node2]):
             return(False)
 
@@ -1677,6 +1680,7 @@ cdef void search_isomorphisms_directed(isomorphisms_search_params & params,
                                                                              G.out_neighbors,
                                                                              G.edges,
                                                                              H.edges)
+
                     # push to stack if valid
                     if(semantic_feasibility):
                         # extend match with the new pair

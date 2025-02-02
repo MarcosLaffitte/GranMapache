@@ -12,15 +12,17 @@ Alignments and other Maps between Graphs
 
 ## ToDo / Working / Done
 
-> done: finished isomorphisms for directed and undirected (labeld) graphs
+There are 5 possible applications with variants of VF2 and MCS's. By increasing order of complexity these are:
 
-- working: mcs routines
+- working: updating (1) Extender A - already done, just updating it - for balanced reactions and extender paper with Long - variant: anchored isomorphism of the "remainder" graphs
 
-- working: test isomorphism and mcs routines
+- working: implement (2) Extender B - for unbalanced reactions and extender paper with Long - variant: anchored maximum common connected induced subgraph(s)
 
-- modules: integerization, partial_maps, common_subgraphs, alignment, isomorphism, rebalancing, verbosity, visualization, (maybe) classes, (maybe) tests.
+- working: implement (3) Aligner - for multiple progressive graph aligner and rule inference through ITS alignment - variant: anchored maximum common induced subgraph
 
-- versions: pip for linux, pip for windows, stand-alone.
+- working: implement (4) Balancer - implementation of the balancing idea in the Symmetries paper - variant: anchored maximum common subgraph
+
+- working: implement (5) Tautomers - (possible idea) analysis of ITS-derived transformation rules from Tautomerism reactions with Nico and Long - application of alignments
 
 
 ## Institutions
@@ -28,6 +30,7 @@ Alignments and other Maps between Graphs
 > Center for Scalable Data Analytics and Artificial Intelligence, Leipzig / Dresden, Germany. See <a href="https://scads.ai/">ScaDS.AI</a>.<br/>
 
 > Bioinformatics Group, Department of Computer Science, Leipzig University, Germany. See <a href="https://www.bioinf.uni-leipzig.de/">Bioinf</a>.<br/>
+
 
 ## Developed by
 
