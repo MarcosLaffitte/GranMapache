@@ -39,16 +39,17 @@
 # - NOTE:                                                                      #
 #                                                                              #
 #   * the module is not yet available online in the pip system, but that       #
-#     is our intention for this package in the future.                         #
+#     is our intention for this package in the future, which will make the     #
+#     the instalation / removal simpler.                                       #
 #                                                                              #
 #   * not installing the package inside an anaconda enviornment or python      #
 #     environment may produce unexpected dependency erros, which my produce    #
 #     incompatibility warnings and also runtime errors, therefore our          #
 #     recommendation for installing this package inside an environment.        #
 #                                                                              #
-#   * when installing additional packages not required by gmapache, the        #
+#   * when installing additional packages not required by gmapache the         #
 #     installers may suggest different python versions, thus always check the  #
-#     compatibility of those version with the required by gmapache             #
+#     compatibility of those version with the required by gmapache.            #
 #                                                                              #
 #   * after installing gmapache you can call it from a script in any location  #
 #     in your computer, except for a script inside the parent folder of the    #
@@ -81,13 +82,14 @@ import gmapache as gm
 # example: induced connected extensions ----------------------------------------
 
 
-# We build two networkx graphs G and H with arbitrary vertex labels and edge labels, and define
-# a "partial map" as an injective match between the graphs, also refered to as "anchor" given
-# as a list of unrepeated 2-tuples (x, y) of vertices x in G and y in H. This data is passed to the
-# method gm.induced_connected_extensions(G, H, partial_map), which extends the partial map
-# and returns two results: (1) a list of all the possible induced extensions of the reaction center
-# also expressed as matches, and (2) a boolean value indicating if the extensions form bijections
-# and, equivalentely, if the "anchor" was a good partial map.
+# We build two networkx graphs G and H with arbitrary vertex labels and edge labels,
+# and define a "partial map" as an injective match between the graphs, also refered
+# to as "anchor" given as a list of unrepeated 2-tuples (x, y) of vertices x in G and
+# y in H. This data is passed to the method gm.induced_connected_extensions(G, H, partial_map),
+# which extends the partial map and returns two results: (1) a list of all the possible
+# induced extensions of the reaction center also expressed as matches, and (2) a boolean
+# value indicating if the extensions form bijections and, equivalentely, if the "anchor"
+# was a good partial map.
 
 
 # buid first test graph for induced connected extension
@@ -179,19 +181,19 @@ print("\n")
 # returned indicating if the graphs were indeed ismorphic. This method has an
 # optional boolean argument "all_isomorphisms". When False the function returns
 # only one isomorphism (if any), this is the default behavior since it is faster
-# than enumerating all isomorphism. If set to True the function will search and
-# return all possible isomorphisms, which is an exhaustive and can be more time
-# consuming depending on the input graphs. Moreover, the function can take into
-# acount all the node-labels and/or edge-labels of the graphs. This is controlled
-# by the booleand variables node_labels and edge_labels which by default are set
-# to False thus ignoring labels. The function can optionally also take into account
-# a total order for the nodes of the graphs. This is required by the all the VF2-like
-# algorithms to carry on the search. If this is not provided then the functions
-# computes a totoal order internally, based on the degrees of the nodes in the
-# underlying (unlabled) versions of the inout graphs.
+# than enumerating all isomorphisms. If set to True the function will search and
+# return all possible isomorphisms, which is an exhaustive procedure and thus can
+# be more time consuming depending on the input graphs. Moreover, the function can
+# take into acount all the node-labels and/or edge-labels of the graphs. This is
+# controlled by the boolean variables node_labels and edge_labels which by default
+# are set to False, thus ignoring labels. The function can optionally also take into
+# account a total order for the nodes of the graphs. This is required by the all
+# the VF2-like algorithms to carry on the search. If this is not provided then
+# the functions computes a totoal order internally, based on the (out-) degrees
+# of the nodes in the underlying (unlabled) versions of the inout graphs.
 
 
-# buid first test graph for isomorphism search
+# build first test graph for isomorphism search
 G = nx.Graph()
 G.add_edge(1, 2)
 G.add_edge(2, 3)
@@ -201,7 +203,7 @@ G.add_edge(5, 6)
 G.add_edge(5, 7)
 
 
-# buid second test graph for isomorphism search
+# build second test graph for isomorphism search
 H = nx.Graph()
 H.add_edge("a", "b")
 H.add_edge("b", "c")
@@ -211,7 +213,7 @@ H.add_edge("e", "f")
 H.add_edge("e", "g")
 
 
-# buid third test graph for isomorphism search
+# build third test graph for isomorphism search
 F = nx.Graph()
 F.add_edge("x1", "x2")
 F.add_edge("x1", "x3")
@@ -221,7 +223,7 @@ F.add_edge("x1", "x6")
 F.add_edge("x1", "x7")
 
 
-# buid fourth test graph for isomorphism search
+# build fourth test graph for isomorphism search
 L = nx.Graph()
 L.add_node(1, color = "blue")
 L.add_node(2, color = "blue")
