@@ -208,7 +208,7 @@ cdef struct isomorphisms_search_params:
     cpp_bool all_isomorphisms
     # return analyzing complement
     cpp_bool complement
-    # expected amount of matches
+    # expected amount of matches (order of the graphs)
     size_t expected_order
     int expected_order_int
     # total order for VF2-like search

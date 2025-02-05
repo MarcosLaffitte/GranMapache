@@ -16,7 +16,7 @@ There are 5 possible applications with variants of VF2 and MCS's. By increasing 
 
 - working: updating (1) Extender A - already done, just updating it - for balanced reactions and extender paper with Long - variant: anchored isomorphism of the "remainder" graphs
 
-- working: implement (2) Extender B - for unbalanced reactions and extender paper with Long - variant: anchored maximum common connected induced subgraph(s)
+- working: implement (2) Extender B - for unbalanced reactions and extender paper with Long - variant: anchored maximum common induced "meta-connected" subgraph(s)
 
 - working: implement (3) Aligner - for multiple progressive graph aligner and rule inference through ITS alignment - variant: anchored maximum common induced subgraph
 
