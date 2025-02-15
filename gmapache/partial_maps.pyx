@@ -8,6 +8,8 @@
 # - Description: analysis of properties of partial maps, like maximum induced  #
 #   connected extension(s), overlaps, consistency, and others.                 #
 #                                                                              #
+# - TO BE MODIFIED WITH STRUCTURES AND ROUTINES FROM ISOMORPHISMS              #
+#                                                                              #
 ################################################################################
 
 
@@ -47,7 +49,7 @@ from libcpp.string cimport string as cpp_string
 from libcpp.unordered_set cimport unordered_set as cpp_unordered_set
 from libcpp.unordered_map cimport unordered_map as cpp_unordered_map
 cdef extern from "<algorithm>" namespace "std":
-    # turn int to string
+    # turn integer to string
     cpp_string to_string(int value)
 
 
