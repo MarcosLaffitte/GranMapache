@@ -21,7 +21,7 @@
 #     the unmatched vertices have both unordered and ordered representations   #
 #     so as to make the most out of (average) constant look-ups with unordered #
 #     structures, contiguous memory traversals with vectors, and as well as    #
-#     from some linked-lists advantages.                                       #
+#     for some linked-lists advantages.                                        #
 #                                                                              #
 ################################################################################
 
@@ -1111,6 +1111,8 @@ cdef void search_isomorphisms_undirected(isomorphisms_search_params & params,
     cdef int node = 0
     cdef int matchable_node_G = 0
     cdef int candidate_node_H = 0
+    cdef cpp_bool use_filter = False
+    cdef cpp_bool viable_candidate = True
     cdef cpp_bool semantic_feasibility = True
     cdef cpp_bool syntactic_feasibility = True
     cdef cpp_pair[int, int] candidates_info
@@ -1119,6 +1121,7 @@ cdef void search_isomorphisms_undirected(isomorphisms_search_params & params,
     cdef cpp_list[int] ring_H_ordered_backup
     cdef cpp_list[int] unmatched_G_ordered_backup
     cdef cpp_list[int] unmatched_H_ordered_backup
+    cdef cpp_unordered_set[int] filtered_ring
     cdef isomorphisms_change_in_state_undirected change_in_state
 
     # save if isomorphism was reached
@@ -1142,81 +1145,96 @@ cdef void search_isomorphisms_undirected(isomorphisms_search_params & params,
         # get minimum node in G
         matchable_node_G = candidates_info.first
 
-        # get list of candidates in H
+        # get list of candidates in H from ring
         if(candidates_info.second == 0):
-            # from ring
+            # get ordered candidates
             ordered_candidates = current_state.ring_H_ordered
+            # get filter for candidates, i.e., with compatible neighbors in match (different from syntactic feasibility)
+            filtered_ring = filter_candidates_undirected(matchable_node_G, G.neighbors_ordered, H.neighbors_ordered, current_state)
+            # determine if filter is to be used
+            use_filter = (filtered_ring.size() != ordered_candidates.size())
+            # finish early if filter should be used but it is empty
+            if(use_filter and (filtered_ring.empty())):
+                return
+
+        # get list of candidates in H from unmatched
         if(candidates_info.second == 1):
-            # from unmatched
+            # order version of candidates
             ordered_candidates = current_state.unmatched_H_ordered
 
         # evaluate candidate pairs
         for candidate_node_H in ordered_candidates:
 
-            # evaluate syntactic feasibility (possibly over complement graph)
-            if(params.complement):
-                syntactic_feasibility = syntactic_feasibility_undirected(matchable_node_G,
-                                                                         candidate_node_H,
-                                                                         current_state.ring_G,
-                                                                         current_state.ring_H,
-                                                                         current_state.match_G,
-                                                                         current_state.match_H,
-                                                                         G.loops,
-                                                                         H.loops,
-                                                                         current_state.forward_match,
-                                                                         current_state.inverse_match,
-                                                                         G.neighbors_complement,
-                                                                         H.neighbors_complement)
-            else:
-                syntactic_feasibility = syntactic_feasibility_undirected(matchable_node_G,
-                                                                         candidate_node_H,
-                                                                         current_state.ring_G,
-                                                                         current_state.ring_H,
-                                                                         current_state.match_G,
-                                                                         current_state.match_H,
-                                                                         G.loops,
-                                                                         H.loops,
-                                                                         current_state.forward_match,
-                                                                         current_state.inverse_match,
-                                                                         G.neighbors,
-                                                                         H.neighbors)
+            # test if candidate is in filter (only if required)
+            if(use_filter):
+                viable_candidate = (filtered_ring.find(candidate_node_H) != filtered_ring.end())
 
-            # evaluate semantic feasibility (always over original graphs)
-            if(syntactic_feasibility):
-                if(params.node_labels or params.edge_labels):
-                    semantic_feasibility = semantic_feasibility_undirected(params.node_labels,
-                                                                           params.edge_labels,
-                                                                           matchable_node_G,
-                                                                           candidate_node_H,
-                                                                           current_state.match_G,
-                                                                           G.loops,
-                                                                           current_state.forward_match,
-                                                                           G.nodes,
-                                                                           H.nodes,
-                                                                           G.neighbors,
-                                                                           G.edges,
-                                                                           H.edges)
+            # control variable changing only when filter is actually being used
+            if(viable_candidate):
 
-                # push to stack if valid
-                if(semantic_feasibility):
-                    # extend match with the new pair
-                    change_in_state = extend_match_undirected(candidates_info.second, matchable_node_G, candidate_node_H, G, H, current_state)
-                    # recursive call
-                    search_isomorphisms_undirected(params, current_state, G, H, all_matches)
-                    # finish if only one isosmorphism was requested and it was already found
-                    if(not all_matches.empty()):
-                        if(not params.all_isomorphisms):
-                            return
-                    # restore state unordered sets
-                    restore_match_undirected(matchable_node_G, candidate_node_H, change_in_state, current_state)
-                    # restore state ordered lists
-                    current_state.ring_G_ordered = ring_G_ordered_backup
-                    current_state.ring_H_ordered = ring_H_ordered_backup
-                    current_state.unmatched_G_ordered = unmatched_G_ordered_backup
-                    current_state.unmatched_H_ordered = unmatched_H_ordered_backup
+                # evaluate syntactic feasibility (possibly over complement graph)
+                if(params.complement):
+                    syntactic_feasibility = syntactic_feasibility_undirected(matchable_node_G,
+                                                                             candidate_node_H,
+                                                                             current_state.ring_G,
+                                                                             current_state.ring_H,
+                                                                             current_state.match_G,
+                                                                             current_state.match_H,
+                                                                             G.loops,
+                                                                             H.loops,
+                                                                             current_state.forward_match,
+                                                                             current_state.inverse_match,
+                                                                             G.neighbors_complement,
+                                                                             H.neighbors_complement)
+                else:
+                    syntactic_feasibility = syntactic_feasibility_undirected(matchable_node_G,
+                                                                             candidate_node_H,
+                                                                             current_state.ring_G,
+                                                                             current_state.ring_H,
+                                                                             current_state.match_G,
+                                                                             current_state.match_H,
+                                                                             G.loops,
+                                                                             H.loops,
+                                                                             current_state.forward_match,
+                                                                             current_state.inverse_match,
+                                                                             G.neighbors,
+                                                                             H.neighbors)
+
+                # evaluate semantic feasibility (always over original graphs)
+                if(syntactic_feasibility):
+                    if(params.node_labels or params.edge_labels):
+                        semantic_feasibility = semantic_feasibility_undirected(params.node_labels,
+                                                                               params.edge_labels,
+                                                                               matchable_node_G,
+                                                                               candidate_node_H,
+                                                                               current_state.match_G,
+                                                                               G.loops,
+                                                                               current_state.forward_match,
+                                                                               G.nodes,
+                                                                               H.nodes,
+                                                                               G.neighbors,
+                                                                               G.edges,
+                                                                               H.edges)
+
+                    # push to stack if valid
+                    if(semantic_feasibility):
+                        # extend match with the new pair
+                        change_in_state = extend_match_undirected(candidates_info.second, matchable_node_G, candidate_node_H, G, H, current_state)
+                        # recursive call
+                        search_isomorphisms_undirected(params, current_state, G, H, all_matches)
+                        # finish if only one isosmorphism was requested and it was already found
+                        if(not all_matches.empty()):
+                            if(not params.all_isomorphisms):
+                                return
+                        # restore state unordered sets
+                        restore_match_undirected(matchable_node_G, candidate_node_H, change_in_state, current_state)
+                        # restore state ordered lists
+                        current_state.ring_G_ordered = ring_G_ordered_backup
+                        current_state.ring_H_ordered = ring_H_ordered_backup
+                        current_state.unmatched_G_ordered = unmatched_G_ordered_backup
+                        current_state.unmatched_H_ordered = unmatched_H_ordered_backup
 
     # end of function
-
 
 
 
@@ -1237,7 +1255,7 @@ cdef cpp_pair[int, int] candidates_info_undirected(isomorphisms_search_params & 
     minimum_value = 10 + params.expected_order_int
 
     # NOTE: syntactic feasability for isomorphism guarantees that both rings have
-    # always the same cardinality, thus only the following two disjoint options.
+    # always the same cardinality, thus we only have the following two disjoint options.
 
     # build candidates either with nodes in the rings or with unmatched nodes
     if((not current_state.ring_G.empty()) and (not current_state.ring_H.empty())):
@@ -1249,6 +1267,7 @@ cdef cpp_pair[int, int] candidates_info_undirected(isomorphisms_search_params & 
                 minimum_node = node
 
         # build output pair
+        # NOTE: candidates with consistent neighbors are obtained in a second step
         candidates_info.first = minimum_node
         candidates_info.second = 0
 
@@ -1263,6 +1282,45 @@ cdef cpp_pair[int, int] candidates_info_undirected(isomorphisms_search_params & 
 
     # end of function
     return(candidates_info)
+
+
+
+
+
+# function: get compatible neighbors of match ----------------------------------
+cdef cpp_unordered_set[int] filter_candidates_undirected(int matchable_node_G,
+                                                         cpp_unordered_map[int, cpp_vector[int]] & neighbors_ordered_G,
+                                                         cpp_unordered_map[int, cpp_vector[int]] & neighbors_ordered_H,
+                                                         isomorphisms_state_undirected & current_state) noexcept:
+
+    # output holders
+    cdef cpp_unordered_set[int] filtered_candidates
+
+    # local variables
+    cdef int node1 = 0
+    cdef int node2 = 0
+    cdef int mapped = 0
+
+    # get filter
+    for node1 in neighbors_ordered_G[matchable_node_G]:
+        # continue as long as filter is not the whole ring
+        if(filtered_candidates.size() != current_state.ring_H.size()):
+            # only for neighbors in the match
+            if(current_state.match_G.find(node1) != current_state.match_G.end()):
+                # get image unde match
+                mapped = current_state.forward_match[node1]
+                # traverse neighbors of image under match
+                for node2 in neighbors_ordered_H[mapped]:
+                    # save only the neighbors not in the match
+                    if(current_state.match_H.find(node2) == current_state.match_H.end()):
+                        # unordered set takes care of repetitions
+                        filtered_candidates.insert(node2)
+        else:
+            # if the filter reached the whole ring then just finish early
+            return(filtered_candidates)
+
+    # end of function
+    return(filtered_candidates)
 
 
 
@@ -1729,7 +1787,7 @@ cdef cpp_pair[int, int] candidates_info_directed(isomorphisms_search_params & pa
     minimum_value = 10 + params.expected_order_int
 
     # NOTE: syntactic feasability for isomorphism guarantees that all the rings have
-    # always the same cardinality, thus only the following three disjoint options.
+    # always the same cardinality, thus we only have the following three disjoint options.
 
     # build candidates from out ring
     if((not current_state.out_ring_G.empty()) and (not current_state.out_ring_H.empty())):
@@ -1741,6 +1799,7 @@ cdef cpp_pair[int, int] candidates_info_directed(isomorphisms_search_params & pa
                 minimum_node = node
 
         # build output pair
+        # NOTE: candidates with consistent neighbors are obtained in a second step
         candidates_info.first = minimum_node
         candidates_info.second = 0
 
@@ -1756,6 +1815,7 @@ cdef cpp_pair[int, int] candidates_info_directed(isomorphisms_search_params & pa
                     minimum_node = node
 
             # build output pair
+            # NOTE: candidates with consistent neighbors are obtained in a second step
             candidates_info.first = minimum_node
             candidates_info.second = 1
 
