@@ -20,8 +20,8 @@
 # Building the package and install dependencies inside anaconda environment
 # python -m pip install .
 
-# note that the last command is runned with "python -m pip", instead of just "pip",
-# this allows to use the pip version linked to the required python version
+# note that the last command includes "python -m pip", instead of just "pip",
+# this allows one to use the pip version linked to the required python version
 # instead of the default version of the system
 
 # Builing cython code in place if dependencies are already satisfied
