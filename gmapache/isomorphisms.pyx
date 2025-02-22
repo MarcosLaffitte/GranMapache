@@ -19,8 +19,9 @@
 #                                                                              #
 #   * the data structures holding the matched vertices, the rings and also     #
 #     the unmatched vertices have both unordered and ordered representations   #
-#     so as to make the most out of (average) constant look-ups, contiguous    #
-#     memory traversals with vectors, as well as from linked-lists advantages. #
+#     so as to make the most out of (average) constant look-ups with unordered #
+#     structures, contiguous memory traversals with vectors, and as well as    #
+#     from some linked-lists advantages.                                       #
 #                                                                              #
 ################################################################################
 
