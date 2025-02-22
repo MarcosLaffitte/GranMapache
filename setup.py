@@ -18,7 +18,11 @@
 # conda install -c conda-forge cxx-compiler
 
 # Building the package and install dependencies inside anaconda environment
-# pip install .
+# python -m pip install .
+
+# note that the last command is runned with "python -m pip", instead of just "pip",
+# this allows to use the pip version linked to the required python version
+# instead of the default version of the system
 
 # Builing cython code in place if dependencies are already satisfied
 # LINUX:   python setup.py build_ext --inplace
@@ -30,7 +34,7 @@
 # python -m gmapache
 
 # Uninstalling gmapache from anaconda environment
-# pip uninstall gmapache
+# python -m pip uninstall gmapache
 
 # Removing anaconda environmnet completely
 # conda remove -n devdep --all
