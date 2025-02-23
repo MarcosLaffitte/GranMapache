@@ -1271,7 +1271,7 @@ cdef cpp_pair[int, int] candidates_info_undirected(isomorphisms_search_params & 
                 minimum_node = node
 
         # build output pair
-        # NOTE: candidates with compatibly matched neighbors are obtained in a second step
+        # NOTE: candidates with compatibly-matched neighbors are obtained in a second step
         candidates_info.first = minimum_node
         candidates_info.second = 0
 
@@ -1685,7 +1685,9 @@ cdef void search_isomorphisms_directed(isomorphisms_search_params & params,
                                                                           current_state.forward_match,
                                                                           current_state.inverse_match,
                                                                           G.in_neighbors_complement,
-                                                                          H.in_neighbors_complement)
+                                                                          H.in_neighbors_complement,
+                                                                          G.in_neighbors_ordered,
+                                                                          H.in_neighbors_ordered)
             else:
                 in_syntactic_feasibility = syntactic_feasibility_directed(matchable_node_G,
                                                                           candidate_node_H,
@@ -1700,7 +1702,9 @@ cdef void search_isomorphisms_directed(isomorphisms_search_params & params,
                                                                           current_state.forward_match,
                                                                           current_state.inverse_match,
                                                                           G.in_neighbors,
-                                                                          H.in_neighbors)
+                                                                          H.in_neighbors,
+                                                                          G.in_neighbors_ordered,
+                                                                          H.in_neighbors_ordered)
 
             # evaluate out syntactic feasibility (possibly over complement graph)
             if(in_syntactic_feasibility):
@@ -1718,7 +1722,9 @@ cdef void search_isomorphisms_directed(isomorphisms_search_params & params,
                                                                                current_state.forward_match,
                                                                                current_state.inverse_match,
                                                                                G.out_neighbors_complement,
-                                                                               H.out_neighbors_complement)
+                                                                               H.out_neighbors_complement,
+                                                                               G.out_neighbors_ordered,
+                                                                               H.out_neighbors_ordered)
                 else:
                     out_syntactic_feasibility = syntactic_feasibility_directed(matchable_node_G,
                                                                                candidate_node_H,
@@ -1733,7 +1739,9 @@ cdef void search_isomorphisms_directed(isomorphisms_search_params & params,
                                                                                current_state.forward_match,
                                                                                current_state.inverse_match,
                                                                                G.out_neighbors,
-                                                                               H.out_neighbors)
+                                                                               H.out_neighbors,
+                                                                               G.out_neighbors_ordered,
+                                                                               H.out_neighbors_ordered)
 
                 # evaluate semantic feasibility (always over original graphs)
                 if(out_syntactic_feasibility):
@@ -1806,7 +1814,7 @@ cdef cpp_pair[int, int] candidates_info_directed(isomorphisms_search_params & pa
                 minimum_node = node
 
         # build output pair
-        # NOTE: candidates with consistent neighbors are obtained in a second step
+        # NOTE: candidates with compatibly-matched neighbors are obtained in a second step
         candidates_info.first = minimum_node
         candidates_info.second = 0
 
@@ -1822,7 +1830,7 @@ cdef cpp_pair[int, int] candidates_info_directed(isomorphisms_search_params & pa
                     minimum_node = node
 
             # build output pair
-            # NOTE: candidates with consistent neighbors are obtained in a second step
+            # NOTE: candidates with compatibly-matched neighbors are obtained in a second step
             candidates_info.first = minimum_node
             candidates_info.second = 1
 
@@ -2033,7 +2041,9 @@ cdef cpp_bool syntactic_feasibility_directed(int node1,
                                              cpp_unordered_map[int, int] & forward_match,
                                              cpp_unordered_map[int, int] & inverse_match,
                                              cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_G,
-                                             cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_H) noexcept:
+                                             cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_H,
+                                             cpp_unordered_map[int, cpp_vector[int]] & ordered_neigh_G,
+                                             cpp_unordered_map[int, cpp_vector[int]] & ordered_neigh_H) noexcept:
 
     # local variables
     cdef cpp_bool ring_neighbor = False
@@ -2061,7 +2071,7 @@ cdef cpp_bool syntactic_feasibility_directed(int node1,
             return(False)
 
     # look ahead 0: consistency of neighbors in match, while doing tripartition of neighbors
-    for node in neigh_G[node1]:
+    for node in ordered_neigh_G[node1]:
         if(current_match_G.find(node) != current_match_G.end()):
             # check that the mapping is also the corresponding neighbor
             mapped = forward_match[node]
@@ -2082,7 +2092,7 @@ cdef cpp_bool syntactic_feasibility_directed(int node1,
             if(not ring_neighbor):
                 neighbors_extern_G = neighbors_extern_G + 1
 
-    for node in neigh_H[node2]:
+    for node in ordered_neigh_H[node2]:
         if(current_match_H.find(node) != current_match_H.end()):
             # check that the mapping is also the corresponding neighbor
             mapped = inverse_match[node]
