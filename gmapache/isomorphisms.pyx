@@ -1149,7 +1149,7 @@ cdef void search_isomorphisms_undirected(isomorphisms_search_params & params,
         if(candidates_info.second == 0):
             # get ordered candidates
             ordered_candidates = current_state.ring_H_ordered
-            # get filter for candidates, i.e., with compatible neighbors in match (different from syntactic feasibility)
+            # get filter for candidates, i.e., with compatibly matched neighbors in match (different from syntactic feasibility)
             filtered_ring = filter_candidates_undirected(matchable_node_G, G.neighbors_ordered, H.neighbors_ordered, current_state)
             # determine if filter is to be used
             use_filter = (filtered_ring.size() != ordered_candidates.size())
@@ -1185,7 +1185,9 @@ cdef void search_isomorphisms_undirected(isomorphisms_search_params & params,
                                                                              current_state.forward_match,
                                                                              current_state.inverse_match,
                                                                              G.neighbors_complement,
-                                                                             H.neighbors_complement)
+                                                                             H.neighbors_complement,
+                                                                             G.neighbors_ordered,
+                                                                             H.neighbors_ordered)
                 else:
                     syntactic_feasibility = syntactic_feasibility_undirected(matchable_node_G,
                                                                              candidate_node_H,
@@ -1198,7 +1200,9 @@ cdef void search_isomorphisms_undirected(isomorphisms_search_params & params,
                                                                              current_state.forward_match,
                                                                              current_state.inverse_match,
                                                                              G.neighbors,
-                                                                             H.neighbors)
+                                                                             H.neighbors,
+                                                                             G.neighbors_ordered,
+                                                                             H.neighbors_ordered)
 
                 # evaluate semantic feasibility (always over original graphs)
                 if(syntactic_feasibility):
@@ -1267,7 +1271,7 @@ cdef cpp_pair[int, int] candidates_info_undirected(isomorphisms_search_params & 
                 minimum_node = node
 
         # build output pair
-        # NOTE: candidates with consistent neighbors are obtained in a second step
+        # NOTE: candidates with compatibly matched neighbors are obtained in a second step
         candidates_info.first = minimum_node
         candidates_info.second = 0
 
@@ -1287,7 +1291,8 @@ cdef cpp_pair[int, int] candidates_info_undirected(isomorphisms_search_params & 
 
 
 
-# function: get compatible neighbors of match ----------------------------------
+# function: get compatibly matched neighbors extending match -------------------
+# NOTE: this is one of the "VF3" improvements
 cdef cpp_unordered_set[int] filter_candidates_undirected(int matchable_node_G,
                                                          cpp_unordered_map[int, cpp_vector[int]] & neighbors_ordered_G,
                                                          cpp_unordered_map[int, cpp_vector[int]] & neighbors_ordered_H,
@@ -1473,7 +1478,9 @@ cdef cpp_bool syntactic_feasibility_undirected(int node1,
                                                cpp_unordered_map[int, int] & forward_match,
                                                cpp_unordered_map[int, int] & inverse_match,
                                                cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_G,
-                                               cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_H) noexcept:
+                                               cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_H,
+                                               cpp_unordered_map[int, cpp_vector[int]] & ordered_neigh_G,
+                                               cpp_unordered_map[int, cpp_vector[int]] & ordered_neigh_H) noexcept:
 
     # local variables
     cdef int node = 0
@@ -1498,7 +1505,7 @@ cdef cpp_bool syntactic_feasibility_undirected(int node1,
             return(False)
 
     # look ahead 0: consistency of neighbors in match, while doing tripartition of neighbors
-    for node in neigh_G[node1]:
+    for node in ordered_neigh_G[node1]:
         if(current_match_G.find(node) != current_match_G.end()):
             # check that the mapping is also the corresponding neighbor
             mapped = forward_match[node]
@@ -1512,7 +1519,7 @@ cdef cpp_bool syntactic_feasibility_undirected(int node1,
                 # save neighbor since we are just comparing numbers later
                 neighbors_extern_G = neighbors_extern_G + 1
 
-    for node in neigh_H[node2]:
+    for node in ordered_neigh_H[node2]:
         if(current_match_H.find(node) != current_match_H.end()):
             # check that the mapping is also the corresponding neighbor
             mapped = inverse_match[node]
