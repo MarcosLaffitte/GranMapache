@@ -24,9 +24,11 @@
 # this allows one to use the pip version linked to the required python version
 # instead of the default version of the system
 
-# Builing cython code in place if dependencies are already satisfied
-# LINUX:   python setup.py build_ext --inplace
-# WINDOWS: python setup.py build_ext -i --compiler=mingw32 -DMS_WIN64
+# Builing cython code IN PLACE if dependencies are already satisfied
+# LINUX:
+# python setup.py build_ext --inplace
+# WINDOWS:
+# python setup.py build_ext -i --compiler=mingw32 -DMS_WIN64
 # Note - about Numpy Api Warning see:
 # https://stackoverflow.com/questions/52749662/using-deprecated-numpy-api
 

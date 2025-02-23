@@ -103,7 +103,7 @@ cdef struct subgraph_isomorphisms_undirected_graph:
     cpp_unordered_map[int, cpp_unordered_set[int]] neighbors
     # neighbors data complement (for constant look-ups)
     cpp_unordered_map[int, cpp_unordered_set[int]] neighbors_complement
-    # ordered neighbors data (for insertion into ring)
+    # ordered neighbors data (for insertion into ring, from original or complement)
     cpp_unordered_map[int, cpp_vector[int]] neighbors_ordered
 
 
@@ -124,7 +124,7 @@ cdef struct subgraph_isomorphisms_directed_graph:
     # neighbors data complement (for constant look-ups)
     cpp_unordered_map[int, cpp_unordered_set[int]] in_neighbors_complement
     cpp_unordered_map[int, cpp_unordered_set[int]] out_neighbors_complement
-    # ordered neighbors data (for insertion into ring)
+    # ordered neighbors data (for insertion into ring, from original or complement)
     cpp_unordered_map[int, cpp_vector[int]] in_neighbors_ordered
     cpp_unordered_map[int, cpp_vector[int]] out_neighbors_ordered
 
@@ -208,9 +208,11 @@ cdef struct subgraph_isomorphisms_search_params:
     cpp_bool got_order_for_G
     # given total order for H
     cpp_bool got_order_for_H
-    # return all isomorphisms
+    # return all subgraph isomorphisms
     cpp_bool all_isomorphisms
-    # expected amount of matches (order of the smaller graph)
+    # return analyzing complement
+    cpp_bool complement
+    # expected amount of matches (order of the graphs)
     size_t expected_order
     int expected_order_int
     # total order for VF2-like search
@@ -231,7 +233,7 @@ cdef struct subgraph_isomorphisms_search_params:
 
 
 # struct: nodes added or removed from rings during recursive search ------------
-cdef struct isomorphisms_change_in_state_undirected:
+cdef struct subgraph_isomorphisms_change_in_state_undirected:
     # node effectively removed from ring in G
     cpp_bool removed_node_ring_G
     # node effectively removed from ring in H
@@ -246,7 +248,7 @@ cdef struct isomorphisms_change_in_state_undirected:
 
 
 # struct: nodes added or removed from rings during recursive search ------------
-cdef struct isomorphisms_change_in_state_directed:
+cdef struct subgraph_isomorphisms_change_in_state_directed:
     # node effectively removed from ring in G
     cpp_bool removed_node_in_ring_G
     cpp_bool removed_node_out_ring_G
@@ -270,20 +272,20 @@ cdef struct isomorphisms_change_in_state_directed:
 
 
 
-# functions - search isomorphisms - wrapper ####################################
+# functions - search subgraph isomorphisms - wrapper ###########################
 
 
 
 
 
-# function: callable wrapper for searching for isomorphisms --------------------
-def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx DiGraph
-                        nx_H = nx.Graph(),           # can also be a networkx DiGraph
-                        node_labels = False,         # consider node labels when evaluating isomorphisms
-                        edge_labels = False,         # consider edge labels when evaluating isomorphisms
-                        all_isomorphisms = False,    # by default stops when finding one isomorphism (if any)
-                        total_order_A = dict(),      # custom total order for the nodes of first graph (nx_G)
-                        total_order_B = dict()):     # custom total order for the nodes of second graph (nx_H)
+# function: callable wrapper for searching for subgraph isomorphisms -----------
+def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx DiGraph
+                                 nx_H = nx.Graph(),           # can also be a networkx DiGraph
+                                 node_labels = False,         # consider node labels when evaluating subgraph isomorphisms
+                                 edge_labels = False,         # consider edge labels when evaluating subgraph isomorphisms
+                                 all_isomorphisms = False,    # by default stops when finding one subgraph isomorphism (if any)
+                                 total_order_A = dict(),      # custom total order for the nodes of first graph (nx_G)
+                                 total_order_B = dict()):     # custom total order for the nodes of second graph (nx_H)
 
     # description
     """
@@ -292,14 +294,15 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     possibly but not necessarily with either node labels and/or edge labels, with
     the same number of nodes and edges, and a boolean variable indicating if the
     function should finish when finding only one isomorphism from G to H (if any),
-    or if it should search for all possible isomorphisms from G to H and return them.
-    In addition, the VF2-like search requires a total order for the nodes of one of
-    the input graphs. In principle this can be an arbitrary total order, though it
-    has been shown that certain orders may improve the search (see VF2++). Here we
-    order the nodes based on their (out) degree in descending order by default.
-    Moreover, a custom total order can be provided for either or both graphs with the
-    optional input dictionaries total_order_A and total_order_B, which might help the
-    search whenever such orders encode a bijection almost resembling an isomorphism,
+    or if it should search for all possible isomorphisms from G to H and return
+    them. In addition, the VF2-like search requires a total order for the nodes
+    of one of the input graphs (traditionally the domain graph). In principle this
+    can be an arbitrary total order, though it has been shown that certain orders
+    may improve the search (see VF2++). Here we order the nodes in both graphs
+    based on their (out) degree in descending order by default. Moreover, a custom
+    total order can be provided for either or both graphs with the optional input
+    dictionaries total_order_A and total_order_B, which might help the search
+    whenever such orders encode a bijection almost resembling an isomorphism,
     obtained, for example, from a canonicalization or construction algorithm.
 
     > input:
@@ -330,11 +333,12 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     * gmapache.integerization.encode_graphs
     * gmapache.integerization.decode_graphs
     * gmapache.integerization.decode_match
-    * gmapache.isomorphisms.search_isomorphisms_input_correctness
-    * gmapache.isomorphisms.search_isomorphisms_label_consistency
-    * gmapache.isomorphisms.search_isomorphisms_order_neighbors
-    * gmapache.isomorphisms.search_isomorphisms_undirected
-    * gmapache.isomorphisms.search_isomorphisms_directed
+    * gmapache.isomorphisms.search_subgraph_isomorphisms_input_correctness
+    * gmapache.isomorphisms.search_subgraph_isomorphisms_order_nodes_by_degree
+    * gmapache.isomorphisms.search_subgraph_isomorphisms_label_consistency
+    * gmapache.isomorphisms.search_subgraph_isomorphisms_order_neighbors
+    * gmapache.isomorphisms.search_subgraph_isomorphisms_undirected
+    * gmapache.isomorphisms.search_subgraph_isomorphisms_directed
     """
 
     # output holders
@@ -368,23 +372,20 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     cdef cpp_vector[int] out_deg_G
     cdef cpp_vector[int] out_deg_H
     cdef cpp_vector[int] each_vector
-    cdef cpp_vector[int] all_degrees
     cdef cpp_vector[cpp_vector[int]] all_edges_G
     cdef cpp_vector[cpp_vector[int]] all_edges_H
-    cdef cpp_vector[cpp_pair[int, int]] temp_nodes
     cdef cpp_vector[cpp_pair[int, int]] all_nodes_G
     cdef cpp_vector[cpp_pair[int, int]] all_nodes_H
-    cdef cpp_vector[cpp_pair[int, int]] temp_vector
+    cdef cpp_vector[cpp_pair[cpp_pair[int, int], int]] temp_nodes
     cdef cpp_vector[cpp_set[cpp_pair[int, int]]] encoded_isomorphisms
     cdef cpp_set[cpp_pair[int, int]] each_isomorphism
-    cdef cpp_unordered_map[int, cpp_vector[cpp_pair[int, int]]] nodes_by_degree
-    cdef isomorphisms_search_params params
-    cdef isomorphisms_directed_graph directed_G
-    cdef isomorphisms_directed_graph directed_H
-    cdef isomorphisms_undirected_graph undirected_G
-    cdef isomorphisms_undirected_graph undirected_H
-    cdef isomorphisms_state_directed initial_state_directed
-    cdef isomorphisms_state_undirected initial_state_undirected
+    cdef subgraph_isomorphisms_search_params params
+    cdef subgraph_isomorphisms_directed_graph directed_G
+    cdef subgraph_isomorphisms_directed_graph directed_H
+    cdef subgraph_isomorphisms_undirected_graph undirected_G
+    cdef subgraph_isomorphisms_undirected_graph undirected_H
+    cdef subgraph_isomorphisms_state_directed initial_state_directed
+    cdef subgraph_isomorphisms_state_undirected initial_state_undirected
 
     # local variables (python)
     cdef list encoded_graphs = []
@@ -397,7 +398,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     complement_H = None
 
     # test input correctness
-    input_correctness = search_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_labels, all_isomorphisms, total_order_A, total_order_B)
+    input_correctness = search_subgraph_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_labels, all_isomorphisms, total_order_A, total_order_B)
     if(not input_correctness):
         return([], False)
 
@@ -453,93 +454,41 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     if(params.directed_graphs):
         # order for directed G
         if(not params.got_order_for_G):
-            all_degrees.clear()
-            nodes_by_degree.clear()
-            temp_nodes = [(node, info["GMNL"]) for (node, info) in encoded_graphs[0].nodes(data = True)]
-            for each_pair in temp_nodes:
-                if(params.complement):
-                    deg = complement_G.out_degree[each_pair.first]
-                else:
-                    deg = encoded_graphs[0].out_degree[each_pair.first]
-                if(nodes_by_degree.find(deg) != nodes_by_degree.end()):
-                    nodes_by_degree[deg].push_back(each_pair)
-                else:
-                    all_degrees.push_back(deg)
-                    temp_vector.clear()
-                    temp_vector.push_back(each_pair)
-                    nodes_by_degree[deg] = temp_vector
-            sort(all_degrees.begin(), all_degrees.end())
-            reverse(all_degrees.begin(), all_degrees.end())
-            for deg in all_degrees:
-                for each_pair in nodes_by_degree[deg]:
-                    all_nodes_G.push_back(each_pair)
+            # get node information
+            if(params.complement):
+                temp_nodes = [((node, info["GMNL"]), complement_G.out_degree[node]) for (node, info) in encoded_graphs[0].nodes(data = True)]
+            else:
+                temp_nodes = [((node, info["GMNL"]), encoded_graphs[0].out_degree[node]) for (node, info) in encoded_graphs[0].nodes(data = True)]
+            # make vector of ordered nodes
+            search_subgraph_isomorphisms_order_nodes_by_degree(temp_nodes, all_nodes_G)
         # order for directed H
         if(not params.got_order_for_H):
-            all_degrees.clear()
-            nodes_by_degree.clear()
-            temp_nodes = [(node, info["GMNL"]) for (node, info) in encoded_graphs[1].nodes(data = True)]
-            for each_pair in temp_nodes:
-                if(params.complement):
-                    deg = complement_H.out_degree[each_pair.first]
-                else:
-                    deg = encoded_graphs[1].out_degree[each_pair.first]
-                if(nodes_by_degree.find(deg) != nodes_by_degree.end()):
-                    nodes_by_degree[deg].push_back(each_pair)
-                else:
-                    all_degrees.push_back(deg)
-                    temp_vector.clear()
-                    temp_vector.push_back(each_pair)
-                    nodes_by_degree[deg] = temp_vector
-            sort(all_degrees.begin(), all_degrees.end())
-            reverse(all_degrees.begin(), all_degrees.end())
-            for deg in all_degrees:
-                for each_pair in nodes_by_degree[deg]:
-                    all_nodes_H.push_back(each_pair)
+            # get node information
+            if(params.complement):
+                temp_nodes = [((node, info["GMNL"]), complement_H.out_degree[node]) for (node, info) in encoded_graphs[1].nodes(data = True)]
+            else:
+                temp_nodes = [((node, info["GMNL"]), encoded_graphs[1].out_degree[node]) for (node, info) in encoded_graphs[1].nodes(data = True)]
+            # make vector of ordered nodes
+            search_subgraph_isomorphisms_order_nodes_by_degree(temp_nodes, all_nodes_H)
     else:
         # order for undirected G
         if(not params.got_order_for_G):
-            all_degrees.clear()
-            nodes_by_degree.clear()
-            temp_nodes = [(node, info["GMNL"]) for (node, info) in encoded_graphs[0].nodes(data = True)]
-            for each_pair in temp_nodes:
-                if(params.complement):
-                    deg = complement_G.degree[each_pair.first]
-                else:
-                    deg = encoded_graphs[0].degree[each_pair.first]
-                if(nodes_by_degree.find(deg) != nodes_by_degree.end()):
-                    nodes_by_degree[deg].push_back(each_pair)
-                else:
-                    all_degrees.push_back(deg)
-                    temp_vector.clear()
-                    temp_vector.push_back(each_pair)
-                    nodes_by_degree[deg] = temp_vector
-            sort(all_degrees.begin(), all_degrees.end())
-            reverse(all_degrees.begin(), all_degrees.end())
-            for deg in all_degrees:
-                for each_pair in nodes_by_degree[deg]:
-                    all_nodes_G.push_back(each_pair)
+            # get node information
+            if(params.complement):
+                temp_nodes = [((node, info["GMNL"]), complement_G.degree[node]) for (node, info) in encoded_graphs[0].nodes(data = True)]
+            else:
+                temp_nodes = [((node, info["GMNL"]), encoded_graphs[0].degree[node]) for (node, info) in encoded_graphs[0].nodes(data = True)]
+            # make vector of ordered nodes
+            search_subgraph_isomorphisms_order_nodes_by_degree(temp_nodes, all_nodes_G)
         # order for undirected H
         if(not params.got_order_for_H):
-            all_degrees.clear()
-            nodes_by_degree.clear()
-            temp_nodes = [(node, info["GMNL"]) for (node, info) in encoded_graphs[1].nodes(data = True)]
-            for each_pair in temp_nodes:
-                if(params.complement):
-                    deg = complement_H.degree[each_pair.first]
-                else:
-                    deg = encoded_graphs[1].degree[each_pair.first]
-                if(nodes_by_degree.find(deg) != nodes_by_degree.end()):
-                    nodes_by_degree[deg].push_back(each_pair)
-                else:
-                    all_degrees.push_back(deg)
-                    temp_vector.clear()
-                    temp_vector.push_back(each_pair)
-                    nodes_by_degree[deg] = temp_vector
-            sort(all_degrees.begin(), all_degrees.end())
-            reverse(all_degrees.begin(), all_degrees.end())
-            for deg in all_degrees:
-                for each_pair in nodes_by_degree[deg]:
-                    all_nodes_H.push_back(each_pair)
+            # get node information
+            if(params.complement):
+                temp_nodes = [((node, info["GMNL"]), complement_H.degree[node]) for (node, info) in encoded_graphs[1].nodes(data = True)]
+            else:
+                temp_nodes = [((node, info["GMNL"]), encoded_graphs[1].degree[node]) for (node, info) in encoded_graphs[1].nodes(data = True)]
+            # make vector of ordered nodes
+            search_subgraph_isomorphisms_order_nodes_by_degree(temp_nodes, all_nodes_H)
 
     # prepare nodes, neighbors and total order
     if(params.directed_graphs):
@@ -738,13 +687,13 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     if(params.node_labels or params.edge_labels):
         # test consistency of node and/or edge labels
         if(params.directed_graphs):
-            consistent_labels = search_isomorphisms_label_consistency(params.node_labels, params.edge_labels,
-                                                                      directed_G.nodes, directed_H.nodes,
-                                                                      directed_G.edges, directed_H.edges)
+            consistent_labels = search_subgraph_isomorphisms_label_consistency(params.node_labels, params.edge_labels,
+                                                                               directed_G.nodes, directed_H.nodes,
+                                                                               directed_G.edges, directed_H.edges)
         else:
-            consistent_labels = search_isomorphisms_label_consistency(params.node_labels, params.edge_labels,
-                                                                      undirected_G.nodes, undirected_H.nodes,
-                                                                      undirected_G.edges, undirected_H.edges)
+            consistent_labels = search_subgraph_isomorphisms_label_consistency(params.node_labels, params.edge_labels,
+                                                                               undirected_G.nodes, undirected_H.nodes,
+                                                                               undirected_G.edges, undirected_H.edges)
         # if labels are not consistent then the graphs cannot be isomorphic
         if(not consistent_labels):
             return([], False)
@@ -753,41 +702,41 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     if(params.complement):
         if(params.directed_graphs):
             # order nodes of G
-            search_isomorphisms_order_neighbors(all_nodes_G, directed_G.in_neighbors_complement, directed_G.in_neighbors_ordered,
+            search_subgraph_isomorphisms_order_neighbors(all_nodes_G, directed_G.in_neighbors_complement, directed_G.in_neighbors_ordered,
                                                 params.total_order_G, params.inverse_total_order_G)
-            search_isomorphisms_order_neighbors(all_nodes_G, directed_G.out_neighbors_complement, directed_G.out_neighbors_ordered,
+            search_subgraph_isomorphisms_order_neighbors(all_nodes_G, directed_G.out_neighbors_complement, directed_G.out_neighbors_ordered,
                                                 params.total_order_G, params.inverse_total_order_G)
             # order nodes of H
-            search_isomorphisms_order_neighbors(all_nodes_H, directed_H.in_neighbors_complement, directed_H.in_neighbors_ordered,
+            search_subgraph_isomorphisms_order_neighbors(all_nodes_H, directed_H.in_neighbors_complement, directed_H.in_neighbors_ordered,
                                                 params.total_order_H, params.inverse_total_order_H)
-            search_isomorphisms_order_neighbors(all_nodes_H, directed_H.out_neighbors_complement, directed_H.out_neighbors_ordered,
+            search_subgraph_isomorphisms_order_neighbors(all_nodes_H, directed_H.out_neighbors_complement, directed_H.out_neighbors_ordered,
                                                 params.total_order_H, params.inverse_total_order_H)
         else:
             # order nodes of G
-            search_isomorphisms_order_neighbors(all_nodes_G, undirected_G.neighbors_complement, undirected_G.neighbors_ordered,
+            search_subgraph_isomorphisms_order_neighbors(all_nodes_G, undirected_G.neighbors_complement, undirected_G.neighbors_ordered,
                                                 params.total_order_G, params.inverse_total_order_G)
             # order nodes of H
-            search_isomorphisms_order_neighbors(all_nodes_H, undirected_H.neighbors_complement, undirected_H.neighbors_ordered,
+            search_subgraph_isomorphisms_order_neighbors(all_nodes_H, undirected_H.neighbors_complement, undirected_H.neighbors_ordered,
                                                 params.total_order_H, params.inverse_total_order_H)
     else:
         if(params.directed_graphs):
             # order nodes of G
-            search_isomorphisms_order_neighbors(all_nodes_G, directed_G.in_neighbors, directed_G.in_neighbors_ordered,
-                                                params.total_order_G, params.inverse_total_order_G)
-            search_isomorphisms_order_neighbors(all_nodes_G, directed_G.out_neighbors, directed_G.out_neighbors_ordered,
-                                                params.total_order_G, params.inverse_total_order_G)
+            search_subgraph_isomorphisms_order_neighbors(all_nodes_G, directed_G.in_neighbors, directed_G.in_neighbors_ordered,
+                                                         params.total_order_G, params.inverse_total_order_G)
+            search_subgraph_isomorphisms_order_neighbors(all_nodes_G, directed_G.out_neighbors, directed_G.out_neighbors_ordered,
+                                                         params.total_order_G, params.inverse_total_order_G)
             # order nodes of H
-            search_isomorphisms_order_neighbors(all_nodes_H, directed_H.in_neighbors, directed_H.in_neighbors_ordered,
-                                                params.total_order_H, params.inverse_total_order_H)
-            search_isomorphisms_order_neighbors(all_nodes_H, directed_H.out_neighbors, directed_H.out_neighbors_ordered,
-                                                params.total_order_H, params.inverse_total_order_H)
+            search_subgraph_isomorphisms_order_neighbors(all_nodes_H, directed_H.in_neighbors, directed_H.in_neighbors_ordered,
+                                                         params.total_order_H, params.inverse_total_order_H)
+            search_subgraph_isomorphisms_order_neighbors(all_nodes_H, directed_H.out_neighbors, directed_H.out_neighbors_ordered,
+                                                         params.total_order_H, params.inverse_total_order_H)
         else:
             # order nodes of G
-            search_isomorphisms_order_neighbors(all_nodes_G, undirected_G.neighbors, undirected_G.neighbors_ordered,
-                                                params.total_order_G, params.inverse_total_order_G)
+            search_subgraph_isomorphisms_order_neighbors(all_nodes_G, undirected_G.neighbors, undirected_G.neighbors_ordered,
+                                                         params.total_order_G, params.inverse_total_order_G)
             # order nodes of H
-            search_isomorphisms_order_neighbors(all_nodes_H, undirected_H.neighbors, undirected_H.neighbors_ordered,
-                                                params.total_order_H, params.inverse_total_order_H)
+            search_subgraph_isomorphisms_order_neighbors(all_nodes_H, undirected_H.neighbors, undirected_H.neighbors_ordered,
+                                                         params.total_order_H, params.inverse_total_order_H)
 
     # set recursion limit
     required_limit = nx_G.order()
@@ -795,17 +744,17 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     if(current_limit < (scalation_value * required_limit)):
         setrecursionlimit(int(scalation_value * required_limit))
 
-    # evaluate isomorphisms
+    # evaluate subgraph isomorphisms
     if(params.directed_graphs):
-        search_isomorphisms_directed(params, initial_state_directed, directed_G, directed_H, encoded_isomorphisms)
+        search_subgraph_isomorphisms_directed(params, initial_state_directed, directed_G, directed_H, encoded_isomorphisms)
     else:
-        search_isomorphisms_undirected(params, initial_state_undirected, undirected_G, undirected_H, encoded_isomorphisms)
+        search_subgraph_isomorphisms_undirected(params, initial_state_undirected, undirected_G, undirected_H, encoded_isomorphisms)
 
-    # decode isomorphisms
+    # decode subgraph isomorphisms
     for each_isomorphism in encoded_isomorphisms:
         isomorphisms.append(decode_match(list(each_isomorphism), encoded_node_names))
 
-    # check if the graphs were isomorphic
+    # check if there were subgraph isomorphisms
     if(len(isomorphisms) > 0):
         found_isomorphism = True
 
@@ -823,7 +772,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
 
 
 # function: test input correctness ---------------------------------------------
-cdef cpp_bool search_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_labels, all_isomorphisms, total_order_A, total_order_B):
+cdef cpp_bool search_subgraph_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_labels, all_isomorphisms, total_order_A, total_order_B):
 
     # local variables (cython)
     cdef int minimum_order = 0
@@ -954,12 +903,12 @@ cdef cpp_bool search_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edg
 
 
 # function: consistency of node or edge labels ---------------------------------
-cdef cpp_bool search_isomorphisms_label_consistency(cpp_bool & node_labels,
-                                                    cpp_bool & edge_labels,
-                                                    cpp_unordered_map[int, int] & nodes_G,
-                                                    cpp_unordered_map[int, int] & nodes_H,
-                                                    cpp_unordered_map[cpp_string, int] & edges_G,
-                                                    cpp_unordered_map[cpp_string, int] & edges_H) noexcept:
+cdef cpp_bool search_subgraph_isomorphisms_label_consistency(cpp_bool & node_labels,
+                                                             cpp_bool & edge_labels,
+                                                             cpp_unordered_map[int, int] & nodes_G,
+                                                             cpp_unordered_map[int, int] & nodes_H,
+                                                             cpp_unordered_map[cpp_string, int] & edges_G,
+                                                             cpp_unordered_map[cpp_string, int] & edges_H) noexcept:
 
     # local variables
     cdef int label = 0
@@ -1060,12 +1009,52 @@ cdef cpp_bool search_isomorphisms_label_consistency(cpp_bool & node_labels,
 
 
 
+# function: order nodes by decreasing (out) degree -----------------------------
+cdef void search_subgraph_isomorphisms_order_nodes_by_degree(cpp_vector[cpp_pair[cpp_pair[int, int], int]] & nodes_info,
+                                                             cpp_vector[cpp_pair[int, int]] & all_nodes) noexcept:
+
+    # local variables
+    cdef int deg = 0
+    cdef cpp_pair[int, int] each_pair
+    cdef cpp_pair[cpp_pair[int, int], int] each_info_tuple
+    cdef cpp_vector[int] all_degrees
+    cdef cpp_vector[cpp_pair[int, int]] temp_vector
+    cdef cpp_unordered_map[int, cpp_vector[cpp_pair[int, int]]] nodes_by_degree
+
+    # partition node information by node degree
+    for each_info_tuple in nodes_info:
+        # determine if degree was already encountered
+        if(nodes_by_degree.find(each_info_tuple.second) != nodes_by_degree.end()):
+            # save new pair associated to corresponding degree
+            nodes_by_degree[each_info_tuple.second].push_back(each_info_tuple.first)
+        else:
+            # save new degree and create vector of pairs with node information
+            all_degrees.push_back(each_info_tuple.second)
+            temp_vector.clear()
+            temp_vector.push_back(each_info_tuple.first)
+            nodes_by_degree[each_info_tuple.second] = temp_vector
+
+    # sort encountered degrees in decreasing order
+    sort(all_degrees.begin(), all_degrees.end())
+    reverse(all_degrees.begin(), all_degrees.end())
+
+    # traverse nodes one to save them by decreasing degree
+    for deg in all_degrees:
+        for each_pair in nodes_by_degree[deg]:
+            all_nodes.push_back(each_pair)
+
+    # end of function
+
+
+
+
+
 # function: order neighbors according to the total order -----------------------
-cdef void search_isomorphisms_order_neighbors(cpp_vector[cpp_pair[int, int]] & all_nodes,
-                                              cpp_unordered_map[int, cpp_unordered_set[int]] & all_neighbors,
-                                              cpp_unordered_map[int, cpp_vector[int]] & all_neighbors_ordered,
-                                              cpp_unordered_map[int, int] & total_order,
-                                              cpp_unordered_map[int, int] & inverse_total_order) noexcept:
+cdef void search_subgraph_isomorphisms_order_neighbors(cpp_vector[cpp_pair[int, int]] & all_nodes,
+                                                       cpp_unordered_map[int, cpp_unordered_set[int]] & all_neighbors,
+                                                       cpp_unordered_map[int, cpp_vector[int]] & all_neighbors_ordered,
+                                                       cpp_unordered_map[int, int] & total_order,
+                                                       cpp_unordered_map[int, int] & inverse_total_order) noexcept:
 
     # local variables
     cdef int each_order = 0
@@ -1074,7 +1063,7 @@ cdef void search_isomorphisms_order_neighbors(cpp_vector[cpp_pair[int, int]] & a
     cdef cpp_vector[int] empty_vector
     cdef cpp_pair[int, int] each_pair
 
-    # order nodes
+    # order neighbors of each node
     for each_pair in all_nodes:
         # get total orders
         temp_vector.clear()
@@ -1093,23 +1082,25 @@ cdef void search_isomorphisms_order_neighbors(cpp_vector[cpp_pair[int, int]] & a
 
 
 
-# functions - search isomorphisms - undirected #################################
+# functions - search subgraph isomorphisms - undirected ########################
 
 
 
 
 
 # function: core routine of VF2-like undirected approach - recursive -----------
-cdef void search_isomorphisms_undirected(isomorphisms_search_params & params,
-                                         isomorphisms_state_undirected & current_state,
-                                         isomorphisms_undirected_graph & G,
-                                         isomorphisms_undirected_graph & H,
-                                         cpp_vector[cpp_set[cpp_pair[int, int]]] & all_matches) noexcept:
+cdef void search_subgraph_isomorphisms_undirected(subgraph_isomorphisms_search_params & params,
+                                                  subgraph_isomorphisms_state_undirected & current_state,
+                                                  subgraph_isomorphisms_undirected_graph & G,
+                                                  subgraph_isomorphisms_undirected_graph & H,
+                                                  cpp_vector[cpp_set[cpp_pair[int, int]]] & all_matches) noexcept:
 
     # local variables
     cdef int node = 0
-    cdef int viable_node_G = 0
-    cdef int target_node_H = 0
+    cdef int matchable_node_G = 0
+    cdef int candidate_node_H = 0
+    cdef cpp_bool use_filter = False
+    cdef cpp_bool viable_candidate = True
     cdef cpp_bool semantic_feasibility = True
     cdef cpp_bool syntactic_feasibility = True
     cdef cpp_pair[int, int] candidates_info
@@ -1118,9 +1109,10 @@ cdef void search_isomorphisms_undirected(isomorphisms_search_params & params,
     cdef cpp_list[int] ring_H_ordered_backup
     cdef cpp_list[int] unmatched_G_ordered_backup
     cdef cpp_list[int] unmatched_H_ordered_backup
-    cdef isomorphisms_change_in_state_undirected change_in_state
+    cdef cpp_unordered_set[int] filtered_ring
+    cdef subgraph_isomorphisms_change_in_state_undirected change_in_state
 
-    # save if isomorphism was reached
+    # save if subgraph isomorphism was reached
     if(current_state.match.size() == params.expected_order):
         all_matches.push_back(current_state.match)
         if(not params.all_isomorphisms):
@@ -1138,81 +1130,101 @@ cdef void search_isomorphisms_undirected(isomorphisms_search_params & params,
         # get minimum and candidates to form pairs
         candidates_info = candidates_info_undirected(params, current_state)
 
-        # get minimum node in H
-        target_node_H = candidates_info.first
+        # get minimum node in G
+        matchable_node_G = candidates_info.first
 
-        # get list of candidates in G
+        # get list of candidates in H from ring
         if(candidates_info.second == 0):
-            # from ring
-            ordered_candidates = current_state.ring_G_ordered
+            # order version of candidates
+            ordered_candidates = current_state.ring_H_ordered
+            # get filter for candidates, i.e., with compatibly matched neighbors in match (different from syntactic feasibility)
+            filtered_ring = filter_candidates_undirected(matchable_node_G, G.neighbors_ordered, H.neighbors_ordered, current_state)
+            # determine if filter is to be used
+            use_filter = (filtered_ring.size() != ordered_candidates.size())
+            # finish early if filter should be used but it is empty
+            if(use_filter and (filtered_ring.empty())):
+                return
+
+        # get list of candidates in H from unmatched
         if(candidates_info.second == 1):
-            # from unmatched
-            ordered_candidates = current_state.unmatched_G_ordered
+            # order version of candidates
+            ordered_candidates = current_state.unmatched_H_ordered
 
         # evaluate candidate pairs
-        for viable_node_G in ordered_candidates:
+        for candidate_node_H in ordered_candidates:
 
-            # evaluate syntactic feasibility (possibly over complement graph)
-            if(params.complement):
-                syntactic_feasibility = syntactic_feasibility_undirected(viable_node_G,
-                                                                         target_node_H,
-                                                                         current_state.ring_G,
-                                                                         current_state.ring_H,
-                                                                         current_state.match_G,
-                                                                         current_state.match_H,
-                                                                         G.loops,
-                                                                         H.loops,
-                                                                         current_state.forward_match,
-                                                                         current_state.inverse_match,
-                                                                         G.neighbors_complement,
-                                                                         H.neighbors_complement)
-            else:
-                syntactic_feasibility = syntactic_feasibility_undirected(viable_node_G,
-                                                                         target_node_H,
-                                                                         current_state.ring_G,
-                                                                         current_state.ring_H,
-                                                                         current_state.match_G,
-                                                                         current_state.match_H,
-                                                                         G.loops,
-                                                                         H.loops,
-                                                                         current_state.forward_match,
-                                                                         current_state.inverse_match,
-                                                                         G.neighbors,
-                                                                         H.neighbors)
+            # test if candidate is in filter (only if required)
+            if(use_filter):
+                viable_candidate = (filtered_ring.find(candidate_node_H) != filtered_ring.end())
 
-            # evaluate semantic feasibility (always over original graphs)
-            if(syntactic_feasibility):
-                if(params.node_labels or params.edge_labels):
-                    semantic_feasibility = semantic_feasibility_undirected(params.node_labels,
-                                                                           params.edge_labels,
-                                                                           viable_node_G,
-                                                                           target_node_H,
-                                                                           current_state.match_G,
-                                                                           G.loops,
-                                                                           current_state.forward_match,
-                                                                           G.nodes,
-                                                                           H.nodes,
-                                                                           G.neighbors,
-                                                                           G.edges,
-                                                                           H.edges)
+            # control variable changing only when filter is actually being used
+            if(viable_candidate):
 
-                # push to stack if valid
-                if(semantic_feasibility):
-                    # extend match with the new pair
-                    change_in_state = extend_match_undirected(candidates_info.second, viable_node_G, target_node_H, G, H, current_state)
-                    # recursive call
-                    search_isomorphisms_undirected(params, current_state, G, H, all_matches)
-                    # finish if only one isosmorphism was requested and it was already found
-                    if(not all_matches.empty()):
-                        if(not params.all_isomorphisms):
-                            return
-                    # restore state unordered sets
-                    restore_match_undirected(viable_node_G, target_node_H, change_in_state, current_state)
-                    # restore state ordered lists
-                    current_state.ring_G_ordered = ring_G_ordered_backup
-                    current_state.ring_H_ordered = ring_H_ordered_backup
-                    current_state.unmatched_G_ordered = unmatched_G_ordered_backup
-                    current_state.unmatched_H_ordered = unmatched_H_ordered_backup
+                # evaluate syntactic feasibility (possibly over complement graph)
+                if(params.complement):
+                    syntactic_feasibility = syntactic_feasibility_undirected(matchable_node_G,
+                                                                             candidate_node_H,
+                                                                             current_state.ring_G,
+                                                                             current_state.ring_H,
+                                                                             current_state.match_G,
+                                                                             current_state.match_H,
+                                                                             G.loops,
+                                                                             H.loops,
+                                                                             current_state.forward_match,
+                                                                             current_state.inverse_match,
+                                                                             G.neighbors_complement,
+                                                                             H.neighbors_complement,
+                                                                             G.neighbors_ordered,
+                                                                             H.neighbors_ordered)
+                else:
+                    syntactic_feasibility = syntactic_feasibility_undirected(matchable_node_G,
+                                                                             candidate_node_H,
+                                                                             current_state.ring_G,
+                                                                             current_state.ring_H,
+                                                                             current_state.match_G,
+                                                                             current_state.match_H,
+                                                                             G.loops,
+                                                                             H.loops,
+                                                                             current_state.forward_match,
+                                                                             current_state.inverse_match,
+                                                                             G.neighbors,
+                                                                             H.neighbors,
+                                                                             G.neighbors_ordered,
+                                                                             H.neighbors_ordered)
+
+                # evaluate semantic feasibility (always over original graphs)
+                if(syntactic_feasibility):
+                    if(params.node_labels or params.edge_labels):
+                        semantic_feasibility = semantic_feasibility_undirected(params.node_labels,
+                                                                               params.edge_labels,
+                                                                               matchable_node_G,
+                                                                               candidate_node_H,
+                                                                               current_state.match_G,
+                                                                               G.loops,
+                                                                               current_state.forward_match,
+                                                                               G.nodes,
+                                                                               H.nodes,
+                                                                               G.neighbors,
+                                                                               G.edges,
+                                                                               H.edges)
+
+                    # push to stack if valid
+                    if(semantic_feasibility):
+                        # extend match with the new pair
+                        change_in_state = extend_match_undirected(candidates_info.second, matchable_node_G, candidate_node_H, G, H, current_state)
+                        # recursive call
+                        search_subgraph_isomorphisms_undirected(params, current_state, G, H, all_matches)
+                        # finish if only one subgraph isosmorphism was requested and it was already found
+                        if(not all_matches.empty()):
+                            if(not params.all_isomorphisms):
+                                return
+                        # restore state unordered sets
+                        restore_match_undirected(matchable_node_G, candidate_node_H, change_in_state, current_state)
+                        # restore state ordered lists
+                        current_state.ring_G_ordered = ring_G_ordered_backup
+                        current_state.ring_H_ordered = ring_H_ordered_backup
+                        current_state.unmatched_G_ordered = unmatched_G_ordered_backup
+                        current_state.unmatched_H_ordered = unmatched_H_ordered_backup
 
     # end of function
 
@@ -1220,9 +1232,9 @@ cdef void search_isomorphisms_undirected(isomorphisms_search_params & params,
 
 
 
-# function: get candidate pairs for undirected isomorphism search --------------
-cdef cpp_pair[int, int] candidates_info_undirected(isomorphisms_search_params & params,
-                                                   isomorphisms_state_undirected & current_state) noexcept:
+# function: get candidate pairs for undirected subgraph isomorphism search -----
+cdef cpp_pair[int, int] candidates_info_undirected(subgraph_isomorphisms_search_params & params,
+                                                   subgraph_isomorphisms_state_undirected & current_state) noexcept:
 
     # output holders
     cdef cpp_pair[int, int] candidates_info
@@ -1235,23 +1247,27 @@ cdef cpp_pair[int, int] candidates_info_undirected(isomorphisms_search_params & 
     # initialize with impossible minimum (total order ranges from 1 to expected_order)
     minimum_value = 10 + params.expected_order_int
 
+    # NOTE: syntactic feasability for subgraph isomorphism guarantees that both rings have
+    # always the same cardinality, thus we only have the following two disjoint options.
+
     # build candidates either with nodes in the rings or with unmatched nodes
     if((not current_state.ring_G.empty()) and (not current_state.ring_H.empty())):
 
-        # get node with minimum order from ring in H
-        for node in current_state.ring_H_ordered:
-            if(params.total_order_H[node] < minimum_value):
-                minimum_value = params.total_order_H[node]
+        # get node with minimum order from (ordered) ring in G
+        for node in current_state.ring_G_ordered:
+            if(params.total_order_G[node] < minimum_value):
+                minimum_value = params.total_order_G[node]
                 minimum_node = node
 
         # build output pair
+        # NOTE: candidates with compatibly-matched neighbors are obtained in a second step
         candidates_info.first = minimum_node
         candidates_info.second = 0
 
     else:
 
-        # get node with minimum order from unmatched nodes in H
-        minimum_node = current_state.unmatched_H_ordered.front()
+        # get node with minimum order from unmatched nodes in G
+        minimum_node = current_state.unmatched_G_ordered.front()
 
         # build output pair
         candidates_info.first = minimum_node
@@ -1264,16 +1280,56 @@ cdef cpp_pair[int, int] candidates_info_undirected(isomorphisms_search_params & 
 
 
 
-# function: upgrade search state by extending match ----------------------------
-cdef isomorphisms_change_in_state_undirected extend_match_undirected(int taken_from,
-                                                                     int node1,
-                                                                     int node2,
-                                                                     isomorphisms_undirected_graph & G,
-                                                                     isomorphisms_undirected_graph & H,
-                                                                     isomorphisms_state_undirected & current_state) noexcept:
+# function: get compatibly-matched neighbors extending match -------------------
+# NOTE: this is one of the "VF3" improvements
+cdef cpp_unordered_set[int] filter_candidates_undirected(int matchable_node_G,
+                                                         cpp_unordered_map[int, cpp_vector[int]] & neighbors_ordered_G,
+                                                         cpp_unordered_map[int, cpp_vector[int]] & neighbors_ordered_H,
+                                                         subgraph_isomorphisms_state_undirected & current_state) noexcept:
 
     # output holders
-    cdef isomorphisms_change_in_state_undirected change_in_state
+    cdef cpp_unordered_set[int] filtered_candidates
+
+    # local variables
+    cdef int node1 = 0
+    cdef int node2 = 0
+    cdef int mapped = 0
+
+    # get filter
+    for node1 in neighbors_ordered_G[matchable_node_G]:
+        # continue as long as filter is not the whole ring
+        if(filtered_candidates.size() != current_state.ring_H.size()):
+            # only for neighbors in the match
+            if(current_state.match_G.find(node1) != current_state.match_G.end()):
+                # get image under match
+                mapped = current_state.forward_match[node1]
+                # traverse neighbors of image under match
+                for node2 in neighbors_ordered_H[mapped]:
+                    # save only the neighbors not in the match
+                    if(current_state.match_H.find(node2) == current_state.match_H.end()):
+                        # unordered set takes care of repetitions
+                        filtered_candidates.insert(node2)
+        else:
+            # if the filter reached the whole ring then just finish early
+            return(filtered_candidates)
+
+    # end of function
+    return(filtered_candidates)
+
+
+
+
+
+# function: upgrade search state by extending match ----------------------------
+cdef subgraph_isomorphisms_change_in_state_undirected extend_match_undirected(int taken_from,
+                                                                              int node1,
+                                                                              int node2,
+                                                                              subgraph_isomorphisms_undirected_graph & G,
+                                                                              subgraph_isomorphisms_undirected_graph & H,
+                                                                              subgraph_isomorphisms_state_undirected & current_state) noexcept:
+
+    # output holders
+    cdef subgraph_isomorphisms_change_in_state_undirected change_in_state
 
     # local variables
     cdef int node = 0
@@ -1345,8 +1401,8 @@ cdef isomorphisms_change_in_state_undirected extend_match_undirected(int taken_f
 # function: backtrack search state by restoring match --------------------------
 cdef void restore_match_undirected(int node1,
                                    int node2,
-                                   isomorphisms_change_in_state_undirected & change_in_state,
-                                   isomorphisms_state_undirected & current_state) noexcept:
+                                   subgraph_isomorphisms_change_in_state_undirected & change_in_state,
+                                   subgraph_isomorphisms_state_undirected & current_state) noexcept:
 
     # local variables
     cdef int node = 0
@@ -1399,7 +1455,7 @@ cdef void restore_match_undirected(int node1,
 
 
 
-# function: evaluate syntactic feasability for isomorphism search --------------
+# function: evaluate syntactic feasability for subgraph isomorphism search -----
 cdef cpp_bool syntactic_feasibility_undirected(int node1,
                                                int node2,
                                                cpp_unordered_set[int] & ring_G,
@@ -1411,7 +1467,9 @@ cdef cpp_bool syntactic_feasibility_undirected(int node1,
                                                cpp_unordered_map[int, int] & forward_match,
                                                cpp_unordered_map[int, int] & inverse_match,
                                                cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_G,
-                                               cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_H) noexcept:
+                                               cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_H,
+                                               cpp_unordered_map[int, cpp_vector[int]] & ordered_neigh_G,
+                                               cpp_unordered_map[int, cpp_vector[int]] & ordered_neigh_H) noexcept:
 
     # local variables
     cdef int node = 0
@@ -1436,7 +1494,7 @@ cdef cpp_bool syntactic_feasibility_undirected(int node1,
             return(False)
 
     # look ahead 0: consistency of neighbors in match, while doing tripartition of neighbors
-    for node in neigh_G[node1]:
+    for node in ordered_neigh_G[node1]:
         if(current_match_G.find(node) != current_match_G.end()):
             # check that the mapping is also the corresponding neighbor
             mapped = forward_match[node]
@@ -1450,7 +1508,7 @@ cdef cpp_bool syntactic_feasibility_undirected(int node1,
                 # save neighbor since we are just comparing numbers later
                 neighbors_extern_G = neighbors_extern_G + 1
 
-    for node in neigh_H[node2]:
+    for node in ordered_neigh_H[node2]:
         if(current_match_H.find(node) != current_match_H.end()):
             # check that the mapping is also the corresponding neighbor
             mapped = inverse_match[node]
@@ -1479,7 +1537,7 @@ cdef cpp_bool syntactic_feasibility_undirected(int node1,
 
 
 
-# function: evaluate semantic feasability for isomorphism search ---------------
+# function: evaluate semantic feasability for subgraph isomorphism search ------
 cdef cpp_bool semantic_feasibility_undirected(cpp_bool node_labels,
                                               cpp_bool edge_labels,
                                               int node1,
@@ -1534,23 +1592,25 @@ cdef cpp_bool semantic_feasibility_undirected(cpp_bool node_labels,
 
 
 
-# functions - search isomorphisms - directed ###################################
+# functions - search subgraph isomorphisms - directed ##########################
 
 
 
 
 
 # function: core routine of VF2-like directed approach - recursive -------------
-cdef void search_isomorphisms_directed(isomorphisms_search_params & params,
-                                       isomorphisms_state_directed & current_state,
-                                       isomorphisms_directed_graph & G,
-                                       isomorphisms_directed_graph & H,
-                                       cpp_vector[cpp_set[cpp_pair[int, int]]] & all_matches) noexcept:
+cdef void search_subgraph_isomorphisms_directed(subgraph_isomorphisms_search_params & params,
+                                                subgraph_isomorphisms_state_directed & current_state,
+                                                subgraph_isomorphisms_directed_graph & G,
+                                                subgraph_isomorphisms_directed_graph & H,
+                                                cpp_vector[cpp_set[cpp_pair[int, int]]] & all_matches) noexcept:
 
     # local variables
     cdef int node = 0
-    cdef int viable_node_G = 0
-    cdef int target_node_H = 0
+    cdef int matchable_node_G = 0
+    cdef int candidate_node_H = 0
+    cdef cpp_bool use_filter = False
+    cdef cpp_bool viable_candidate = True
     cdef cpp_bool semantic_feasibility = True
     cdef cpp_bool in_syntactic_feasibility = True
     cdef cpp_bool out_syntactic_feasibility = True
@@ -1562,9 +1622,10 @@ cdef void search_isomorphisms_directed(isomorphisms_search_params & params,
     cdef cpp_list[int] out_ring_H_ordered_backup
     cdef cpp_list[int] unmatched_G_ordered_backup
     cdef cpp_list[int] unmatched_H_ordered_backup
-    cdef isomorphisms_change_in_state_directed change_in_state
+    cdef cpp_unordered_set[int] filtered_ring
+    cdef subgraph_isomorphisms_change_in_state_directed change_in_state
 
-    # save if isomorphism was reached
+    # save if subgraph isomorphism was reached
     if(current_state.match.size() == params.expected_order):
         all_matches.push_back(current_state.match)
         if(not params.all_isomorphisms):
@@ -1584,124 +1645,157 @@ cdef void search_isomorphisms_directed(isomorphisms_search_params & params,
         # get minimum and candidates to form pairs
         candidates_info = candidates_info_directed(params, current_state)
 
-        # get minimum node in H
-        target_node_H = candidates_info.first
+        # get minimum node in G
+        matchable_node_G = candidates_info.first
 
-        # get list of candidates in G
+        # get list of candidates in H from out-ring
         if(candidates_info.second == 0):
-            # from out ring
-            ordered_candidates = current_state.out_ring_G_ordered
+            # order version of candidates
+            ordered_candidates = current_state.out_ring_H_ordered
+            # get filter for candidates, i.e., with compatibly matched neighbors in match (different from syntactic feasibility)
+            filtered_ring = filter_candidates_directed(matchable_node_G, G.in_neighbors_ordered, H.out_neighbors_ordered, current_state, current_state.out_ring_H)
+            # determine if filter is to be used
+            use_filter = (filtered_ring.size() != ordered_candidates.size())
+            # finish early if filter should be used but it is empty
+            if(use_filter and (filtered_ring.empty())):
+                return
+
+        # get list of candidates in H from in-ring
         if(candidates_info.second == 1):
-            # from in ring
-            ordered_candidates = current_state.in_ring_G_ordered
+            # order version of candidates
+            ordered_candidates = current_state.in_ring_H_ordered
+            # get filter for candidates, i.e., with compatibly matched neighbors in match (different from syntactic feasibility)
+            filtered_ring = filter_candidates_directed(matchable_node_G, G.out_neighbors_ordered, H.in_neighbors_ordered, current_state, current_state.in_ring_H)
+            # determine if filter is to be used
+            use_filter = (filtered_ring.size() != ordered_candidates.size())
+            # finish early if filter should be used but it is empty
+            if(use_filter and (filtered_ring.empty())):
+                return
+
+        # get list of candidates in H from unmatched
         if(candidates_info.second == 2):
-            # from unmatched
-            ordered_candidates = current_state.unmatched_G_ordered
+            # order version of candidates
+            ordered_candidates = current_state.unmatched_H_ordered
 
         # evaluate candidate pairs
-        for viable_node_G in ordered_candidates:
+        for candidate_node_H in ordered_candidates:
 
-            # evaluate in syntactic feasibility (possibly over complement graph)
-            if(params.complement):
-                in_syntactic_feasibility = syntactic_feasibility_directed(viable_node_G,
-                                                                          target_node_H,
-                                                                          current_state.in_ring_G,
-                                                                          current_state.in_ring_H,
-                                                                          current_state.out_ring_G,
-                                                                          current_state.out_ring_H,
-                                                                          current_state.match_G,
-                                                                          current_state.match_H,
-                                                                          G.loops,
-                                                                          H.loops,
-                                                                          current_state.forward_match,
-                                                                          current_state.inverse_match,
-                                                                          G.in_neighbors_complement,
-                                                                          H.in_neighbors_complement)
-            else:
-                in_syntactic_feasibility = syntactic_feasibility_directed(viable_node_G,
-                                                                          target_node_H,
-                                                                          current_state.in_ring_G,
-                                                                          current_state.in_ring_H,
-                                                                          current_state.out_ring_G,
-                                                                          current_state.out_ring_H,
-                                                                          current_state.match_G,
-                                                                          current_state.match_H,
-                                                                          G.loops,
-                                                                          H.loops,
-                                                                          current_state.forward_match,
-                                                                          current_state.inverse_match,
-                                                                          G.in_neighbors,
-                                                                          H.in_neighbors)
+            # test if candidate is in filter (only if required)
+            if(use_filter):
+                viable_candidate = (filtered_ring.find(candidate_node_H) != filtered_ring.end())
 
-            # evaluate out syntactic feasibility (possibly over complement graph)
-            if(in_syntactic_feasibility):
+            # control variable changing only when filter is actually being used
+            if(viable_candidate):
+
+                # evaluate in syntactic feasibility (possibly over complement graph)
                 if(params.complement):
-                    out_syntactic_feasibility = syntactic_feasibility_directed(viable_node_G,
-                                                                               target_node_H,
-                                                                               current_state.in_ring_G,
-                                                                               current_state.in_ring_H,
-                                                                               current_state.out_ring_G,
-                                                                               current_state.out_ring_H,
-                                                                               current_state.match_G,
-                                                                               current_state.match_H,
-                                                                               G.loops,
-                                                                               H.loops,
-                                                                               current_state.forward_match,
-                                                                               current_state.inverse_match,
-                                                                               G.out_neighbors_complement,
-                                                                               H.out_neighbors_complement)
+                    in_syntactic_feasibility = syntactic_feasibility_directed(matchable_node_G,
+                                                                              candidate_node_H,
+                                                                              current_state.in_ring_G,
+                                                                              current_state.in_ring_H,
+                                                                              current_state.out_ring_G,
+                                                                              current_state.out_ring_H,
+                                                                              current_state.match_G,
+                                                                              current_state.match_H,
+                                                                              G.loops,
+                                                                              H.loops,
+                                                                              current_state.forward_match,
+                                                                              current_state.inverse_match,
+                                                                              G.in_neighbors_complement,
+                                                                              H.in_neighbors_complement,
+                                                                              G.in_neighbors_ordered,
+                                                                              H.in_neighbors_ordered)
                 else:
-                    out_syntactic_feasibility = syntactic_feasibility_directed(viable_node_G,
-                                                                               target_node_H,
-                                                                               current_state.in_ring_G,
-                                                                               current_state.in_ring_H,
-                                                                               current_state.out_ring_G,
-                                                                               current_state.out_ring_H,
-                                                                               current_state.match_G,
-                                                                               current_state.match_H,
-                                                                               G.loops,
-                                                                               H.loops,
-                                                                               current_state.forward_match,
-                                                                               current_state.inverse_match,
-                                                                               G.out_neighbors,
-                                                                               H.out_neighbors)
+                    in_syntactic_feasibility = syntactic_feasibility_directed(matchable_node_G,
+                                                                              candidate_node_H,
+                                                                              current_state.in_ring_G,
+                                                                              current_state.in_ring_H,
+                                                                              current_state.out_ring_G,
+                                                                              current_state.out_ring_H,
+                                                                              current_state.match_G,
+                                                                              current_state.match_H,
+                                                                              G.loops,
+                                                                              H.loops,
+                                                                              current_state.forward_match,
+                                                                              current_state.inverse_match,
+                                                                              G.in_neighbors,
+                                                                              H.in_neighbors,
+                                                                              G.in_neighbors_ordered,
+                                                                              H.in_neighbors_ordered)
 
-                # evaluate semantic feasibility (always over original graphs)
-                if(out_syntactic_feasibility):
-                    if(params.node_labels or params.edge_labels):
-                        semantic_feasibility = semantic_feasibility_directed(params.node_labels,
-                                                                             params.edge_labels,
-                                                                             viable_node_G,
-                                                                             target_node_H,
-                                                                             current_state.match_G,
-                                                                             G.loops,
-                                                                             current_state.forward_match,
-                                                                             G.nodes,
-                                                                             H.nodes,
-                                                                             G.in_neighbors,
-                                                                             G.out_neighbors,
-                                                                             G.edges,
-                                                                             H.edges)
+                # evaluate out syntactic feasibility (possibly over complement graph)
+                if(in_syntactic_feasibility):
+                    if(params.complement):
+                        out_syntactic_feasibility = syntactic_feasibility_directed(matchable_node_G,
+                                                                                   candidate_node_H,
+                                                                                   current_state.in_ring_G,
+                                                                                   current_state.in_ring_H,
+                                                                                   current_state.out_ring_G,
+                                                                                   current_state.out_ring_H,
+                                                                                   current_state.match_G,
+                                                                                   current_state.match_H,
+                                                                                   G.loops,
+                                                                                   H.loops,
+                                                                                   current_state.forward_match,
+                                                                                   current_state.inverse_match,
+                                                                                   G.out_neighbors_complement,
+                                                                                   H.out_neighbors_complement,
+                                                                                   G.out_neighbors_ordered,
+                                                                                   H.out_neighbors_ordered)
+                    else:
+                        out_syntactic_feasibility = syntactic_feasibility_directed(matchable_node_G,
+                                                                                   candidate_node_H,
+                                                                                   current_state.in_ring_G,
+                                                                                   current_state.in_ring_H,
+                                                                                   current_state.out_ring_G,
+                                                                                   current_state.out_ring_H,
+                                                                                   current_state.match_G,
+                                                                                   current_state.match_H,
+                                                                                   G.loops,
+                                                                                   H.loops,
+                                                                                   current_state.forward_match,
+                                                                                   current_state.inverse_match,
+                                                                                   G.out_neighbors,
+                                                                                   H.out_neighbors,
+                                                                                   G.out_neighbors_ordered,
+                                                                                   H.out_neighbors_ordered)
 
-                    # push to stack if valid
-                    if(semantic_feasibility):
-                        # extend match with the new pair
-                        change_in_state = extend_match_directed(candidates_info.second, viable_node_G, target_node_H, G, H, current_state)
-                        # recursive call
-                        search_isomorphisms_directed(params, current_state, G, H, all_matches)
-                        # finish if only one isosmorphism was requested and it was already found
-                        if(not all_matches.empty()):
-                            if(not params.all_isomorphisms):
-                                return
-                        # restore state unordered sets
-                        restore_match_directed(viable_node_G, target_node_H, change_in_state, current_state)
-                        # restore state ordered lists
-                        current_state.in_ring_G_ordered = in_ring_G_ordered_backup
-                        current_state.out_ring_G_ordered = out_ring_G_ordered_backup
-                        current_state.in_ring_H_ordered = in_ring_H_ordered_backup
-                        current_state.out_ring_H_ordered = out_ring_H_ordered_backup
-                        current_state.unmatched_G_ordered = unmatched_G_ordered_backup
-                        current_state.unmatched_H_ordered = unmatched_H_ordered_backup
+                    # evaluate semantic feasibility (always over original graphs)
+                    if(out_syntactic_feasibility):
+                        if(params.node_labels or params.edge_labels):
+                            semantic_feasibility = semantic_feasibility_directed(params.node_labels,
+                                                                                 params.edge_labels,
+                                                                                 matchable_node_G,
+                                                                                 candidate_node_H,
+                                                                                 current_state.match_G,
+                                                                                 G.loops,
+                                                                                 current_state.forward_match,
+                                                                                 G.nodes,
+                                                                                 H.nodes,
+                                                                                 G.in_neighbors,
+                                                                                 G.out_neighbors,
+                                                                                 G.edges,
+                                                                                 H.edges)
+
+                        # push to stack if valid
+                        if(semantic_feasibility):
+                            # extend match with the new pair
+                            change_in_state = extend_match_directed(candidates_info.second, matchable_node_G, candidate_node_H, G, H, current_state)
+                            # recursive call
+                            search_subgraph_isomorphisms_directed(params, current_state, G, H, all_matches)
+                            # finish if only one subgraph isosmorphism was requested and it was already found
+                            if(not all_matches.empty()):
+                                if(not params.all_isomorphisms):
+                                    return
+                            # restore state unordered sets
+                            restore_match_directed(matchable_node_G, candidate_node_H, change_in_state, current_state)
+                            # restore state ordered lists
+                            current_state.in_ring_G_ordered = in_ring_G_ordered_backup
+                            current_state.out_ring_G_ordered = out_ring_G_ordered_backup
+                            current_state.in_ring_H_ordered = in_ring_H_ordered_backup
+                            current_state.out_ring_H_ordered = out_ring_H_ordered_backup
+                            current_state.unmatched_G_ordered = unmatched_G_ordered_backup
+                            current_state.unmatched_H_ordered = unmatched_H_ordered_backup
 
     # end of function
 
@@ -1709,9 +1803,9 @@ cdef void search_isomorphisms_directed(isomorphisms_search_params & params,
 
 
 
-# function: get candidate pairs for directed isomorphism search ----------------
-cdef cpp_pair[int, int] candidates_info_directed(isomorphisms_search_params & params,
-                                                 isomorphisms_state_directed & current_state) noexcept:
+    # function: get candidate pairs for directed subgraph isomorphism search -------
+cdef cpp_pair[int, int] candidates_info_directed(subgraph_isomorphisms_search_params & params,
+                                                 subgraph_isomorphisms_state_directed & current_state) noexcept:
 
     # output holders
     cdef cpp_pair[int, int] candidates_info
@@ -1724,16 +1818,20 @@ cdef cpp_pair[int, int] candidates_info_directed(isomorphisms_search_params & pa
     # initialize with impossible minimum (total order ranges from 1 to expected_order)
     minimum_value = 10 + params.expected_order_int
 
+    # NOTE: syntactic feasability for subgraph isomorphism guarantees that all the rings have
+    # always the same cardinality, thus we only have the following three disjoint options.
+
     # build candidates from out ring
     if((not current_state.out_ring_G.empty()) and (not current_state.out_ring_H.empty())):
 
-        # get node with minimum order from out ring in H
-        for node in current_state.out_ring_H_ordered:
-            if(params.total_order_H[node] < minimum_value):
-                minimum_value = params.total_order_H[node]
+        # get node with minimum order from out ring in G
+        for node in current_state.out_ring_G_ordered:
+            if(params.total_order_G[node] < minimum_value):
+                minimum_value = params.total_order_G[node]
                 minimum_node = node
 
         # build output pair
+        # NOTE: candidates with compatibly-matched neighbors are obtained in a second step
         candidates_info.first = minimum_node
         candidates_info.second = 0
 
@@ -1742,20 +1840,21 @@ cdef cpp_pair[int, int] candidates_info_directed(isomorphisms_search_params & pa
         # build candidates from in ring
         if((not current_state.in_ring_G.empty()) and (not current_state.in_ring_H.empty())):
 
-            # get node with minimum order from in ring in H
-            for node in current_state.in_ring_H_ordered:
-                if(params.total_order_H[node] < minimum_value):
-                    minimum_value = params.total_order_H[node]
+            # get node with minimum order from in ring in G
+            for node in current_state.in_ring_G_ordered:
+                if(params.total_order_G[node] < minimum_value):
+                    minimum_value = params.total_order_G[node]
                     minimum_node = node
 
             # build output pair
+            # NOTE: candidates with compatibly-matched neighbors are obtained in a second step
             candidates_info.first = minimum_node
             candidates_info.second = 1
 
         else:
 
-            # get node with minimum order from unmatched nodes in H
-            minimum_node = current_state.unmatched_H_ordered.front()
+            # get node with minimum order from unmatched nodes in G
+            minimum_node = current_state.unmatched_G_ordered.front()
 
             # build output pair
             candidates_info.first = minimum_node
@@ -1768,16 +1867,57 @@ cdef cpp_pair[int, int] candidates_info_directed(isomorphisms_search_params & pa
 
 
 
-# function: upgrade search state by extending match ----------------------------
-cdef isomorphisms_change_in_state_directed extend_match_directed(int taken_from,
-                                                                 int node1,
-                                                                 int node2,
-                                                                 isomorphisms_directed_graph & G,
-                                                                 isomorphisms_directed_graph & H,
-                                                                 isomorphisms_state_directed & current_state) noexcept:
+# function: get compatibly-matched neighbors extending match -------------------
+# NOTE: this is one of the "VF3" improvements
+cdef cpp_unordered_set[int] filter_candidates_directed(int matchable_node_G,
+                                                       cpp_unordered_map[int, cpp_vector[int]] & neighbors_ordered_G,
+                                                       cpp_unordered_map[int, cpp_vector[int]] & neighbors_ordered_H,
+                                                       subgraph_isomorphisms_state_directed & current_state,
+                                                       cpp_unordered_set[int] & ring_H) noexcept:
 
     # output holders
-    cdef isomorphisms_change_in_state_directed change_in_state
+    cdef cpp_unordered_set[int] filtered_candidates
+
+    # local variables
+    cdef int node1 = 0
+    cdef int node2 = 0
+    cdef int mapped = 0
+
+    # get filter
+    for node1 in neighbors_ordered_G[matchable_node_G]:
+        # continue as long as filter is not the whole ring
+        if(filtered_candidates.size() != ring_H.size()):
+            # only for neighbors in the match
+            if(current_state.match_G.find(node1) != current_state.match_G.end()):
+                # get image under match
+                mapped = current_state.forward_match[node1]
+                # traverse neighbors of image under match
+                for node2 in neighbors_ordered_H[mapped]:
+                    # save only the neighbors not in the match
+                    if(current_state.match_H.find(node2) == current_state.match_H.end()):
+                        # unordered set takes care of repetitions
+                        filtered_candidates.insert(node2)
+        else:
+            # if the filter reached the whole ring then just finish early
+            return(filtered_candidates)
+
+    # end of function
+    return(filtered_candidates)
+
+
+
+
+
+# function: upgrade search state by extending match ----------------------------
+cdef subgraph_isomorphisms_change_in_state_directed extend_match_directed(int taken_from,
+                                                                          int node1,
+                                                                          int node2,
+                                                                          subgraph_isomorphisms_directed_graph & G,
+                                                                          subgraph_isomorphisms_directed_graph & H,
+                                                                          subgraph_isomorphisms_state_directed & current_state) noexcept:
+
+    # output holders
+    cdef subgraph_isomorphisms_change_in_state_directed change_in_state
 
     # local variables
     cdef int node = 0
@@ -1873,8 +2013,8 @@ cdef isomorphisms_change_in_state_directed extend_match_directed(int taken_from,
 # function: backtrack search state by restoring match --------------------------
 cdef void restore_match_directed(int node1,
                                  int node2,
-                                 isomorphisms_change_in_state_directed & change_in_state,
-                                 isomorphisms_state_directed & current_state) noexcept:
+                                 subgraph_isomorphisms_change_in_state_directed & change_in_state,
+                                 subgraph_isomorphisms_state_directed & current_state) noexcept:
 
     # local variables
     cdef int node = 0
@@ -1945,7 +2085,7 @@ cdef void restore_match_directed(int node1,
 
 
 
-# function: evaluate syntactic feasability for isomorphism search --------------
+# function: evaluate syntactic feasability for subgraph isomorphism search -----
 cdef cpp_bool syntactic_feasibility_directed(int node1,
                                              int node2,
                                              cpp_unordered_set[int] & in_ring_G,
@@ -1959,7 +2099,9 @@ cdef cpp_bool syntactic_feasibility_directed(int node1,
                                              cpp_unordered_map[int, int] & forward_match,
                                              cpp_unordered_map[int, int] & inverse_match,
                                              cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_G,
-                                             cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_H) noexcept:
+                                             cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_H,
+                                             cpp_unordered_map[int, cpp_vector[int]] & ordered_neigh_G,
+                                             cpp_unordered_map[int, cpp_vector[int]] & ordered_neigh_H) noexcept:
 
     # local variables
     cdef cpp_bool ring_neighbor = False
@@ -1987,7 +2129,7 @@ cdef cpp_bool syntactic_feasibility_directed(int node1,
             return(False)
 
     # look ahead 0: consistency of neighbors in match, while doing tripartition of neighbors
-    for node in neigh_G[node1]:
+    for node in ordered_neigh_G[node1]:
         if(current_match_G.find(node) != current_match_G.end()):
             # check that the mapping is also the corresponding neighbor
             mapped = forward_match[node]
@@ -2008,7 +2150,7 @@ cdef cpp_bool syntactic_feasibility_directed(int node1,
             if(not ring_neighbor):
                 neighbors_extern_G = neighbors_extern_G + 1
 
-    for node in neigh_H[node2]:
+    for node in ordered_neigh_H[node2]:
         if(current_match_H.find(node) != current_match_H.end()):
             # check that the mapping is also the corresponding neighbor
             mapped = inverse_match[node]
@@ -2046,7 +2188,7 @@ cdef cpp_bool syntactic_feasibility_directed(int node1,
 
 
 
-# function: evaluate semantic feasability for isomorphism search ---------------
+# function: evaluate semantic feasability for subgraph isomorphism search ------
 cdef cpp_bool semantic_feasibility_directed(cpp_bool node_labels,
                                             cpp_bool edge_labels,
                                             int node1,
