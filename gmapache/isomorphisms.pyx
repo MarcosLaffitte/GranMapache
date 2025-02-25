@@ -222,7 +222,7 @@ cdef struct isomorphisms_search_params:
     cpp_bool got_order_for_H
     # return all isomorphisms
     cpp_bool all_isomorphisms
-    # return analyzing complement
+    # analyzing complement
     cpp_bool complement
     # expected amount of matches (order of the graphs)
     size_t expected_order
@@ -414,7 +414,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     if(not input_correctness):
         return([], False)
 
-    # quick test by comparing the degree sequences of input graphs
+    # quick test by comparing the degree sequences of the input graphs
     params.directed_graphs = nx.is_directed(nx_G)
     if(params.directed_graphs):
         # get degrees
