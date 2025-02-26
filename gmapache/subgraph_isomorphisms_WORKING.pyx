@@ -101,9 +101,7 @@ cdef struct subgraph_isomorphisms_undirected_graph:
     cpp_unordered_map[cpp_string, int] edges
     # neighbors data (for constant look-ups)
     cpp_unordered_map[int, cpp_unordered_set[int]] neighbors
-    # neighbors data complement (for constant look-ups)
-    cpp_unordered_map[int, cpp_unordered_set[int]] neighbors_complement
-    # ordered neighbors data (for insertion into ring, from original or complement)
+    # ordered neighbors data (for insertion into ring)
     cpp_unordered_map[int, cpp_vector[int]] neighbors_ordered
 
 
@@ -121,10 +119,7 @@ cdef struct subgraph_isomorphisms_directed_graph:
     # neighbors data (for constant look-ups)
     cpp_unordered_map[int, cpp_unordered_set[int]] in_neighbors
     cpp_unordered_map[int, cpp_unordered_set[int]] out_neighbors
-    # neighbors data complement (for constant look-ups)
-    cpp_unordered_map[int, cpp_unordered_set[int]] in_neighbors_complement
-    cpp_unordered_map[int, cpp_unordered_set[int]] out_neighbors_complement
-    # ordered neighbors data (for insertion into ring, from original or complement)
+    # ordered neighbors data (for insertion into ring)
     cpp_unordered_map[int, cpp_vector[int]] in_neighbors_ordered
     cpp_unordered_map[int, cpp_vector[int]] out_neighbors_ordered
 
@@ -210,9 +205,7 @@ cdef struct subgraph_isomorphisms_search_params:
     cpp_bool got_order_for_H
     # return all subgraph isomorphisms
     cpp_bool all_isomorphisms
-    # return analyzing complement
-    cpp_bool complement
-    # expected amount of matches (order of the graphs)
+    # expected amount of matches (order of the subgraph)
     size_t expected_order
     int expected_order_int
     # total order for VF2-like search
@@ -290,20 +283,22 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
     # description
     """
     > description:
-    receives two networkx (di-)graphs G and H both directed or both undirected,
-    possibly but not necessarily with either node labels and/or edge labels, with
-    the same number of nodes and edges, and a boolean variable indicating if the
-    function should finish when finding only one isomorphism from G to H (if any),
-    or if it should search for all possible isomorphisms from G to H and return
-    them. In addition, the VF2-like search requires a total order for the nodes
-    of one of the input graphs (traditionally the domain graph). In principle this
-    can be an arbitrary total order, though it has been shown that certain orders
-    may improve the search (see VF2++). Here we order the nodes in both graphs
-    based on their (out) degree in descending order by default. Moreover, a custom
-    total order can be provided for either or both graphs with the optional input
-    dictionaries total_order_A and total_order_B, which might help the search
-    whenever such orders encode a bijection almost resembling an isomorphism,
-    obtained, for example, from a canonicalization or construction algorithm.
+    receives two networkx (di-)graphs G and H both directed or both undirected, possibly
+    but not necessarily with either node labels and/or edge labels, and where the second
+    graph H has the same or a bigger number of nodes and edges than the first graph G,
+    and we test for embeddings of G in H, i.e., induced subgraph isomorphisms. If both
+    graphs have the same amount of nodes and edges then we run a graph isomorphism test
+    instead. A boolean variable can be passed indicating if the function should finish
+    when finding only one subgraph isomorphism of G in H (if any), or if it should search
+    for all possible such isomorphisms and return all of them. In addition, the VF2-like
+    search requires a total order for the nodes of one of the input graphs (traditionally
+    the domain graph). In principle this can be an arbitrary total order, though it has
+    been shown that certain orders may improve the search (see VF2++). Here we order the
+    nodes in both graphs based on their (out) degree in descending order by default.
+    Moreover, a custom total order can be provided for either or both graphs with the
+    optional input dictionaries total_order_A and total_order_B, which might help the
+    search whenever such orders encode a function almost resembling a subgrah isomorphism,
+    obtained, for example, from an external canonicalization or construction algorithm.
 
     > input:
     * nx_G - first networkx (di)graph being matched.
@@ -312,8 +307,8 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
     the search or if they should be ignored (default).
     * edge_labels - boolean indicating if all edge labels should be considered for
     the search or if they should be ignored (default).
-    * all_isomorphisms - boolean variable indicating if the function should stop
-    as soon as one isomorphism is found (if any) -default behavior- or if it
+    * all_isomorphisms - boolean variable indicating if the function should stop as
+    soon as one subgraph isomorphism is found (if any) -default behavior- or if it
     should search for all possible isomorphisms between the graphs.
     * total_order_A - dictionary mapping all the nodes of nx_G into different
     integers from 1 and up to the order of the graphs, representing the custom
@@ -323,22 +318,22 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
     total order for the nodes of second graph.
 
     > output:
-    * isomorphisms - (possibly empty) list of isomorphisms, each as a list of
-    2-tuples (x, y) of nodes x from G and y from H representing the one-to-one
-    correspondences preserving adjacency and labels.
-    * found_isomorphism - boolean value indicating if any isomorphism was found
-    and equivalently if G and H are isomorphic (labeled) (di-)graphs.
+    * isomorphisms - (possibly empty) list of subgraph isomorphisms, each as a list of
+    2-tuples (x, y) of nodes x from G and y from H representing the injective function
+    preserving adjacency and (possibly) labels.
+    * found_isomorphism - boolean value indicating if any subgraph isomorphism was found
+    and equivalently if G is isomorphic to an induced (labeled) subgraph of H.
 
     > calls:
     * gmapache.integerization.encode_graphs
     * gmapache.integerization.decode_graphs
     * gmapache.integerization.decode_match
-    * gmapache.isomorphisms.search_subgraph_isomorphisms_input_correctness
-    * gmapache.isomorphisms.search_subgraph_isomorphisms_order_nodes_by_degree
-    * gmapache.isomorphisms.search_subgraph_isomorphisms_label_consistency
-    * gmapache.isomorphisms.search_subgraph_isomorphisms_order_neighbors
-    * gmapache.isomorphisms.search_subgraph_isomorphisms_undirected
-    * gmapache.isomorphisms.search_subgraph_isomorphisms_directed
+    * gmapache.subgraph_isomorphisms.search_subgraph_isomorphisms_input_correctness
+    * gmapache.subgraph_isomorphisms.search_subgraph_isomorphisms_order_nodes_by_degree
+    * gmapache.subgraph_isomorphisms.search_subgraph_isomorphisms_label_consistency
+    * gmapache.subgraph_isomorphisms.search_subgraph_isomorphisms_order_neighbors
+    * gmapache.subgraph_isomorphisms.search_subgraph_isomorphisms_undirected
+    * gmapache.subgraph_isomorphisms.search_subgraph_isomorphisms_directed
     """
 
     # output holders
@@ -346,8 +341,6 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
     cdef list isomorphisms = []
 
     # fixed threshold parameters
-    cdef float limit_edges = 0.7
-    cdef float bigger_graphs = 15
     cdef float scalation_value = 1.5
 
     # local variables (cython)
@@ -356,7 +349,11 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
     cdef int node = 0
     cdef int node1 = 0
     cdef int node2 = 0
+    cdef int offset = 0
+    cdef int covered = 0
     cdef int counter = 0
+    cdef int order_G = 0
+    cdef int order_H = 0
     cdef int current_limit = 0
     cdef int required_limit = 0
     cdef cpp_bool input_correctness = True
@@ -394,29 +391,66 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
     cdef dict encoded_node_labels = dict()
     cdef dict encoded_edge_labels = dict()
     node_obj = None
-    complement_G = None
-    complement_H = None
 
     # test input correctness
     input_correctness = search_subgraph_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_labels, all_isomorphisms, total_order_A, total_order_B)
     if(not input_correctness):
         return([], False)
 
-    # quick test by comparing the degree sequences of input graphs
+    # quick test by testing for cover between degree sequences of the input graphs
+    order_G = nx_G.order()
+    order_H = nx_H.order()
     params.directed_graphs = nx.is_directed(nx_G)
     if(params.directed_graphs):
-        # get degrees
+        # get in-degrees
         in_deg_G = [deg for (node_obj, deg) in list(nx_G.in_degree())]
         in_deg_H = [deg for (node_obj, deg) in list(nx_H.in_degree())]
-        out_deg_G = [deg for (node_obj, deg) in list(nx_G.out_degree())]
-        out_deg_H = [deg for (node_obj, deg) in list(nx_H.out_degree())]
-        # sort degrees
+        # sort in-degrees
         sort(in_deg_G.begin(), in_deg_G.end())
         sort(in_deg_H.begin(), in_deg_H.end())
+        # test if in-degrees of H cover in-degrees of G
+        i = 0
+        offset = 0
+        covered = 0
+        for deg in in_deg_G:
+            # decide if continue searching
+            if(offset >= order_H):
+                break
+            else:
+                # search for covering degree
+                for i in range(offset, order_H):
+                    if(deg <= in_deg_H[i]):
+                        covered = covered + 1
+                        break
+                # get next offset
+                offset = i + 1
+        # test for in-cover
+        if(covered < order_G):
+            return([], False)
+        # get out-degrees
+        out_deg_G = [deg for (node_obj, deg) in list(nx_G.out_degree())]
+        out_deg_H = [deg for (node_obj, deg) in list(nx_H.out_degree())]
+        # sort out-degrees
         sort(out_deg_G.begin(), out_deg_G.end())
         sort(out_deg_H.begin(), out_deg_H.end())
-        # compare degree sequences
-        if((not in_deg_G == in_deg_H) or (not out_deg_G == out_deg_H)):
+        # test if out-degrees of H cover out-degrees of G
+        i = 0
+        offset = 0
+        covered = 0
+        for deg in out_deg_G:
+            # decide if continue searching
+            if(offset >= order_H):
+                break
+            else:
+                # search for covering degree
+                for i in range(offset, order_H):
+                    if(deg <= out_deg_H[i]):
+                        covered = covered + 1
+                        break
+                # get next offset
+                offset = i + 1
+        # test for out-cover
+        if(covered < order_G):
             return([], False)
     else:
         # get degrees
@@ -425,68 +459,63 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
         # sort degrees
         sort(deg_G.begin(), deg_G.end())
         sort(deg_H.begin(), deg_H.end())
-        # compare degree sequences
-        if(not deg_G == deg_H):
+        # test if degrees of H cover degrees of G
+        i = 0
+        offset = 0
+        covered = 0
+        for deg in deg_G:
+            # decide if continue searching
+            if(offset >= order_H):
+                break
+            else:
+                # search for covering degree
+                for i in range(offset, order_H):
+                    if(deg <= deg_H[i]):
+                        covered = covered + 1
+                        break
+                # get next offset
+                offset = i + 1
+        # test for cover of all degrees
+        if(covered < order_G):
             return([], False)
 
     # save input parameters
     params.node_labels = node_labels
     params.edge_labels = edge_labels
     params.all_isomorphisms = all_isomorphisms
-    params.expected_order = nx_H.order()
-    params.expected_order_int = nx_H.order()
+    params.expected_order = nx_G.order()
+    params.expected_order_int = nx_G.order()
     params.got_order_for_G = (len(total_order_A) > 0)
     params.got_order_for_H = (len(total_order_B) > 0)
-    if(params.directed_graphs):
-        params.complement = (nx_G.size() > (ceil((params.expected_order * (params.expected_order-1)) * limit_edges) + params.expected_order)) and (params.expected_order >= bigger_graphs)
-    else:
-        params.complement = (nx_G.size() > (ceil((params.expected_order * (params.expected_order-1)/2) * limit_edges) + params.expected_order)) and (params.expected_order >= bigger_graphs)
 
     # encode graphs
     encoded_graphs, encoded_node_names, encoded_node_labels, encoded_edge_labels = encode_graphs([nx_G, nx_H])
-
-    # get complement if necessary
-    if(params.complement):
-        complement_G = nx.complement(encoded_graphs[0])
-        complement_H = nx.complement(encoded_graphs[1])
 
     # order nodes by decreasing degree
     if(params.directed_graphs):
         # order for directed G
         if(not params.got_order_for_G):
             # get node information
-            if(params.complement):
-                temp_nodes = [((node, info["GMNL"]), complement_G.out_degree[node]) for (node, info) in encoded_graphs[0].nodes(data = True)]
-            else:
-                temp_nodes = [((node, info["GMNL"]), encoded_graphs[0].out_degree[node]) for (node, info) in encoded_graphs[0].nodes(data = True)]
+            temp_nodes = [((node, info["GMNL"]), encoded_graphs[0].out_degree[node]) for (node, info) in encoded_graphs[0].nodes(data = True)]
             # make vector of ordered nodes
             search_subgraph_isomorphisms_order_nodes_by_degree(temp_nodes, all_nodes_G)
         # order for directed H
         if(not params.got_order_for_H):
             # get node information
-            if(params.complement):
-                temp_nodes = [((node, info["GMNL"]), complement_H.out_degree[node]) for (node, info) in encoded_graphs[1].nodes(data = True)]
-            else:
-                temp_nodes = [((node, info["GMNL"]), encoded_graphs[1].out_degree[node]) for (node, info) in encoded_graphs[1].nodes(data = True)]
+            temp_nodes = [((node, info["GMNL"]), encoded_graphs[1].out_degree[node]) for (node, info) in encoded_graphs[1].nodes(data = True)]
             # make vector of ordered nodes
             search_subgraph_isomorphisms_order_nodes_by_degree(temp_nodes, all_nodes_H)
     else:
         # order for undirected G
         if(not params.got_order_for_G):
             # get node information
-            if(params.complement):
-                temp_nodes = [((node, info["GMNL"]), complement_G.degree[node]) for (node, info) in encoded_graphs[0].nodes(data = True)]
-            else:
-                temp_nodes = [((node, info["GMNL"]), encoded_graphs[0].degree[node]) for (node, info) in encoded_graphs[0].nodes(data = True)]
+            temp_nodes = [((node, info["GMNL"]), encoded_graphs[0].degree[node]) for (node, info) in encoded_graphs[0].nodes(data = True)]
             # make vector of ordered nodes
             search_subgraph_isomorphisms_order_nodes_by_degree(temp_nodes, all_nodes_G)
         # order for undirected H
         if(not params.got_order_for_H):
             # get node information
-            if(params.complement):
-                temp_nodes = [((node, info["GMNL"]), complement_H.degree[node]) for (node, info) in encoded_graphs[1].nodes(data = True)]
-            else:
-                temp_nodes = [((node, info["GMNL"]), encoded_graphs[1].degree[node]) for (node, info) in encoded_graphs[1].nodes(data = True)]
+            temp_nodes = [((node, info["GMNL"]), encoded_graphs[1].degree[node]) for (node, info) in encoded_graphs[1].nodes(data = True)]
             # make vector of ordered nodes
             search_subgraph_isomorphisms_order_nodes_by_degree(temp_nodes, all_nodes_H)
 
@@ -500,13 +529,8 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
                 # save node
                 directed_G.nodes.insert(each_pair)
                 # neighbors for G
-                if((not params.complement) or params.node_labels or params.edge_labels):
-                    directed_G.in_neighbors[each_pair.first] = set(encoded_graphs[0].predecessors(each_pair.first))
-                    directed_G.out_neighbors[each_pair.first] = set(encoded_graphs[0].neighbors(each_pair.first))
-                # neighbors for complement of G
-                if(params.complement):
-                    directed_G.in_neighbors_complement[each_pair.first] = set(complement_G.predecessors(each_pair.first))
-                    directed_G.out_neighbors_complement[each_pair.first] = set(complement_G.neighbors(each_pair.first))
+                directed_G.in_neighbors[each_pair.first] = set(encoded_graphs[0].predecessors(each_pair.first))
+                directed_G.out_neighbors[each_pair.first] = set(encoded_graphs[0].neighbors(each_pair.first))
                 # save total order for the node from input
                 params.total_order_G[each_pair.first] = total_order_A[encoded_node_names[each_pair.first]]
                 params.inverse_total_order_G[params.total_order_G[each_pair.first]] = each_pair.first
@@ -520,13 +544,8 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
                 # save node
                 directed_G.nodes.insert(each_pair)
                 # neighbors for G
-                if((not params.complement) or params.node_labels or params.edge_labels):
-                    directed_G.in_neighbors[each_pair.first] = set(encoded_graphs[0].predecessors(each_pair.first))
-                    directed_G.out_neighbors[each_pair.first] = set(encoded_graphs[0].neighbors(each_pair.first))
-                # neighbors for complement of G
-                if(params.complement):
-                    directed_G.in_neighbors_complement[each_pair.first] = set(complement_G.predecessors(each_pair.first))
-                    directed_G.out_neighbors_complement[each_pair.first] = set(complement_G.neighbors(each_pair.first))
+                directed_G.in_neighbors[each_pair.first] = set(encoded_graphs[0].predecessors(each_pair.first))
+                directed_G.out_neighbors[each_pair.first] = set(encoded_graphs[0].neighbors(each_pair.first))
                 # save total order for the node
                 counter = counter + 1
                 params.total_order_G[each_pair.first] = counter
@@ -540,13 +559,8 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
                 # save node
                 directed_H.nodes.insert(each_pair)
                 # neighbors for H
-                if((not params.complement) or params.node_labels or params.edge_labels):
-                    directed_H.in_neighbors[each_pair.first] = set(encoded_graphs[1].predecessors(each_pair.first))
-                    directed_H.out_neighbors[each_pair.first] = set(encoded_graphs[1].neighbors(each_pair.first))
-                # neighbors for complement of H
-                if(params.complement):
-                    directed_H.in_neighbors_complement[each_pair.first] = set(complement_H.predecessors(each_pair.first))
-                    directed_H.out_neighbors_complement[each_pair.first] = set(complement_H.neighbors(each_pair.first))
+                directed_H.in_neighbors[each_pair.first] = set(encoded_graphs[1].predecessors(each_pair.first))
+                directed_H.out_neighbors[each_pair.first] = set(encoded_graphs[1].neighbors(each_pair.first))
                 # save total order for the node from input
                 params.total_order_H[each_pair.first] = total_order_B[encoded_node_names[each_pair.first]]
                 params.inverse_total_order_H[params.total_order_H[each_pair.first]] = each_pair.first
@@ -559,13 +573,8 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
                 # save node
                 directed_H.nodes.insert(each_pair)
                 # neighbors for H
-                if((not params.complement) or params.node_labels or params.edge_labels):
-                    directed_H.in_neighbors[each_pair.first] = set(encoded_graphs[1].predecessors(each_pair.first))
-                    directed_H.out_neighbors[each_pair.first] = set(encoded_graphs[1].neighbors(each_pair.first))
-                # neighbors for complement of H
-                if(params.complement):
-                    directed_H.in_neighbors_complement[each_pair.first] = set(complement_H.predecessors(each_pair.first))
-                    directed_H.out_neighbors_complement[each_pair.first] = set(complement_H.neighbors(each_pair.first))
+                directed_H.in_neighbors[each_pair.first] = set(encoded_graphs[1].predecessors(each_pair.first))
+                directed_H.out_neighbors[each_pair.first] = set(encoded_graphs[1].neighbors(each_pair.first))
                 # save total order for the node
                 counter = counter + 1
                 params.total_order_H[each_pair.first] = counter
@@ -580,11 +589,7 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
                 # save node
                 undirected_G.nodes.insert(each_pair)
                 # neighbors for G
-                if((not params.complement) or params.node_labels or params.edge_labels):
-                    undirected_G.neighbors[each_pair.first] = set(encoded_graphs[0].neighbors(each_pair.first))
-                # neighbors for complement of G
-                if(params.complement):
-                    undirected_G.neighbors_complement[each_pair.first] = set(complement_G.neighbors(each_pair.first))
+                undirected_G.neighbors[each_pair.first] = set(encoded_graphs[0].neighbors(each_pair.first))
                 # save total order for the node from input
                 params.total_order_G[each_pair.first] = total_order_A[encoded_node_names[each_pair.first]]
                 params.inverse_total_order_G[params.total_order_G[each_pair.first]] = each_pair.first
@@ -597,11 +602,7 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
                 # save node
                 undirected_G.nodes.insert(each_pair)
                 # neighbors for G
-                if((not params.complement) or params.node_labels or params.edge_labels):
-                    undirected_G.neighbors[each_pair.first] = set(encoded_graphs[0].neighbors(each_pair.first))
-                # neighbors for complement of G
-                if(params.complement):
-                    undirected_G.neighbors_complement[each_pair.first] = set(complement_G.neighbors(each_pair.first))
+                undirected_G.neighbors[each_pair.first] = set(encoded_graphs[0].neighbors(each_pair.first))
                 # save total order for the node
                 counter = counter + 1
                 params.total_order_G[each_pair.first] = counter
@@ -615,11 +616,7 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
                 # save node
                 undirected_H.nodes.insert(each_pair)
                 # neighbors for H
-                if((not params.complement) or params.node_labels or params.edge_labels):
-                    undirected_H.neighbors[each_pair.first] = set(encoded_graphs[1].neighbors(each_pair.first))
-                # neighbors for complement of H
-                if(params.complement):
-                    undirected_H.neighbors_complement[each_pair.first] = set(complement_H.neighbors(each_pair.first))
+                undirected_H.neighbors[each_pair.first] = set(encoded_graphs[1].neighbors(each_pair.first))
                 # save total order for the node from input
                 params.total_order_H[each_pair.first] = total_order_B[encoded_node_names[each_pair.first]]
                 params.inverse_total_order_H[params.total_order_H[each_pair.first]] = each_pair.first
@@ -632,11 +629,7 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
                 # save node
                 undirected_H.nodes.insert(each_pair)
                 # neighbors for H
-                if((not params.complement) or params.node_labels or params.edge_labels):
-                    undirected_H.neighbors[each_pair.first] = set(encoded_graphs[1].neighbors(each_pair.first))
-                # neighbors for complement of H
-                if(params.complement):
-                    undirected_H.neighbors_complement[each_pair.first] = set(complement_H.neighbors(each_pair.first))
+                undirected_H.neighbors[each_pair.first] = set(encoded_graphs[1].neighbors(each_pair.first))
                 # save total order for the node
                 counter = counter + 1
                 params.total_order_H[each_pair.first] = counter
@@ -699,44 +692,24 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
             return([], False)
 
     # prepare ordered neighbors
-    if(params.complement):
-        if(params.directed_graphs):
-            # order nodes of G
-            search_subgraph_isomorphisms_order_neighbors(all_nodes_G, directed_G.in_neighbors_complement, directed_G.in_neighbors_ordered,
-                                                params.total_order_G, params.inverse_total_order_G)
-            search_subgraph_isomorphisms_order_neighbors(all_nodes_G, directed_G.out_neighbors_complement, directed_G.out_neighbors_ordered,
-                                                params.total_order_G, params.inverse_total_order_G)
-            # order nodes of H
-            search_subgraph_isomorphisms_order_neighbors(all_nodes_H, directed_H.in_neighbors_complement, directed_H.in_neighbors_ordered,
-                                                params.total_order_H, params.inverse_total_order_H)
-            search_subgraph_isomorphisms_order_neighbors(all_nodes_H, directed_H.out_neighbors_complement, directed_H.out_neighbors_ordered,
-                                                params.total_order_H, params.inverse_total_order_H)
-        else:
-            # order nodes of G
-            search_subgraph_isomorphisms_order_neighbors(all_nodes_G, undirected_G.neighbors_complement, undirected_G.neighbors_ordered,
-                                                params.total_order_G, params.inverse_total_order_G)
-            # order nodes of H
-            search_subgraph_isomorphisms_order_neighbors(all_nodes_H, undirected_H.neighbors_complement, undirected_H.neighbors_ordered,
-                                                params.total_order_H, params.inverse_total_order_H)
+    if(params.directed_graphs):
+        # order nodes of G
+        search_subgraph_isomorphisms_order_neighbors(all_nodes_G, directed_G.in_neighbors, directed_G.in_neighbors_ordered,
+                                                     params.total_order_G, params.inverse_total_order_G)
+        search_subgraph_isomorphisms_order_neighbors(all_nodes_G, directed_G.out_neighbors, directed_G.out_neighbors_ordered,
+                                                     params.total_order_G, params.inverse_total_order_G)
+        # order nodes of H
+        search_subgraph_isomorphisms_order_neighbors(all_nodes_H, directed_H.in_neighbors, directed_H.in_neighbors_ordered,
+                                                     params.total_order_H, params.inverse_total_order_H)
+        search_subgraph_isomorphisms_order_neighbors(all_nodes_H, directed_H.out_neighbors, directed_H.out_neighbors_ordered,
+                                                     params.total_order_H, params.inverse_total_order_H)
     else:
-        if(params.directed_graphs):
-            # order nodes of G
-            search_subgraph_isomorphisms_order_neighbors(all_nodes_G, directed_G.in_neighbors, directed_G.in_neighbors_ordered,
-                                                         params.total_order_G, params.inverse_total_order_G)
-            search_subgraph_isomorphisms_order_neighbors(all_nodes_G, directed_G.out_neighbors, directed_G.out_neighbors_ordered,
-                                                         params.total_order_G, params.inverse_total_order_G)
-            # order nodes of H
-            search_subgraph_isomorphisms_order_neighbors(all_nodes_H, directed_H.in_neighbors, directed_H.in_neighbors_ordered,
-                                                         params.total_order_H, params.inverse_total_order_H)
-            search_subgraph_isomorphisms_order_neighbors(all_nodes_H, directed_H.out_neighbors, directed_H.out_neighbors_ordered,
-                                                         params.total_order_H, params.inverse_total_order_H)
-        else:
-            # order nodes of G
-            search_subgraph_isomorphisms_order_neighbors(all_nodes_G, undirected_G.neighbors, undirected_G.neighbors_ordered,
-                                                         params.total_order_G, params.inverse_total_order_G)
-            # order nodes of H
-            search_subgraph_isomorphisms_order_neighbors(all_nodes_H, undirected_H.neighbors, undirected_H.neighbors_ordered,
-                                                         params.total_order_H, params.inverse_total_order_H)
+        # order nodes of G
+        search_subgraph_isomorphisms_order_neighbors(all_nodes_G, undirected_G.neighbors, undirected_G.neighbors_ordered,
+                                                     params.total_order_G, params.inverse_total_order_G)
+        # order nodes of H
+        search_subgraph_isomorphisms_order_neighbors(all_nodes_H, undirected_H.neighbors, undirected_H.neighbors_ordered,
+                                                     params.total_order_H, params.inverse_total_order_H)
 
     # set recursion limit
     required_limit = nx_G.order()
