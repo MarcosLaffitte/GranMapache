@@ -397,9 +397,11 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
     if(not input_correctness):
         return([], False)
 
-    # quick test by testing for cover between degree sequences of the input graphs
+    # get order of graphs for local processing
     order_G = nx_G.order()
     order_H = nx_H.order()
+
+    # quick test by testing for cover between degree sequences of the input graphs
     params.directed_graphs = nx.is_directed(nx_G)
     if(params.directed_graphs):
         # get in-degrees
@@ -535,8 +537,8 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
                 params.total_order_G[each_pair.first] = total_order_A[encoded_node_names[each_pair.first]]
                 params.inverse_total_order_G[params.total_order_G[each_pair.first]] = each_pair.first
                 initial_state_directed.unmatched_G.insert(each_pair.first)
-            # get ordered unmatched nodes for G
-            for i in range(1, params.expected_order_int + 1):
+            # get ordered unmatched nodes of G
+            for i in range(1, order_G + 1):
                 initial_state_directed.unmatched_G_ordered.push_back(params.inverse_total_order_G[i])
         else:
             counter = 0
@@ -565,7 +567,8 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
                 params.total_order_H[each_pair.first] = total_order_B[encoded_node_names[each_pair.first]]
                 params.inverse_total_order_H[params.total_order_H[each_pair.first]] = each_pair.first
                 initial_state_directed.unmatched_H.insert(each_pair.first)
-            for i in range(1, params.expected_order_int + 1):
+            # get ordered unmatched nodes of H
+            for i in range(1, order_H + 1):
                 initial_state_directed.unmatched_H_ordered.push_back(params.inverse_total_order_H[i])
         else:
             counter = 0
@@ -594,7 +597,8 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
                 params.total_order_G[each_pair.first] = total_order_A[encoded_node_names[each_pair.first]]
                 params.inverse_total_order_G[params.total_order_G[each_pair.first]] = each_pair.first
                 initial_state_undirected.unmatched_G.insert(each_pair.first)
-            for i in range(1, params.expected_order_int + 1):
+            # get ordered unmatched nodes of G
+            for i in range(1, order_G + 1):
                 initial_state_undirected.unmatched_G_ordered.push_back(params.inverse_total_order_G[i])
         else:
             counter = 0
@@ -621,7 +625,8 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
                 params.total_order_H[each_pair.first] = total_order_B[encoded_node_names[each_pair.first]]
                 params.inverse_total_order_H[params.total_order_H[each_pair.first]] = each_pair.first
                 initial_state_undirected.unmatched_H.insert(each_pair.first)
-            for i in range(1, params.expected_order_int + 1):
+            # get ordered unmatched nodes of H
+            for i in range(1, order_H + 1):
                 initial_state_undirected.unmatched_H_ordered.push_back(params.inverse_total_order_H[i])
         else:
             counter = 0
@@ -802,12 +807,12 @@ cdef cpp_bool search_subgraph_isomorphisms_input_correctness(nx_G, nx_H, node_la
     if((nx_G.order() == 0) or (nx_H.order() == 0)):
         raise(ValueError("gmapache: input graphs must have at least one node each."))
 
-    # check that input graphs have the same number of nodes
-    if(not nx_G.order() == nx_H.order()):
+    # check that second graph has at least as many nodes as first graph
+    if(nx_G.order() > nx_H.order()):
         return(False)
 
-    # check that input graphs have the same number of edges
-    if(not nx_G.size() == nx_H.size()):
+    # check that second graph has at least as many edges as first graph
+    if(nx_G.size() > nx_H.size()):
         return(False)
 
     # check consistency of sixth argument
@@ -915,13 +920,13 @@ cdef cpp_bool search_subgraph_isomorphisms_label_consistency(cpp_bool & node_lab
                 count_labels_H[label] = 1
 
         # compare node counts in both graphs per label
-        if(count_labels_G.size() != count_labels_H.size()):
+        if(count_labels_G.size() <= count_labels_H.size()):
             return(False)
         for label_and_count in count_labels_G:
             if(count_labels_H.find(label_and_count.first) == count_labels_H.end()):
                 return(False)
             else:
-                if(label_and_count.second != count_labels_H[label_and_count.first]):
+                if(label_and_count.second <= count_labels_H[label_and_count.first]):
                     return(False)
 
         # if there is only one node label then turn off node-label checking
@@ -956,13 +961,13 @@ cdef cpp_bool search_subgraph_isomorphisms_label_consistency(cpp_bool & node_lab
                 count_labels_H[label] = 1
 
         # compare edge counts in both graphs per label
-        if(count_labels_G.size() != count_labels_H.size()):
+        if(count_labels_G.size() <= count_labels_H.size()):
             return(False)
         for label_and_count in count_labels_G:
             if(count_labels_H.find(label_and_count.first) == count_labels_H.end()):
                 return(False)
             else:
-                if(label_and_count.second != count_labels_H[label_and_count.first]):
+                if(label_and_count.second <= count_labels_H[label_and_count.first]):
                     return(False)
 
         # if there is only one edge label then turn off edge-label checking
@@ -1133,39 +1138,23 @@ cdef void search_subgraph_isomorphisms_undirected(subgraph_isomorphisms_search_p
             # control variable changing only when filter is actually being used
             if(viable_candidate):
 
-                # evaluate syntactic feasibility (possibly over complement graph)
-                if(params.complement):
-                    syntactic_feasibility = syntactic_feasibility_undirected(matchable_node_G,
-                                                                             candidate_node_H,
-                                                                             current_state.ring_G,
-                                                                             current_state.ring_H,
-                                                                             current_state.match_G,
-                                                                             current_state.match_H,
-                                                                             G.loops,
-                                                                             H.loops,
-                                                                             current_state.forward_match,
-                                                                             current_state.inverse_match,
-                                                                             G.neighbors_complement,
-                                                                             H.neighbors_complement,
-                                                                             G.neighbors_ordered,
-                                                                             H.neighbors_ordered)
-                else:
-                    syntactic_feasibility = syntactic_feasibility_undirected(matchable_node_G,
-                                                                             candidate_node_H,
-                                                                             current_state.ring_G,
-                                                                             current_state.ring_H,
-                                                                             current_state.match_G,
-                                                                             current_state.match_H,
-                                                                             G.loops,
-                                                                             H.loops,
-                                                                             current_state.forward_match,
-                                                                             current_state.inverse_match,
-                                                                             G.neighbors,
-                                                                             H.neighbors,
-                                                                             G.neighbors_ordered,
-                                                                             H.neighbors_ordered)
+                # evaluate syntactic feasibility
+                syntactic_feasibility = syntactic_feasibility_undirected(matchable_node_G,
+                                                                         candidate_node_H,
+                                                                         current_state.ring_G,
+                                                                         current_state.ring_H,
+                                                                         current_state.match_G,
+                                                                         current_state.match_H,
+                                                                         G.loops,
+                                                                         H.loops,
+                                                                         current_state.forward_match,
+                                                                         current_state.inverse_match,
+                                                                         G.neighbors,
+                                                                         H.neighbors,
+                                                                         G.neighbors_ordered,
+                                                                         H.neighbors_ordered)
 
-                # evaluate semantic feasibility (always over original graphs)
+                # evaluate semantic feasibility
                 if(syntactic_feasibility):
                     if(params.node_labels or params.edge_labels):
                         semantic_feasibility = semantic_feasibility_undirected(params.node_labels,
@@ -1220,8 +1209,9 @@ cdef cpp_pair[int, int] candidates_info_undirected(subgraph_isomorphisms_search_
     # initialize with impossible minimum (total order ranges from 1 to expected_order)
     minimum_value = 10 + params.expected_order_int
 
-    # NOTE: syntactic feasability for subgraph isomorphism guarantees that both rings have
-    # always the same cardinality, thus we only have the following two disjoint options.
+    # NOTE: syntactic feasability for subgraph isomorphism guarantees that the ring in H has the
+    # same or bigger cardinality than in G, thus we only have the following two disjoint options,
+    # aided by the "filter" of the ring in H obtained in a second step.
 
     # build candidates either with nodes in the rings or with unmatched nodes
     if((not current_state.ring_G.empty()) and (not current_state.ring_H.empty())):
@@ -1233,7 +1223,7 @@ cdef cpp_pair[int, int] candidates_info_undirected(subgraph_isomorphisms_search_
                 minimum_node = node
 
         # build output pair
-        # NOTE: candidates with compatibly-matched neighbors are obtained in a second step
+        # NOTE: candidates with compatibly-matched neighbors are obtained in a second step.
         candidates_info.first = minimum_node
         candidates_info.second = 0
 
@@ -1453,7 +1443,7 @@ cdef cpp_bool syntactic_feasibility_undirected(int node1,
     cdef int neighbors_extern_H = 0
 
     # consistency of degree
-    if(neigh_G[node1].size() != neigh_H[node2].size()):
+    if(neigh_G[node1].size() <= neigh_H[node2].size()):
         return(False)
 
     # loop-consistency-test
@@ -1496,11 +1486,11 @@ cdef cpp_bool syntactic_feasibility_undirected(int node1,
                 neighbors_extern_H = neighbors_extern_H + 1
 
     # look ahead 1: consistency of neighbors in ring (not in match but adjacent to match)
-    if(neighbors_ring_G != neighbors_ring_H):
+    if(neighbors_ring_G <= neighbors_ring_H):
         return(False)
 
     # look ahead 2: consistency of extern neighbors (neither in match nor adjacent to match)
-    if(neighbors_extern_G != neighbors_extern_H):
+    if(neighbors_extern_G <= neighbors_extern_H):
         return(False)
 
     # end of function
@@ -1660,80 +1650,44 @@ cdef void search_subgraph_isomorphisms_directed(subgraph_isomorphisms_search_par
             # control variable changing only when filter is actually being used
             if(viable_candidate):
 
-                # evaluate in syntactic feasibility (possibly over complement graph)
-                if(params.complement):
-                    in_syntactic_feasibility = syntactic_feasibility_directed(matchable_node_G,
-                                                                              candidate_node_H,
-                                                                              current_state.in_ring_G,
-                                                                              current_state.in_ring_H,
-                                                                              current_state.out_ring_G,
-                                                                              current_state.out_ring_H,
-                                                                              current_state.match_G,
-                                                                              current_state.match_H,
-                                                                              G.loops,
-                                                                              H.loops,
-                                                                              current_state.forward_match,
-                                                                              current_state.inverse_match,
-                                                                              G.in_neighbors_complement,
-                                                                              H.in_neighbors_complement,
-                                                                              G.in_neighbors_ordered,
-                                                                              H.in_neighbors_ordered)
-                else:
-                    in_syntactic_feasibility = syntactic_feasibility_directed(matchable_node_G,
-                                                                              candidate_node_H,
-                                                                              current_state.in_ring_G,
-                                                                              current_state.in_ring_H,
-                                                                              current_state.out_ring_G,
-                                                                              current_state.out_ring_H,
-                                                                              current_state.match_G,
-                                                                              current_state.match_H,
-                                                                              G.loops,
-                                                                              H.loops,
-                                                                              current_state.forward_match,
-                                                                              current_state.inverse_match,
-                                                                              G.in_neighbors,
-                                                                              H.in_neighbors,
-                                                                              G.in_neighbors_ordered,
-                                                                              H.in_neighbors_ordered)
+                # evaluate in syntactic feasibility
+                in_syntactic_feasibility = syntactic_feasibility_directed(matchable_node_G,
+                                                                          candidate_node_H,
+                                                                          current_state.in_ring_G,
+                                                                          current_state.in_ring_H,
+                                                                          current_state.out_ring_G,
+                                                                          current_state.out_ring_H,
+                                                                          current_state.match_G,
+                                                                          current_state.match_H,
+                                                                          G.loops,
+                                                                          H.loops,
+                                                                          current_state.forward_match,
+                                                                          current_state.inverse_match,
+                                                                          G.in_neighbors,
+                                                                          H.in_neighbors,
+                                                                          G.in_neighbors_ordered,
+                                                                          H.in_neighbors_ordered)
 
-                # evaluate out syntactic feasibility (possibly over complement graph)
+                # evaluate out syntactic feasibility
                 if(in_syntactic_feasibility):
-                    if(params.complement):
-                        out_syntactic_feasibility = syntactic_feasibility_directed(matchable_node_G,
-                                                                                   candidate_node_H,
-                                                                                   current_state.in_ring_G,
-                                                                                   current_state.in_ring_H,
-                                                                                   current_state.out_ring_G,
-                                                                                   current_state.out_ring_H,
-                                                                                   current_state.match_G,
-                                                                                   current_state.match_H,
-                                                                                   G.loops,
-                                                                                   H.loops,
-                                                                                   current_state.forward_match,
-                                                                                   current_state.inverse_match,
-                                                                                   G.out_neighbors_complement,
-                                                                                   H.out_neighbors_complement,
-                                                                                   G.out_neighbors_ordered,
-                                                                                   H.out_neighbors_ordered)
-                    else:
-                        out_syntactic_feasibility = syntactic_feasibility_directed(matchable_node_G,
-                                                                                   candidate_node_H,
-                                                                                   current_state.in_ring_G,
-                                                                                   current_state.in_ring_H,
-                                                                                   current_state.out_ring_G,
-                                                                                   current_state.out_ring_H,
-                                                                                   current_state.match_G,
-                                                                                   current_state.match_H,
-                                                                                   G.loops,
-                                                                                   H.loops,
-                                                                                   current_state.forward_match,
-                                                                                   current_state.inverse_match,
-                                                                                   G.out_neighbors,
-                                                                                   H.out_neighbors,
-                                                                                   G.out_neighbors_ordered,
-                                                                                   H.out_neighbors_ordered)
+                    out_syntactic_feasibility = syntactic_feasibility_directed(matchable_node_G,
+                                                                               candidate_node_H,
+                                                                               current_state.in_ring_G,
+                                                                               current_state.in_ring_H,
+                                                                               current_state.out_ring_G,
+                                                                               current_state.out_ring_H,
+                                                                               current_state.match_G,
+                                                                               current_state.match_H,
+                                                                               G.loops,
+                                                                               H.loops,
+                                                                               current_state.forward_match,
+                                                                               current_state.inverse_match,
+                                                                               G.out_neighbors,
+                                                                               H.out_neighbors,
+                                                                               G.out_neighbors_ordered,
+                                                                               H.out_neighbors_ordered)
 
-                    # evaluate semantic feasibility (always over original graphs)
+                    # evaluate semantic feasibility
                     if(out_syntactic_feasibility):
                         if(params.node_labels or params.edge_labels):
                             semantic_feasibility = semantic_feasibility_directed(params.node_labels,
@@ -1776,7 +1730,7 @@ cdef void search_subgraph_isomorphisms_directed(subgraph_isomorphisms_search_par
 
 
 
-    # function: get candidate pairs for directed subgraph isomorphism search -------
+# function: get candidate pairs for directed subgraph isomorphism search -------
 cdef cpp_pair[int, int] candidates_info_directed(subgraph_isomorphisms_search_params & params,
                                                  subgraph_isomorphisms_state_directed & current_state) noexcept:
 
@@ -1791,8 +1745,9 @@ cdef cpp_pair[int, int] candidates_info_directed(subgraph_isomorphisms_search_pa
     # initialize with impossible minimum (total order ranges from 1 to expected_order)
     minimum_value = 10 + params.expected_order_int
 
-    # NOTE: syntactic feasability for subgraph isomorphism guarantees that all the rings have
-    # always the same cardinality, thus we only have the following three disjoint options.
+    # NOTE: syntactic feasability for subgraph isomorphism guarantees that the rings in H have the
+    # same or bigger cardinality than in G, thus we only have the following three disjoint options,
+    # aided by the "filter" of the ring in H obtained in a second step.
 
     # build candidates from out ring
     if((not current_state.out_ring_G.empty()) and (not current_state.out_ring_H.empty())):
@@ -1930,7 +1885,7 @@ cdef subgraph_isomorphisms_change_in_state_directed extend_match_directed(int ta
     current_state.unmatched_H_ordered.remove(node2)
 
     # remove node from in-ring and/or out-ring in G if taken from there and the same for H
-    if((taken_from == 0) and (taken_from == 1)):
+    if((taken_from == 0) or (taken_from == 1)):
         # try removing node from in-ring in G
         current_state.in_ring_G_ordered.remove(node1)
         change_in_state.removed_node_in_ring_G = current_state.in_ring_G.erase(node1)
@@ -2088,7 +2043,7 @@ cdef cpp_bool syntactic_feasibility_directed(int node1,
     cdef int neighbors_extern_H = 0
 
     # consistency of degrees
-    if(neigh_G[node1].size() != neigh_H[node2].size()):
+    if(neigh_G[node1].size() <= neigh_H[node2].size()):
         return(False)
 
     # loop-consistency-test
@@ -2145,13 +2100,13 @@ cdef cpp_bool syntactic_feasibility_directed(int node1,
                 neighbors_extern_H = neighbors_extern_H + 1
 
     # look ahead 1: consistency of neighbors in rings (not in match but adjacent to match)
-    if(neighbors_in_ring_G != neighbors_in_ring_H):
+    if(neighbors_in_ring_G <= neighbors_in_ring_H):
         return(False)
-    if(neighbors_out_ring_G != neighbors_out_ring_H):
+    if(neighbors_out_ring_G <= neighbors_out_ring_H):
         return(False)
 
     # look ahead 2: consistency of extern neighbors (neither in match nor adjacent to match)
-    if(neighbors_extern_G != neighbors_extern_H):
+    if(neighbors_extern_G <= neighbors_extern_H):
         return(False)
 
     # end of function
