@@ -417,18 +417,23 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     # quick test by comparing the degree sequences of the input graphs
     params.directed_graphs = nx.is_directed(nx_G)
     if(params.directed_graphs):
-        # get degrees
+        # get in-degrees
         in_deg_G = [deg for (node_obj, deg) in list(nx_G.in_degree())]
         in_deg_H = [deg for (node_obj, deg) in list(nx_H.in_degree())]
-        out_deg_G = [deg for (node_obj, deg) in list(nx_G.out_degree())]
-        out_deg_H = [deg for (node_obj, deg) in list(nx_H.out_degree())]
-        # sort degrees
+        # sort in-degrees
         sort(in_deg_G.begin(), in_deg_G.end())
         sort(in_deg_H.begin(), in_deg_H.end())
+        # compare in-degree sequences
+        if(not in_deg_G == in_deg_H):
+            return([], False)
+        # get out-degrees
+        out_deg_G = [deg for (node_obj, deg) in list(nx_G.out_degree())]
+        out_deg_H = [deg for (node_obj, deg) in list(nx_H.out_degree())]
+        # sort out-degrees
         sort(out_deg_G.begin(), out_deg_G.end())
         sort(out_deg_H.begin(), out_deg_H.end())
-        # compare degree sequences
-        if((not in_deg_G == in_deg_H) or (not out_deg_G == out_deg_H)):
+        # compare out-degree sequences
+        if(not out_deg_G == out_deg_H):
             return([], False)
     else:
         # get degrees
@@ -523,7 +528,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                 params.total_order_G[each_pair.first] = total_order_A[encoded_node_names[each_pair.first]]
                 params.inverse_total_order_G[params.total_order_G[each_pair.first]] = each_pair.first
                 initial_state_directed.unmatched_G.insert(each_pair.first)
-            # get ordered unmatched nodes for G
+            # get ordered unmatched nodes of G
             for i in range(1, params.expected_order_int + 1):
                 initial_state_directed.unmatched_G_ordered.push_back(params.inverse_total_order_G[i])
         else:
@@ -563,6 +568,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                 params.total_order_H[each_pair.first] = total_order_B[encoded_node_names[each_pair.first]]
                 params.inverse_total_order_H[params.total_order_H[each_pair.first]] = each_pair.first
                 initial_state_directed.unmatched_H.insert(each_pair.first)
+            # get ordered unmatched nodes of H
             for i in range(1, params.expected_order_int + 1):
                 initial_state_directed.unmatched_H_ordered.push_back(params.inverse_total_order_H[i])
         else:
@@ -601,6 +607,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                 params.total_order_G[each_pair.first] = total_order_A[encoded_node_names[each_pair.first]]
                 params.inverse_total_order_G[params.total_order_G[each_pair.first]] = each_pair.first
                 initial_state_undirected.unmatched_G.insert(each_pair.first)
+            # get ordered unmatched nodes of G
             for i in range(1, params.expected_order_int + 1):
                 initial_state_undirected.unmatched_G_ordered.push_back(params.inverse_total_order_G[i])
         else:
@@ -636,6 +643,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                 params.total_order_H[each_pair.first] = total_order_B[encoded_node_names[each_pair.first]]
                 params.inverse_total_order_H[params.total_order_H[each_pair.first]] = each_pair.first
                 initial_state_undirected.unmatched_H.insert(each_pair.first)
+            # get ordered unmatched nodes of H
             for i in range(1, params.expected_order_int + 1):
                 initial_state_undirected.unmatched_H_ordered.push_back(params.inverse_total_order_H[i])
         else:
@@ -1969,7 +1977,7 @@ cdef isomorphisms_change_in_state_directed extend_match_directed(int taken_from,
     current_state.unmatched_H_ordered.remove(node2)
 
     # remove node from in-ring and/or out-ring in G if taken from there and the same for H
-    if((taken_from == 0) and (taken_from == 1)):
+    if((taken_from == 0) or (taken_from == 1)):
         # try removing node from in-ring in G
         current_state.in_ring_G_ordered.remove(node1)
         change_in_state.removed_node_in_ring_G = current_state.in_ring_G.erase(node1)
