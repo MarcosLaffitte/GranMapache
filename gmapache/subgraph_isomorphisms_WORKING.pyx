@@ -11,6 +11,20 @@
 #   first. If both graphs have the same number of vertices then we simply      #
 #   run a graph isomorphism search instead of the (induced) subgraph search.   #
 #                                                                              #
+#   * here we refer as "ring" to what in the literature of the VF2 is known    #
+#     instead as "terminal" sets, for the simple reason that these sets look   #
+#     like rings/doughnuts around the set of matched vertices when drawing     #
+#     them on the whiteboard in a concentric layout.                           #
+#                                                                              #
+#   * the set of neighbors of a vertex that are not in the match and not in    #
+#     the ring is called the set of "extern" neighbors.                        #
+#                                                                              #
+#   * the data structures holding the matched vertices, the rings and also     #
+#     the unmatched vertices have both unordered and ordered representations   #
+#     so as to make the most out of (average) constant look-ups with unordered #
+#     structures, contiguous memory traversals with vectors, and as well as    #
+#     for some linked-lists advantages.                                        #
+#                                                                              #
 ################################################################################
 
 
@@ -695,6 +709,10 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
         # if labels are not consistent then the graphs cannot be isomorphic
         if(not consistent_labels):
             return([], False)
+
+
+    print("hjsakjlkjsalklk")
+
 
     # prepare ordered neighbors
     if(params.directed_graphs):

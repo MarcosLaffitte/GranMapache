@@ -14,7 +14,7 @@
 #     like rings/doughnuts around the set of matched vertices when drawing     #
 #     them on the whiteboard in a concentric layout.                           #
 #                                                                              #
-#   * the set of neighbors of a vertex tha are not in the match and not in     #
+#   * the set of neighbors of a vertex that are not in the match and not in    #
 #     the ring is called the set of "extern" neighbors.                        #
 #                                                                              #
 #   * the data structures holding the matched vertices, the rings and also     #
