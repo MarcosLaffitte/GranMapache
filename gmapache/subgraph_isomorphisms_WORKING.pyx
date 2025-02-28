@@ -401,7 +401,7 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
     order_G = nx_G.order()
     order_H = nx_H.order()
 
-    # quick test by testing for cover between degree sequences of the input graphs
+    # quick test by searching for cover (if any) between degree sequences of the input graphs
     params.directed_graphs = nx.is_directed(nx_G)
     if(params.directed_graphs):
         # get in-degrees
@@ -1223,7 +1223,7 @@ cdef cpp_pair[int, int] candidates_info_undirected(subgraph_isomorphisms_search_
                 minimum_node = node
 
         # build output pair
-        # NOTE: candidates with compatibly-matched neighbors are obtained in a second step.
+        # NOTE: "filter" of candidates with compatibly-matched neighbors are obtained in a second step.
         candidates_info.first = minimum_node
         candidates_info.second = 0
 
@@ -1759,7 +1759,7 @@ cdef cpp_pair[int, int] candidates_info_directed(subgraph_isomorphisms_search_pa
                 minimum_node = node
 
         # build output pair
-        # NOTE: candidates with compatibly-matched neighbors are obtained in a second step
+        # NOTE: "filter" of candidates with compatibly-matched neighbors are obtained in a second step
         candidates_info.first = minimum_node
         candidates_info.second = 0
 
@@ -1775,7 +1775,7 @@ cdef cpp_pair[int, int] candidates_info_directed(subgraph_isomorphisms_search_pa
                     minimum_node = node
 
             # build output pair
-            # NOTE: candidates with compatibly-matched neighbors are obtained in a second step
+            # NOTE: "filter" of candidates with compatibly-matched neighbors are obtained in a second step
             candidates_info.first = minimum_node
             candidates_info.second = 1
 

@@ -1268,7 +1268,8 @@ cdef cpp_pair[int, int] candidates_info_undirected(isomorphisms_search_params & 
     minimum_value = 10 + params.expected_order_int
 
     # NOTE: syntactic feasability for isomorphism guarantees that both rings have
-    # always the same cardinality, thus we only have the following two disjoint options.
+    # always the same cardinality, thus we only have the following two disjoint options,
+    # aided by the "filter" of the ring in H obtained in a second step.
 
     # build candidates either with nodes in the rings or with unmatched nodes
     if((not current_state.ring_G.empty()) and (not current_state.ring_H.empty())):
@@ -1280,7 +1281,7 @@ cdef cpp_pair[int, int] candidates_info_undirected(isomorphisms_search_params & 
                 minimum_node = node
 
         # build output pair
-        # NOTE: candidates with compatibly-matched neighbors are obtained in a second step
+        # NOTE: "filter" of candidates with compatibly-matched neighbors are obtained in a second step
         candidates_info.first = minimum_node
         candidates_info.second = 0
 
@@ -1839,7 +1840,8 @@ cdef cpp_pair[int, int] candidates_info_directed(isomorphisms_search_params & pa
     minimum_value = 10 + params.expected_order_int
 
     # NOTE: syntactic feasability for isomorphism guarantees that all the rings have
-    # always the same cardinality, thus we only have the following three disjoint options.
+    # always the same cardinality, thus we only have the following three disjoint options,
+    # aided by the "filter" of the ring in H obtained in a second step.
 
     # build candidates from out ring
     if((not current_state.out_ring_G.empty()) and (not current_state.out_ring_H.empty())):
@@ -1851,7 +1853,7 @@ cdef cpp_pair[int, int] candidates_info_directed(isomorphisms_search_params & pa
                 minimum_node = node
 
         # build output pair
-        # NOTE: candidates with compatibly-matched neighbors are obtained in a second step
+        # NOTE: "filter" of candidates with compatibly-matched neighbors are obtained in a second step
         candidates_info.first = minimum_node
         candidates_info.second = 0
 
@@ -1867,7 +1869,7 @@ cdef cpp_pair[int, int] candidates_info_directed(isomorphisms_search_params & pa
                     minimum_node = node
 
             # build output pair
-            # NOTE: candidates with compatibly-matched neighbors are obtained in a second step
+            # NOTE: "filter" of candidates with compatibly-matched neighbors are obtained in a second step
             candidates_info.first = minimum_node
             candidates_info.second = 1
 
