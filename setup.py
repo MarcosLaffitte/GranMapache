@@ -11,7 +11,7 @@
 ################################################################################
 
 # Installing required python version with anaconda
-# conda create -n devdep python=3.11.10
+# conda create -n devdep python=3.11.0
 
 # In order to install this package you need C and C++ compilers. If you dont have these
 # already in your system you can install them INSIDE the anaconda environment with
@@ -61,6 +61,10 @@ extensions = [
               sources = ["gmapache/isomorphisms.pyx"],
               language = "c++",
               extra_compile_args = ["-std=c++20"]),
+    Extension("gmapache.subgraph_isomorphisms",
+              sources = ["gmapache/subgraph_isomorphisms.pyx"],
+              language = "c++",
+              extra_compile_args = ["-std=c++20"])
     # Extension("package.module",
     #           sources = ["package/module.pyx"],
     #           include_dirs = [numpy.get_include()],

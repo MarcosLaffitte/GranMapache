@@ -710,10 +710,6 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
         if(not consistent_labels):
             return([], False)
 
-
-    print("hjsakjlkjsalklk")
-
-
     # prepare ordered neighbors
     if(params.directed_graphs):
         # order nodes of G
@@ -938,13 +934,13 @@ cdef cpp_bool search_subgraph_isomorphisms_label_consistency(cpp_bool & node_lab
                 count_labels_H[label] = 1
 
         # compare node counts in both graphs per label
-        if(count_labels_G.size() <= count_labels_H.size()):
+        if(count_labels_G.size() > count_labels_H.size()):
             return(False)
         for label_and_count in count_labels_G:
             if(count_labels_H.find(label_and_count.first) == count_labels_H.end()):
                 return(False)
             else:
-                if(label_and_count.second <= count_labels_H[label_and_count.first]):
+                if(label_and_count.second > count_labels_H[label_and_count.first]):
                     return(False)
 
         # if there is only one node label then turn off node-label checking
@@ -979,13 +975,13 @@ cdef cpp_bool search_subgraph_isomorphisms_label_consistency(cpp_bool & node_lab
                 count_labels_H[label] = 1
 
         # compare edge counts in both graphs per label
-        if(count_labels_G.size() <= count_labels_H.size()):
+        if(count_labels_G.size() > count_labels_H.size()):
             return(False)
         for label_and_count in count_labels_G:
             if(count_labels_H.find(label_and_count.first) == count_labels_H.end()):
                 return(False)
             else:
-                if(label_and_count.second <= count_labels_H[label_and_count.first]):
+                if(label_and_count.second > count_labels_H[label_and_count.first]):
                     return(False)
 
         # if there is only one edge label then turn off edge-label checking
@@ -1461,7 +1457,7 @@ cdef cpp_bool syntactic_feasibility_undirected(int node1,
     cdef int neighbors_extern_H = 0
 
     # consistency of degree
-    if(neigh_G[node1].size() <= neigh_H[node2].size()):
+    if(neigh_G[node1].size() > neigh_H[node2].size()):
         return(False)
 
     # loop-consistency-test
@@ -1504,11 +1500,11 @@ cdef cpp_bool syntactic_feasibility_undirected(int node1,
                 neighbors_extern_H = neighbors_extern_H + 1
 
     # look ahead 1: consistency of neighbors in ring (not in match but adjacent to match)
-    if(neighbors_ring_G <= neighbors_ring_H):
+    if(neighbors_ring_G > neighbors_ring_H):
         return(False)
 
     # look ahead 2: consistency of extern neighbors (neither in match nor adjacent to match)
-    if(neighbors_extern_G <= neighbors_extern_H):
+    if(neighbors_extern_G > neighbors_extern_H):
         return(False)
 
     # end of function
@@ -2061,7 +2057,7 @@ cdef cpp_bool syntactic_feasibility_directed(int node1,
     cdef int neighbors_extern_H = 0
 
     # consistency of degrees
-    if(neigh_G[node1].size() <= neigh_H[node2].size()):
+    if(neigh_G[node1].size() > neigh_H[node2].size()):
         return(False)
 
     # loop-consistency-test
@@ -2118,13 +2114,13 @@ cdef cpp_bool syntactic_feasibility_directed(int node1,
                 neighbors_extern_H = neighbors_extern_H + 1
 
     # look ahead 1: consistency of neighbors in rings (not in match but adjacent to match)
-    if(neighbors_in_ring_G <= neighbors_in_ring_H):
+    if(neighbors_in_ring_G > neighbors_in_ring_H):
         return(False)
-    if(neighbors_out_ring_G <= neighbors_out_ring_H):
+    if(neighbors_out_ring_G > neighbors_out_ring_H):
         return(False)
 
     # look ahead 2: consistency of extern neighbors (neither in match nor adjacent to match)
-    if(neighbors_extern_G <= neighbors_extern_H):
+    if(neighbors_extern_G > neighbors_extern_H):
         return(False)
 
     # end of function
