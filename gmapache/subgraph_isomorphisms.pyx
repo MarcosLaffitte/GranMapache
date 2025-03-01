@@ -88,6 +88,7 @@ cdef extern from "<algorithm>" namespace "std":
 
 # custom dependencies ----------------------------------------------------------
 from .integerization import encode_graphs, decode_graphs, decode_match
+from .isomorphisms import search_isomorphisms
 
 
 
@@ -339,6 +340,7 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
     and equivalently if G is isomorphic to an induced (labeled) subgraph of H.
 
     > calls:
+    * gmapache.isomorphisms.search_isomorphisms
     * gmapache.integerization.encode_graphs
     * gmapache.integerization.decode_graphs
     * gmapache.integerization.decode_match
@@ -350,7 +352,7 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
     * gmapache.subgraph_isomorphisms.search_subgraph_isomorphisms_directed
     """
 
-    # output holders
+    # output holders (python)
     found_isomorphism = False
     cdef list isomorphisms = []
 
@@ -414,6 +416,17 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
     # get order of graphs for local processing
     order_G = nx_G.order()
     order_H = nx_H.order()
+
+    # run graph isomorphism test if G and H have the same number of nodes
+    if(order_G == order_H):
+        isomorphisms, found_isomorphism = search_isomorphisms(nx_G = nx_G,
+                                                              nx_H = nx_H,
+                                                              node_labels = node_labels,
+                                                              edge_labels = edge_labels,
+                                                              all_isomorphisms = all_isomorphisms,
+                                                              total_order_A = total_order_A,
+                                                              total_order_B = total_order_B)
+        return(isomorphisms, found_isomorphism)
 
     # quick test by searching for cover (if any) between degree sequences of the input graphs
     params.directed_graphs = nx.is_directed(nx_G)
