@@ -354,5 +354,164 @@ print(final_time - initial_time)
 print("\n")
 
 
+# example: subgraph isomorphisms -----------------------------------------------
+
+
+# We build two labeled graphs G and H, where G is isomorphic to an induced subgraph
+# of H. We call the function gm.search_subgraph_isomorphisms(G, H) to search for
+# embeddings of G in H, i.e., induced (labeld) subgraphs of H isomorphic to G. The
+# function by default searches for unlabeld subgraph isomorphisms, but similar to the
+# other functions in this package it can receive arguments to explicitly use node
+# labels, edge labels, or both. Similarly it searches by default for only one
+# embedding, but an argument can be passed to obtain all possible embeddings (if any).
+
+
+# build (smaller) first graph for subgraph isomorphism test
+G = nx.Graph()
+# add blue square with edges of weight one
+G.add_node(1, color = "blue")
+G.add_node(2, color = "blue")
+G.add_node(3, color = "blue")
+G.add_node(4, color = "blue")
+G.add_edge(1, 2, weight = 1)
+G.add_edge(2, 3, weight = 1)
+G.add_edge(3, 4, weight = 1)
+G.add_edge(4, 1, weight = 1)
+# add pendant node
+G.add_node(5, color = "root")
+G.add_edge(1, 5, weight = 0)
+
+
+# build (bigger) second graph for subgraph isomorphism test
+H = nx.Graph()
+# add blue square with edges of weight one
+H.add_node("a", color = "blue")
+H.add_node("b", color = "blue")
+H.add_node("c", color = "blue")
+H.add_node("d", color = "blue")
+H.add_edge("a", "b", weight = 1)
+H.add_edge("b", "c", weight = 1)
+H.add_edge("c", "d", weight = 1)
+H.add_edge("d", "a", weight = 1)
+# add blue square with edges of weight 2.5
+H.add_node("e", color = "blue")
+H.add_node("f", color = "blue")
+H.add_node("g", color = "blue")
+H.add_node("h", color = "blue")
+H.add_edge("e", "f", weight = 2.5)
+H.add_edge("f", "g", weight = 2.5)
+H.add_edge("g", "h", weight = 2.5)
+H.add_edge("h", "e", weight = 2.5)
+# add green square with edges of weight 2.5
+H.add_node("w", color = "green")
+H.add_node("x", color = "green")
+H.add_node("y", color = "green")
+H.add_node("z", color = "green")
+H.add_edge("w", "x", weight = 2.5)
+H.add_edge("x", "y", weight = 2.5)
+H.add_edge("y", "z", weight = 2.5)
+H.add_edge("z", "w", weight = 2.5)
+# connect the three squares to a single node
+H.add_node("center", color = "root")
+H.add_edge("a", "center", weight = 0)
+H.add_edge("e", "center", weight = 0)
+H.add_edge("w", "center", weight = 0)
+
+
+# testing subgraph isomorphisms
+initial_time = time.time()
+embeddings, subgraph_isomorphic = gm.search_subgraph_isomorphisms(G, H, node_labels = True, edge_labels = True, all_isomorphisms = False)
+final_time = time.time()
+
+
+# print resutls
+print("--------------------------------------------------")
+print("> Subgraph Isomorphism Search (A - considering node and edge labels; only one embedding)")
+print("\n")
+print("***** Got subgraph isomorphisms:")
+print(embeddings)
+print("***** Were the graphs subgraph-isomorphic?")
+print(subgraph_isomorphic)
+print("***** Running time [s]")
+print(final_time - initial_time)
+print("\n")
+
+
+# testing subgraph isomorphisms
+initial_time = time.time()
+embeddings, subgraph_isomorphic = gm.search_subgraph_isomorphisms(G, H, node_labels = True, edge_labels = True, all_isomorphisms = True)
+final_time = time.time()
+
+
+# print resutls
+print("--------------------------------------------------")
+print("> Subgraph Isomorphism Search (B - considering node and edge labels; all embeddings)")
+print("\n")
+print("***** Got subgraph isomorphisms:")
+print(embeddings)
+print("***** Were the graphs subgraph-isomorphic?")
+print(subgraph_isomorphic)
+print("***** Running time [s]")
+print(final_time - initial_time)
+print("\n")
+
+
+# testing subgraph isomorphisms
+initial_time = time.time()
+embeddings, subgraph_isomorphic = gm.search_subgraph_isomorphisms(G, H, node_labels = True, edge_labels = False, all_isomorphisms = True)
+final_time = time.time()
+
+
+# print resutls
+print("--------------------------------------------------")
+print("> Subgraph Isomorphism Search (C - considering only node labels; all embeddings)")
+print("\n")
+print("***** Got subgraph isomorphisms:")
+print(embeddings)
+print("***** Were the graphs subgraph-isomorphic?")
+print(subgraph_isomorphic)
+print("***** Running time [s]")
+print(final_time - initial_time)
+print("\n")
+
+
+# testing subgraph isomorphisms
+initial_time = time.time()
+embeddings, subgraph_isomorphic = gm.search_subgraph_isomorphisms(G, H, node_labels = False, edge_labels = False, all_isomorphisms = True)
+final_time = time.time()
+
+
+# print resutls
+print("--------------------------------------------------")
+print("> Subgraph Isomorphism Search (D - no labels; all embeddings)")
+print("\n")
+print("***** Got subgraph isomorphisms:")
+print(embeddings)
+print("***** Were the graphs subgraph-isomorphic?")
+print(subgraph_isomorphic)
+print("***** Running time [s]")
+print(final_time - initial_time)
+print("\n")
+
+
+# testing subgraph isomorphisms
+initial_time = time.time()
+embeddings, subgraph_isomorphic = gm.search_subgraph_isomorphisms(G, H, node_labels = False, edge_labels = False, all_isomorphisms = False)
+final_time = time.time()
+
+
+# print resutls
+print("--------------------------------------------------")
+print("> Subgraph Isomorphism Search (E - no labels; only one embedding)")
+print("\n")
+print("***** Got subgraph isomorphisms:")
+print(embeddings)
+print("***** Were the graphs subgraph-isomorphic?")
+print(subgraph_isomorphic)
+print("***** Running time [s]")
+print(final_time - initial_time)
+print("\n")
+
+
 ################################################################################
 ################################################################################

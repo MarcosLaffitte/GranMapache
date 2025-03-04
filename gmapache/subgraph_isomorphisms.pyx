@@ -956,8 +956,8 @@ cdef cpp_bool search_subgraph_isomorphisms_label_consistency(cpp_bool & node_lab
                 if(label_and_count.second > count_labels_H[label_and_count.first]):
                     return(False)
 
-        # if there is only one node label then turn off node-label checking
-        if(count_labels_G.size() == 1):
+        # if there is only one node label (IN BOTH GRAPHS) then turn off node-label checking, since it is the same label
+        if((count_labels_G.size() == 1) and (count_labels_H.size() == 1)):
             node_labels = False
 
     # consistency of edge labels
@@ -997,8 +997,8 @@ cdef cpp_bool search_subgraph_isomorphisms_label_consistency(cpp_bool & node_lab
                 if(label_and_count.second > count_labels_H[label_and_count.first]):
                     return(False)
 
-        # if there is only one edge label then turn off edge-label checking
-        if(count_labels_G.size() == 1):
+        # if there is only one edge label (IN BOTH GRAPHS) then turn off edge-label checking, since it is the same label
+        if((count_labels_G.size() == 1) and (count_labels_H.size() == 1)):
             edge_labels = False
 
     # end of function
