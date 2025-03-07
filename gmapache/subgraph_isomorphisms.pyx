@@ -11,6 +11,8 @@
 #   first. If both graphs have the same number of vertices then we simply      #
 #   run a graph isomorphism search instead of the (induced) subgraph search.   #
 #                                                                              #
+# - NOTES:                                                                     #
+#                                                                              #
 #   * here we refer as "ring" to what in the literature of the VF2 is known    #
 #     instead as "terminal" sets, for the simple reason that these sets look   #
 #     like rings/doughnuts around the set of matched vertices when drawing     #
