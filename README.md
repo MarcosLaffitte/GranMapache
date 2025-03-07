@@ -12,6 +12,8 @@ Alignments and other Maps between Graphs
 
 ## ToDo / Working / Done
 
+- WORKING: making functions for extensions of good partial maps over balanced and unbalanced reactions.
+
 There are 5 possible applications with variants of VF2 and MCS's. By increasing order of complexity these are:
 
 - working: updating (1) Extender A - already done, just updating it - for balanced reactions and extender paper with Long - variant: anchored isomorphism of the "remainder" graphs
