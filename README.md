@@ -6,7 +6,7 @@
 
 <p align="center">
 Suite for the Analysis of Bijections, Morphisms,<br/>
-Alignments and other Maps between Graphs
+Alignments and other Maps between Graphs and Networks
 </p>
 
 
