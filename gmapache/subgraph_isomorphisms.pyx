@@ -310,19 +310,19 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
     but not necessarily with either node-labels and/or edge-labels, and where the second
     graph H has the same or a bigger number of nodes and edges than the first graph G,
     and we test for embeddings of G in H, i.e., subgraph isomorphisms. Such subgraphs of
-    H can either be induced (default option) or general subgraphs. If both graphs have
-    the same amount of nodes and edges then we run a (full) graph isomorphism test instead.
-    A boolean variable can be passed indicating if the function should finish when finding
-    only one subgraph isomorphism of G in H (if any), or if it should search for all
-    possible such isomorphisms and return all of them. In addition, the VF2-like search
-    requires a total order for the nodes of one of the input graphs (traditionally the
-    domain graph). In principle this can be an arbitrary total order, though it has been
+    H can either be induced (default option) or general subgraphs (monomorphisms). If both
+    graphs have the same amount of nodes and edges then we run a (full) graph isomorphism
+    test instead. A boolean variable can be passed indicating if the function should finish
+    when finding only one subgraph isomorphism of G in H (if any), or if it should search
+    for all possible such isomorphisms and return all of them. In addition, the VF2-like
+    search requires a total order for the nodes of one of the input graphs (traditionally
+    the domain graph). In principle this can be an arbitrary total order, though it has been
     shown that certain orders may improve the search (see VF2++). Here we order the nodes
-    in both graphs based on their (out) degree in descending order by default. Moreover,
-    a custom total order can be provided for either or both graphs with the optional input
-    dictionaries total_order_A and total_order_B, which might help the search whenever
-    such orders encode a function almost resembling a subgrah isomorphism, obtained, for
-    example, from an external canonicalization or construction algorithm.
+    in both graphs based on their (out) degree in descending order by default. Moreover, a
+    custom total order can be provided for either or both graphs with the optional input
+    dictionaries total_order_A and total_order_B, which might help the search whenever such
+    orders encode a function almost resembling a subgrah isomorphism, obtained, for example,
+    from an external canonicalization or construction algorithm.
 
     > input:
     * nx_G - first networkx (di)graph being matched.
@@ -342,6 +342,7 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
     total order for the nodes of second graph.
     * induced - controls whether the function should search especifically for induced
     subgraphs of H isomorphic to G (default), or general subgraphs of H isomorphic to G.
+    The latter is known as monomorphism in CS, while the former as subgraph isomorphism.
 
     > output:
     * isomorphisms - (possibly empty) list of subgraph isomorphisms, each as a list of
