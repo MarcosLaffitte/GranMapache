@@ -6,10 +6,13 @@
 # - Module: subgraph_isomorphisms                                              #
 #                                                                              #
 # - Description: analysis of subgraph isomorphisms, i.e., finding embeddings   #
-#   of a first graph inside a second graph at least as big as the first one,   #
-#   in other words, induced subgraphs of the second graph isomorphic to the    #
-#   first. If both graphs have the same number of vertices then we simply      #
-#   run a graph isomorphism search instead of the (induced) subgraph search.   #
+#   of a first graph G inside a second graph H at least as big as the first    #
+#   one. Here we consider both induced and general subgraphs. In other words,  #
+#   we can search for subgraph isomorphisms from G to arbitrary subgraphs      #
+#   of H (also called monomorphisms in CS), or for subgraph isomorphisms from  #
+#   G to induced subgraphs of H (subgraph isomorphisms in CS). If both graphs  #
+#   have the same number of vertices and edges then we run a graph isomorphism #
+#   search instead of the subgraph search.                                     #
 #                                                                              #
 # - NOTES:                                                                     #
 #                                                                              #
@@ -222,6 +225,8 @@ cdef struct subgraph_isomorphisms_search_params:
     cpp_bool got_order_for_H
     # return all subgraph isomorphisms
     cpp_bool all_isomorphisms
+    # search for matches with induced subgraph
+    cpp_bool induced_subgraph
     # expected amount of matches (order of the subgraph)
     size_t expected_order
     int expected_order_int
@@ -295,27 +300,29 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
                                  edge_labels = False,         # consider edge labels when evaluating subgraph isomorphisms
                                  all_isomorphisms = False,    # by default stops when finding one subgraph isomorphism (if any)
                                  total_order_A = dict(),      # custom total order for the nodes of first graph (nx_G)
-                                 total_order_B = dict()):     # custom total order for the nodes of second graph (nx_H)
+                                 total_order_B = dict(),      # custom total order for the nodes of second graph (nx_H)
+                                 induced = True):             # search for induced subgraph isomorphism or general subgraph isomorphism
 
     # description
     """
     > description:
     receives two networkx (di-)graphs G and H both directed or both undirected, possibly
-    but not necessarily with either node labels and/or edge labels, and where the second
+    but not necessarily with either node-labels and/or edge-labels, and where the second
     graph H has the same or a bigger number of nodes and edges than the first graph G,
-    and we test for embeddings of G in H, i.e., induced subgraph isomorphisms. If both
-    graphs have the same amount of nodes and edges then we run a graph isomorphism test
-    instead. A boolean variable can be passed indicating if the function should finish
-    when finding only one subgraph isomorphism of G in H (if any), or if it should search
-    for all possible such isomorphisms and return all of them. In addition, the VF2-like
-    search requires a total order for the nodes of one of the input graphs (traditionally
-    the domain graph). In principle this can be an arbitrary total order, though it has
-    been shown that certain orders may improve the search (see VF2++). Here we order the
-    nodes in both graphs based on their (out) degree in descending order by default.
-    Moreover, a custom total order can be provided for either or both graphs with the
-    optional input dictionaries total_order_A and total_order_B, which might help the
-    search whenever such orders encode a function almost resembling a subgrah isomorphism,
-    obtained, for example, from an external canonicalization or construction algorithm.
+    and we test for embeddings of G in H, i.e., subgraph isomorphisms. Such subgraphs of
+    H can either be induced (default option) or general subgraphs. If both graphs have
+    the same amount of nodes and edges then we run a (full) graph isomorphism test instead.
+    A boolean variable can be passed indicating if the function should finish when finding
+    only one subgraph isomorphism of G in H (if any), or if it should search for all
+    possible such isomorphisms and return all of them. In addition, the VF2-like search
+    requires a total order for the nodes of one of the input graphs (traditionally the
+    domain graph). In principle this can be an arbitrary total order, though it has been
+    shown that certain orders may improve the search (see VF2++). Here we order the nodes
+    in both graphs based on their (out) degree in descending order by default. Moreover,
+    a custom total order can be provided for either or both graphs with the optional input
+    dictionaries total_order_A and total_order_B, which might help the search whenever
+    such orders encode a function almost resembling a subgrah isomorphism, obtained, for
+    example, from an external canonicalization or construction algorithm.
 
     > input:
     * nx_G - first networkx (di)graph being matched.
@@ -333,6 +340,8 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
     * total_order_B - dictionary mapping all the nodes of nx_H into different
     integers from 1 and up to the order of the graphs, representing the custom
     total order for the nodes of second graph.
+    * induced - controls whether the function should search especifically for induced
+    subgraphs of H isomorphic to G (default), or general subgraphs of H isomorphic to G.
 
     > output:
     * isomorphisms - (possibly empty) list of subgraph isomorphisms, each as a list of
@@ -372,6 +381,8 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
     cdef int counter = 0
     cdef int order_G = 0
     cdef int order_H = 0
+    cdef int size_G = 0
+    cdef int size_H = 0
     cdef int current_limit = 0
     cdef int required_limit = 0
     cdef cpp_bool input_correctness = True
@@ -411,16 +422,18 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
     node_obj = None
 
     # test input correctness
-    input_correctness = search_subgraph_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_labels, all_isomorphisms, total_order_A, total_order_B)
+    input_correctness = search_subgraph_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_labels, all_isomorphisms, total_order_A, total_order_B, induced)
     if(not input_correctness):
         return([], False)
 
     # get order of graphs for local processing
     order_G = nx_G.order()
     order_H = nx_H.order()
+    size_G = nx_G.size()
+    size_H = nx_H.size()
 
-    # run graph isomorphism test if G and H have the same number of nodes
-    if(order_G == order_H):
+    # run graph isomorphism test if G and H have the same number of nodes and of egdes
+    if((order_G == order_H) and (size_G == size_H)):
         isomorphisms, found_isomorphism = search_isomorphisms(nx_G = nx_G,
                                                               nx_H = nx_H,
                                                               node_labels = node_labels,
@@ -430,7 +443,7 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
                                                               total_order_B = total_order_B)
         return(isomorphisms, found_isomorphism)
 
-    # quick test by searching for cover (if any) between degree sequences of the input graphs
+    # quick test by searching for a cover (if any) between degree sequences of the input graphs
     params.directed_graphs = nx.is_directed(nx_G)
     if(params.directed_graphs):
         # get in-degrees
@@ -518,6 +531,7 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
     params.expected_order_int = nx_G.order()
     params.got_order_for_G = (len(total_order_A) > 0)
     params.got_order_for_H = (len(total_order_B) > 0)
+    params.induced_subgraph = induced
 
     # encode graphs
     encoded_graphs, encoded_node_names, encoded_node_labels, encoded_edge_labels = encode_graphs([nx_G, nx_H])
@@ -721,7 +735,7 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
             consistent_labels = search_subgraph_isomorphisms_label_consistency(params.node_labels, params.edge_labels,
                                                                                undirected_G.nodes, undirected_H.nodes,
                                                                                undirected_G.edges, undirected_H.edges)
-        # if labels are not consistent then the graphs cannot be isomorphic
+        # if labels are not consistent then there cannot exist any subgraph isomorphisms
         if(not consistent_labels):
             return([], False)
 
@@ -779,7 +793,7 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
 
 
 # function: test input correctness ---------------------------------------------
-cdef cpp_bool search_subgraph_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_labels, all_isomorphisms, total_order_A, total_order_B):
+cdef cpp_bool search_subgraph_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_labels, all_isomorphisms, total_order_A, total_order_B, induced):
 
     # local variables (cython)
     cdef int minimum_order = 0
@@ -825,6 +839,10 @@ cdef cpp_bool search_subgraph_isomorphisms_input_correctness(nx_G, nx_H, node_la
     # check that seventh argument is a dictionary
     if(type(total_order_B) not in [type(test_dict)]):
         raise(ValueError("gmapache: argument total_order_B must be a dictionary."))
+
+    # check that eighth argument is boolean
+    if(type(induced) not in [type(test_bool)]):
+        raise(ValueError("gmapache: argument induced must be a boolean variable."))
 
     # check that input graphs are of the same type
     if((nx.is_directed(nx_G)) and (not nx.is_directed(nx_H))):
@@ -1166,9 +1184,9 @@ cdef void search_subgraph_isomorphisms_undirected(subgraph_isomorphisms_search_p
 
             # control variable changing only when filter is actually being used
             if(viable_candidate):
-
                 # evaluate syntactic feasibility
-                syntactic_feasibility = syntactic_feasibility_undirected(matchable_node_G,
+                syntactic_feasibility = syntactic_feasibility_undirected(params.induced_subgraph,
+                                                                         matchable_node_G,
                                                                          candidate_node_H,
                                                                          current_state.ring_G,
                                                                          current_state.ring_H,
@@ -1203,14 +1221,18 @@ cdef void search_subgraph_isomorphisms_undirected(subgraph_isomorphisms_search_p
                     if(semantic_feasibility):
                         # extend match with the new pair
                         change_in_state = extend_match_undirected(candidates_info.second, matchable_node_G, candidate_node_H, G, H, current_state)
+
                         # recursive call
                         search_subgraph_isomorphisms_undirected(params, current_state, G, H, all_matches)
+
                         # finish if only one subgraph isosmorphism was requested and it was already found
                         if(not all_matches.empty()):
                             if(not params.all_isomorphisms):
                                 return
+
                         # restore state unordered sets
                         restore_match_undirected(matchable_node_G, candidate_node_H, change_in_state, current_state)
+
                         # restore state ordered lists
                         current_state.ring_G_ordered = ring_G_ordered_backup
                         current_state.ring_H_ordered = ring_H_ordered_backup
@@ -1448,7 +1470,8 @@ cdef void restore_match_undirected(int node1,
 
 
 # function: evaluate syntactic feasability for subgraph isomorphism search -----
-cdef cpp_bool syntactic_feasibility_undirected(int node1,
+cdef cpp_bool syntactic_feasibility_undirected(cpp_bool induced,
+                                               int node1,
                                                int node2,
                                                cpp_unordered_set[int] & ring_G,
                                                cpp_unordered_set[int] & ring_H,
@@ -1480,10 +1503,11 @@ cdef cpp_bool syntactic_feasibility_undirected(int node1,
         if(loops_H.find(node2) == loops_H.end()):
             # node1 has a loop in G but node2 has no loop in H
             return(False)
-    if(loops_G.find(node1) == loops_G.end()):
-        if(loops_H.find(node2) != loops_H.end()):
-            # node1 has no loop in G but node2 has a loop in H
-            return(False)
+    if(induced):
+        if(loops_G.find(node1) == loops_G.end()):
+            if(loops_H.find(node2) != loops_H.end()):
+                # node1 has no loop in G but node2 has a loop in H
+                return(False)
 
     # look ahead 0: consistency of neighbors in match, while doing tripartition of neighbors
     for node in ordered_neigh_G[node1]:
@@ -1500,27 +1524,37 @@ cdef cpp_bool syntactic_feasibility_undirected(int node1,
                 # save neighbor since we are just comparing numbers later
                 neighbors_extern_G = neighbors_extern_G + 1
 
-    for node in ordered_neigh_H[node2]:
-        if(current_match_H.find(node) != current_match_H.end()):
-            # check that the mapping is also the corresponding neighbor
-            mapped = inverse_match[node]
-            if(neigh_G[node1].find(mapped) == neigh_G[node1].end()):
-                return(False)
-        else:
-            if(ring_H.find(node) != ring_H.end()):
-                # save neighbor since we are just comparing numbers later
-                neighbors_ring_H = neighbors_ring_H + 1
+    if(induced):
+        for node in ordered_neigh_H[node2]:
+            if(current_match_H.find(node) != current_match_H.end()):
+                # check that the mapping is also the corresponding neighbor
+                mapped = inverse_match[node]
+                if(neigh_G[node1].find(mapped) == neigh_G[node1].end()):
+                    return(False)
             else:
-                # save neighbor since we are just comparing numbers later
-                neighbors_extern_H = neighbors_extern_H + 1
+                if(ring_H.find(node) != ring_H.end()):
+                    # save neighbor since we are just comparing numbers later
+                    neighbors_ring_H = neighbors_ring_H + 1
+                else:
+                    # save neighbor since we are just comparing numbers later
+                    neighbors_extern_H = neighbors_extern_H + 1
+    else:
+        for node in ordered_neigh_H[node2]:
+            # consistency of match was already checked for non-induced search
+            if(current_match_H.find(node) == current_match_H.end()):
+                if(ring_H.find(node) != ring_H.end()):
+                    # save neighbor since we are just comparing numbers later
+                    neighbors_ring_H = neighbors_ring_H + 1
 
     # look ahead 1: consistency of neighbors in ring (not in match but adjacent to match)
     if(neighbors_ring_G > neighbors_ring_H):
         return(False)
 
     # look ahead 2: consistency of extern neighbors (neither in match nor adjacent to match)
-    if(neighbors_extern_G > neighbors_extern_H):
-        return(False)
+    # extern neighbors are not preserved in non-induced case, because non-edges are not necessarily preserved
+    if(induced):
+        if(neighbors_extern_G > neighbors_extern_H):
+            return(False)
 
     # end of function
     return(True)
@@ -1678,9 +1712,9 @@ cdef void search_subgraph_isomorphisms_directed(subgraph_isomorphisms_search_par
 
             # control variable changing only when filter is actually being used
             if(viable_candidate):
-
                 # evaluate in syntactic feasibility
-                in_syntactic_feasibility = syntactic_feasibility_directed(matchable_node_G,
+                in_syntactic_feasibility = syntactic_feasibility_directed(params.induced_subgraph,
+                                                                          matchable_node_G,
                                                                           candidate_node_H,
                                                                           current_state.in_ring_G,
                                                                           current_state.in_ring_H,
@@ -1699,7 +1733,8 @@ cdef void search_subgraph_isomorphisms_directed(subgraph_isomorphisms_search_par
 
                 # evaluate out syntactic feasibility
                 if(in_syntactic_feasibility):
-                    out_syntactic_feasibility = syntactic_feasibility_directed(matchable_node_G,
+                    out_syntactic_feasibility = syntactic_feasibility_directed(params.induced_subgraph,
+                                                                               matchable_node_G,
                                                                                candidate_node_H,
                                                                                current_state.in_ring_G,
                                                                                current_state.in_ring_H,
@@ -1737,14 +1772,18 @@ cdef void search_subgraph_isomorphisms_directed(subgraph_isomorphisms_search_par
                         if(semantic_feasibility):
                             # extend match with the new pair
                             change_in_state = extend_match_directed(candidates_info.second, matchable_node_G, candidate_node_H, G, H, current_state)
+
                             # recursive call
                             search_subgraph_isomorphisms_directed(params, current_state, G, H, all_matches)
+
                             # finish if only one subgraph isosmorphism was requested and it was already found
                             if(not all_matches.empty()):
                                 if(not params.all_isomorphisms):
                                     return
+
                             # restore state unordered sets
                             restore_match_directed(matchable_node_G, candidate_node_H, change_in_state, current_state)
+
                             # restore state ordered lists
                             current_state.in_ring_G_ordered = in_ring_G_ordered_backup
                             current_state.out_ring_G_ordered = out_ring_G_ordered_backup
@@ -1973,6 +2012,7 @@ cdef void restore_match_directed(int node1,
                                  subgraph_isomorphisms_change_in_state_directed & change_in_state,
                                  subgraph_isomorphisms_state_directed & current_state) noexcept:
 
+
     # local variables
     cdef int node = 0
     cdef cpp_pair[int, int] temp_pair
@@ -2043,7 +2083,8 @@ cdef void restore_match_directed(int node1,
 
 
 # function: evaluate syntactic feasability for subgraph isomorphism search -----
-cdef cpp_bool syntactic_feasibility_directed(int node1,
+cdef cpp_bool syntactic_feasibility_directed(cpp_bool induced,
+                                             int node1,
                                              int node2,
                                              cpp_unordered_set[int] & in_ring_G,
                                              cpp_unordered_set[int] & in_ring_H,
@@ -2080,10 +2121,11 @@ cdef cpp_bool syntactic_feasibility_directed(int node1,
         if(loops_H.find(node2) == loops_H.end()):
             # node1 has a loop in G but node2 has no loop in H
             return(False)
-    if(loops_G.find(node1) == loops_G.end()):
-        if(loops_H.find(node2) != loops_H.end()):
-            # node1 has no loop in G but node2 has a loop in H
-            return(False)
+    if(induced):
+        if(loops_G.find(node1) == loops_G.end()):
+            if(loops_H.find(node2) != loops_H.end()):
+                # node1 has no loop in G but node2 has a loop in H
+                return(False)
 
     # look ahead 0: consistency of neighbors in match, while doing tripartition of neighbors
     for node in ordered_neigh_G[node1]:
@@ -2107,26 +2149,37 @@ cdef cpp_bool syntactic_feasibility_directed(int node1,
             if(not ring_neighbor):
                 neighbors_extern_G = neighbors_extern_G + 1
 
-    for node in ordered_neigh_H[node2]:
-        if(current_match_H.find(node) != current_match_H.end()):
-            # check that the mapping is also the corresponding neighbor
-            mapped = inverse_match[node]
-            if(neigh_G[node1].find(mapped) == neigh_G[node1].end()):
-                return(False)
-        else:
-            # reinitialize flag
-            ring_neighbor = False
-            # neighbor in in-ring
-            if(in_ring_H.find(node) != in_ring_H.end()):
-                neighbors_in_ring_H = neighbors_in_ring_H + 1
-                ring_neighbor = True
-            # neighbor (possibly also) in out-ring
-            if(out_ring_H.find(node) != out_ring_H.end()):
-                neighbors_out_ring_H = neighbors_out_ring_H + 1
-                ring_neighbor = True
-            # neighbor not in any ring nor in match
-            if(not ring_neighbor):
-                neighbors_extern_H = neighbors_extern_H + 1
+    if(induced):
+        for node in ordered_neigh_H[node2]:
+            if(current_match_H.find(node) != current_match_H.end()):
+                # check that the mapping is also the corresponding neighbor
+                mapped = inverse_match[node]
+                if(neigh_G[node1].find(mapped) == neigh_G[node1].end()):
+                    return(False)
+            else:
+                # reinitialize flag
+                ring_neighbor = False
+                # neighbor in in-ring
+                if(in_ring_H.find(node) != in_ring_H.end()):
+                    neighbors_in_ring_H = neighbors_in_ring_H + 1
+                    ring_neighbor = True
+                # neighbor (possibly also) in out-ring
+                if(out_ring_H.find(node) != out_ring_H.end()):
+                    neighbors_out_ring_H = neighbors_out_ring_H + 1
+                    ring_neighbor = True
+                # neighbor not in any ring nor in match
+                if(not ring_neighbor):
+                    neighbors_extern_H = neighbors_extern_H + 1
+    else:
+        for node in ordered_neigh_H[node2]:
+            # consistency of match was already checked for non-induced search
+            if(current_match_H.find(node) == current_match_H.end()):
+                # neighbor in in-ring
+                if(in_ring_H.find(node) != in_ring_H.end()):
+                    neighbors_in_ring_H = neighbors_in_ring_H + 1
+                # neighbor (possibly also) in out-ring
+                if(out_ring_H.find(node) != out_ring_H.end()):
+                    neighbors_out_ring_H = neighbors_out_ring_H + 1
 
     # look ahead 1: consistency of neighbors in rings (not in match but adjacent to match)
     if(neighbors_in_ring_G > neighbors_in_ring_H):
@@ -2135,8 +2188,10 @@ cdef cpp_bool syntactic_feasibility_directed(int node1,
         return(False)
 
     # look ahead 2: consistency of extern neighbors (neither in match nor adjacent to match)
-    if(neighbors_extern_G > neighbors_extern_H):
-        return(False)
+    # extern neighbors are not preserved in non-induced case, because non-edges are not necessarily preserved
+    if(induced):
+        if(neighbors_extern_G > neighbors_extern_H):
+            return(False)
 
     # end of function
     return(True)

@@ -357,13 +357,21 @@ print("\n")
 # example: subgraph isomorphisms -----------------------------------------------
 
 
-# We build two labeled graphs G and H, where G is isomorphic to an induced subgraph
-# of H. We call the function gm.search_subgraph_isomorphisms(G, H) to search for
-# embeddings of G in H, i.e., induced (labeld) subgraphs of H isomorphic to G. The
-# function by default searches for unlabeld subgraph isomorphisms, but similar to the
-# other functions in this package it can receive arguments to explicitly use node
-# labels, edge labels, or both. Similarly it searches by default for only one
-# embedding, but an argument can be passed to obtain all possible embeddings (if any).
+# We build two labeled graphs G and H, where G is isomorphic to a subgraph of H.
+# Here we consider both induced and general subgraphs. In other words, we can
+# search for subgraph isomorphisms from G to arbitrary subgraphs of H (also
+# called monomorphisms in CS), or for subgraph isomorphisms from G to induced
+# subgraphs of H (subgraph isomorphisms in CS). We call the function
+# gm.search_subgraph_isomorphisms(G, H) to search for embeddings of G in H.
+# The function by default searches for unlabeld subgraph isomorphisms, but similar
+# to the other functions in this package it can receive arguments to explicitly
+# use node labels, edge labels, or both. Similarly it searches by default for only
+# one embedding, but an argument can be passed to obtain all possible embeddings
+# (if any). Moreover, this function searches for subgraph isomorphisms of G with
+# induced subgraphs of H by default, but an argument can be passed to search for
+# monomorphisms instead, i.e., subgraph isomorphisms of G with arbitrary subgraphs
+# of H. If both graphs have the same number of vertices and edges then the function
+# runs a graph isomorphism search instead of the subgraph search.
 
 
 # build (smaller) first graph for subgraph isomorphism test
@@ -416,6 +424,35 @@ H.add_node("center", color = "root")
 H.add_edge("a", "center", weight = 0)
 H.add_edge("e", "center", weight = 0)
 H.add_edge("w", "center", weight = 0)
+
+
+# build square graph for non-induced subgraph isomorphism test
+S = nx.Graph()
+# add blue square with edges of weight one
+S.add_node(1, color = "blue")
+S.add_node(2, color = "blue")
+S.add_node(3, color = "blue")
+S.add_node(4, color = "blue")
+S.add_edge(1, 2, weight = 1)
+S.add_edge(2, 3, weight = 1)
+S.add_edge(3, 4, weight = 1)
+S.add_edge(4, 1, weight = 1)
+
+
+# build kite graph for non-induced subgraph isomorphism test
+K = nx.Graph()
+# add blue square with edges of weight one
+K.add_node("a", color = "blue")
+K.add_node("b", color = "blue")
+K.add_node("c", color = "blue")
+K.add_node("d", color = "blue")
+K.add_node("e", color = "red")
+K.add_edge("a", "b", weight = 1)
+K.add_edge("b", "c", weight = 1)
+K.add_edge("c", "d", weight = 1)
+K.add_edge("d", "a", weight = 1)
+K.add_edge("b", "d", weight = 1)
+K.add_edge("c", "e", weight = 1)
 
 
 # testing subgraph isomorphisms
@@ -507,6 +544,44 @@ print("\n")
 print("***** Got subgraph isomorphisms:")
 print(embeddings)
 print("***** Were the graphs subgraph-isomorphic?")
+print(subgraph_isomorphic)
+print("***** Running time [s]")
+print(final_time - initial_time)
+print("\n")
+
+
+# testing non-induced subgraph isomorphisms
+initial_time = time.time()
+embeddings, subgraph_isomorphic = gm.search_subgraph_isomorphisms(S, K, node_labels = True, edge_labels = True, all_isomorphisms = True)
+final_time = time.time()
+
+
+# print resutls
+print("--------------------------------------------------")
+print("> Subgraph Isomorphism Search (test for induced - default option; all isomorphisms)")
+print("\n")
+print("***** Got subgraph isomorphisms:")
+print(embeddings)
+print("***** Were the graphs induced subgraph-isomorphic?")
+print(subgraph_isomorphic)
+print("***** Running time [s]")
+print(final_time - initial_time)
+print("\n")
+
+
+# testing non-induced subgraph isomorphisms
+initial_time = time.time()
+embeddings, subgraph_isomorphic = gm.search_subgraph_isomorphisms(S, K, node_labels = True, edge_labels = True, all_isomorphisms = True, induced = False)
+final_time = time.time()
+
+
+# print resutls
+print("--------------------------------------------------")
+print("> Subgraph Isomorphism Search (test for non-induced; all isomorphisms)")
+print("\n")
+print("***** Got subgraph isomorphisms:")
+print(embeddings)
+print("***** Were the graphs monomorphic?")
 print(subgraph_isomorphic)
 print("***** Running time [s]")
 print(final_time - initial_time)
