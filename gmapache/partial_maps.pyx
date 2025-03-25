@@ -220,7 +220,7 @@ cdef struct partial_maps_state_directed:
 cdef struct partial_maps_search_params:
     # flag from the caller wrapper
     # caller = 0 -> gm.partial_maps.search_complete_induced_extension
-    # caller = 1 -> gm.partial_maps.search_maximum_common_anchored_subgraph
+    # caller = 1 -> gm.partial_maps.search_maximum_common_anchored_subgraphs
     int caller
     # use node labels
     cpp_bool node_labels
@@ -448,7 +448,7 @@ def search_complete_induced_extension(nx_G = nx.Graph(),           # can also be
 
     # set caller parameter flag
     # caller = 0 -> gm.partial_maps.search_complete_induced_extension
-    # caller = 1 -> gm.partial_maps.search_maximum_common_anchored_subgraph
+    # caller = 1 -> gm.partial_maps.search_maximum_common_anchored_subgraphs
     params.caller = 0
 
     # test input correctness
@@ -735,17 +735,17 @@ def search_complete_induced_extension(nx_G = nx.Graph(),           # can also be
 
 
 # function: callable wrapper for maximum common induced anchored subgraphs -----
-def search_maximum_common_anchored_subgraph(nx_G = nx.Graph(),           # can also be a networkx DiGraph
-                                            nx_H = nx.Graph(),           # can also be a networkx DiGraph
-                                            input_anchor = [],           # anchor partial map, should be a non-empty list
-                                            node_labels = False,         # consider node labels when evaluating extension
-                                            edge_labels = False,         # consider edge labels when evaluating extension
-                                            all_extensions = False,      # by default stops when finding one extension (if any)
-                                            reachability = True):        # all nodes should be reachable from at least one anchor node
+def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can also be a networkx DiGraph
+                                             nx_H = nx.Graph(),           # can also be a networkx DiGraph
+                                             input_anchor = [],           # anchor partial map, should be a non-empty list
+                                             node_labels = False,         # consider node labels when evaluating extension
+                                             edge_labels = False,         # consider edge labels when evaluating extension
+                                             all_extensions = False,      # by default stops when finding one extension (if any)
+                                             reachability = True):        # all nodes should be reachable from at least one anchor node
 
     # description
     """
-    > description: receives two non-null networkx graphs G and H (possibly with different number
+    > description: receives two non-null networkx (di-) graphs G and H (possibly with different number
     of nodes), and a non-empty injective map between them (here called anchor), and uses a variant
     of the VF2 algorithm by doing an isomorphism-like search and an iterative trimming to obtain
     the maximum common induced subgraphs that extend the matches in the anchor. The function
@@ -866,7 +866,7 @@ def search_maximum_common_anchored_subgraph(nx_G = nx.Graph(),           # can a
 
     # set caller parameter flag
     # caller = 0 -> gm.partial_maps.search_complete_induced_extension
-    # caller = 1 -> gm.partial_maps.search_maximum_common_anchored_subgraph
+    # caller = 1 -> gm.partial_maps.search_maximum_common_anchored_subgraphs
     params.caller = 1
 
     # test input correctness
@@ -1821,7 +1821,7 @@ cdef cpp_bool partial_maps_input_correctness(nx_G, nx_H, input_anchor, node_labe
 
     # NOTE: caller flag
     # caller = 0 -> gm.partial_maps.search_complete_induced_extension
-    # caller = 1 -> gm.partial_maps.search_maximum_common_anchored_subgraph
+    # caller = 1 -> gm.partial_maps.search_maximum_common_anchored_subgraphs
 
     # check that first argument is networkx graph or digraph
     if(type(nx_G) not in [type(test_undir), type(test_dir)]):
@@ -1941,7 +1941,7 @@ cdef cpp_bool partial_maps_label_consistency(int caller,
 
     # NOTE: caller flag
     # caller = 0 -> gm.partial_maps.search_complete_induced_extension
-    # caller = 1 -> gm.partial_maps.search_maximum_common_anchored_subgraph
+    # caller = 1 -> gm.partial_maps.search_maximum_common_anchored_subgraphs
 
     # consistency of node labels
     if(node_labels):
@@ -2697,7 +2697,7 @@ cdef cpp_bool syntactic_feasibility_undirected(int node1,
 
     # NOTE: caller flag
     # caller = 0 -> gm.partial_maps.search_complete_induced_extension
-    # caller = 1 -> gm.partial_maps.search_maximum_common_anchored_subgraph
+    # caller = 1 -> gm.partial_maps.search_maximum_common_anchored_subgraphs
 
     # consistency of degree
     if(params.caller == 0):
@@ -3325,7 +3325,7 @@ cdef cpp_bool syntactic_feasibility_directed(int node1,
 
     # NOTE: caller flag
     # caller = 0 -> gm.partial_maps.search_complete_induced_extension
-    # caller = 1 -> gm.partial_maps.search_maximum_common_anchored_subgraph
+    # caller = 1 -> gm.partial_maps.search_maximum_common_anchored_subgraphs
 
     # consistency of degrees
     if(params.caller == 0):

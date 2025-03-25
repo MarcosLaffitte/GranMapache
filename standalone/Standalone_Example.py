@@ -87,9 +87,9 @@ import gmapache as gm
 # to as "anchor" given as a list of unrepeated 2-tuples (x, y) of vertices x in G and
 # y in H. This data is passed to the method gm.search_complete_induced_extension(G, H, partial_map),
 # which extends the partial map and returns two results: (1) a list of all the possible
-# induced extensions of the reaction center also expressed as matches, and (2) a boolean
-# value indicating if the extensions form bijections and, equivalentely, if the "anchor"
-# was a good partial map.
+# complete induced extensions of the reaction center also expressed as matches, and
+# (2) a boolean value indicating if the extensions form bijections and, equivalentely,
+# if the "anchor" was a good partial map.
 
 
 # buid first test graph for complete induced extension
@@ -167,6 +167,112 @@ print("***** Got extensions:")
 print(all_extensions)
 print("***** Was anchor a good partial map?")
 print(good_map)
+print("***** Running time [s]")
+print(final_time - initial_time)
+print("\n")
+
+
+# example: maximum common induced anchored subgraphs ---------------------------
+
+
+# The function gm.search_maximum_common_anchored_subgraphs(G, H, input_anchor) receives
+# two non-null networkx (di-)graphs G and H (possibly with different number of nodes), and a
+# non-empty injective map between them (here called anchor), and searches for the maximum
+# common induced subgraphs that extend the matches in the anchor. The function specifically
+# searches for proper extensions of the anchor, i.e., containing at least one more match
+# than the anchor itself. The parameter "reachability", controls if the candidate common
+# subgraphs should be "connected" to the anchor, or better put "reachable" from the anchor
+# in the sense that such subgraphs should contain a path between every node and at least one
+# node from the anchor. Thus, if the anchor is connected and reachability is set to True,
+# the function will equivalently get a maximum-common-induced-connected-anchored-subgraph.
+# If both graphs have the same order, the function first will search for a complete-induced-
+# extension and only if no such extension is found it will continue with the search for the
+# maximum common induced anchored subgraphs, thus this function can be more time consuming
+# that simply running the search for the complete induced extension. Moreover, if both graphs
+# have the same order and a complete induced extension exists between them, this function
+# will return such extension independently of the parameter "reachability" and regardless
+# if the complete extension induces a connected ITS.
+
+
+# first graph
+G = nx.Graph()
+G.add_node(1, color = "blue")
+G.add_node(2, color = "red")
+G.add_node(3, color = "red")
+G.add_node(4, color = "orange")
+G.add_node(5, color = "purple")
+G.add_node(6, color = "pink")
+G.add_edge(1, 2, weight = 1)
+G.add_edge(1, 3, weight = 1)
+G.add_edge(2, 4, weight = 1)
+G.add_edge(3, 4, weight = 1)
+G.add_edge(4, 5, weight = 1)
+G.add_edge(5, 6, weight = 1)
+
+
+# second graph
+H = nx.Graph()
+H.add_node("a", color = "blue")
+H.add_node("b", color = "red")
+H.add_node("c", color = "red")
+H.add_node("d", color = "green")
+H.add_node("e", color = "yellow")
+H.add_node("f", color = "purple")
+H.add_node("g", color = "pink")
+H.add_edge("a", "b", weight = 1)
+H.add_edge("a", "c", weight = 1)
+H.add_edge("b", "d", weight = 1)
+H.add_edge("c", "d", weight = 1)
+H.add_edge("d", "e", weight = 1)
+H.add_edge("d", "f", weight = 1)
+H.add_edge("f", "g", weight = 1)
+
+
+# partial map, with nodes x from first graph and y from second graph
+initial_map = [(1, "a"), (2, "b")]
+
+
+# get maximum common subgraph with reachability constraint
+initial_time = time.time()
+extensions, found_extensions = gm.search_maximum_common_anchored_subgraphs(G, H, input_anchor = initial_map,
+                                                                           node_labels = True, edge_labels = True,
+                                                                           all_extensions = False, reachability = True)
+final_time = time.time()
+
+
+# print resutls
+print("--------------------------------------------------")
+print("> Maximum Common Induced Subgraph (I - with reachability constraint)")
+print("\n")
+print("***** Received anchor")
+print(initial_map)
+print("***** Were any proper extensions found?")
+print(found_extensions)
+print("***** Got proper extensions:")
+print(extensions)
+print("***** Running time [s]")
+print(final_time - initial_time)
+print("\n")
+
+
+# get maximum common subgraph without reachability constraint
+initial_time = time.time()
+extensions, found_extensions = gm.search_maximum_common_anchored_subgraphs(G, H, input_anchor = initial_map,
+                                                                           node_labels = True, edge_labels = True,
+                                                                           all_extensions = False, reachability = False)
+final_time = time.time()
+
+
+# print resutls
+print("--------------------------------------------------")
+print("> Maximum Common Induced Subgraph (II - without reachability constraint)")
+print("\n")
+print("***** Received anchor")
+print(initial_map)
+print("***** Were any proper extensions found?")
+print(found_extensions)
+print("***** Got proper extensions:")
+print(extensions)
 print("***** Running time [s]")
 print(final_time - initial_time)
 print("\n")

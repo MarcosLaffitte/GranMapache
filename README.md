@@ -12,17 +12,15 @@ Alignments and other Maps between Graphs and Networks
 
 ## ToDo / Working / Done
 
-- WORKING: making functions for extensions of good partial maps over balanced and unbalanced reactions.
-
 There are 5 possible applications with variants of VF2 and MCS's. By increasing order of complexity these are:
 
-- working: updating (1) Extender A - already done, just updating it - for balanced reactions and extender paper with Long - variant: anchored isomorphism of the "remainder" graphs
+- working: updating (1) Extender A - for balanced reactions and extender paper with Long - variant: anchored isomorphism of the "remainder" graphs
 
-- working: implement (2) Extender B - for unbalanced reactions and extender paper with Long - variant: anchored maximum common induced "meta-connected" subgraph(s)
+- working: implement (2) Extender B - for unbalanced reactions and extender paper with Long - variant: maximum common induced anchored subgraph(s), both "connected/reachable" and "disconnected/arbitrary"
 
-- working: implement (3) Aligner - for multiple progressive graph aligner and rule inference through ITS alignment - variant: anchored maximum common induced subgraph
+- working: implement (3) Aligner - for multiple progressive graph aligner and rule inference through ITS alignment - variant: maximum common induced anchored connected subgraph
 
-- working: implement (4) Balancer - implementation of the balancing idea in the Symmetries paper - variant: anchored maximum common subgraph
+- working: implement (4) Balancer - implementation of the balancing idea in the Symmetries paper - variant: maximum common anchored subgraph
 
 - working: implement (5) Tautomers - (possible idea) analysis of ITS-derived transformation rules from Tautomerism reactions with Nico and Long - application of alignments
 
