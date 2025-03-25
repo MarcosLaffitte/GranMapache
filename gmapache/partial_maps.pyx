@@ -750,8 +750,8 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
     of the VF2 algorithm by doing an isomorphism-like search and an iterative trimming to obtain
     the maximum common induced subgraphs that extend the matches in the anchor. The function
     specifically searches for proper extensions of the anchor, i.e., containing at least one more
-    match than the anchor itself. If no proper extension is found then the function returns an empty
-    list and a boolean variable with value False. The parameter "reachability", controls if the
+    match than the anchor itself. If no proper extension is found then the function returns the anchor
+    as a list and a boolean variable with value False. The parameter "reachability", controls if the
     candidate common subgraphs should be "connected" to the anchor, or better put "reachable" from
     the anchor in the sense that such subgraphs should contain a path between every node and at least
     one node from the anchor. Thus, if the anchor is connected and reachability is set to True, the
@@ -782,10 +782,11 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
     maximum-common-induced-connected-subgraph properly containing the anchor, if any.
 
     > output:
-    * extensions - (possibly empty) list of maximum common induced subgraphs extending the anchor,
-    i.e., containing the anchor and strictly bigger than it, each as a list of 2-tuples (x, y) of
-    nodes x from G and y from H representing the injective function preserving adjacency and also
-    (possibly) labels outside the anchor.
+    * extensions - non-empty list of maximum common induced subgraphs extending the anchor, i.e.,
+    containing the anchor and possibly bigger than it, each as a list of 2-tuples (x, y) of nodes
+    x from G and y from H representing the injective function preserving adjacency and also labels
+    outside the anchor, if required. If no proper extension was found then the anchor itself is
+    returned inside this list.
     * found_proper_extensions - boolean value indicating if any maximum reachable extensions were
     found, different from the anchor itself, i.e., non-trivial extensions (eq. proper extensions).
 
@@ -1226,9 +1227,12 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
         for each_extension in encoded_extensions:
             extensions.append(decode_match(list(each_extension), encoded_node_names))
 
-    # check if there were any proper extensions
+    # check if there were any proper extensions, if not return the anchor and the value false
     if(len(extensions) > 0):
         found_proper_extensions = True
+    else:
+        found_proper_extensions = False
+        extensions = [input_anchor]
 
     # end of function
     return(extensions, found_proper_extensions)
@@ -1283,77 +1287,80 @@ cdef void partial_maps_iterative_trimming(cpp_unordered_map[int, int] & all_remo
         if(not encoded_extensions.empty()):
             return
 
-    # test removal of singleton sets
-    for i in range(total_removable):
-        # créate singleton
-        test_subset.clear()
-        test_subset.push_back(i)
-        # trimm smaller graph and test induced subgraph isomorphism
-        if(params.directed_graphs):
-            trimm_and_test_subgraph_isomorphism_directed(test_subset,
-                                                         all_removable_nodes,
-                                                         encoded_extensions,
-                                                         params,
-                                                         directed_bigger,
-                                                         directed_smaller)
-        else:
-            trimm_and_test_subgraph_isomorphism_undirected(test_subset,
-                                                           all_removable_nodes,
-                                                           encoded_extensions,
-                                                           params,
-                                                           undirected_bigger,
-                                                           undirected_smaller)
-        # finish if one extension was found and no more are required
-        if(not encoded_extensions.empty()):
-            if(not params.all_extensions):
-                return
-        # save singleton
-        old_subsets.push_back(test_subset)
-    # finish if extensions were found; next trimmings produce smaller graphs
-    if(not encoded_extensions.empty()):
-        return
+    # test removing non-empty sets only if there are at least 2 removable nodes
+    if(total_removable >= 2):
 
-    # test removal of sets with more than one element, and up to cardinality
-    # N-1 for N removable nodes, since removing the N nodes can only produce
-    # the trivial extension, i.e., return the input anchor itself
-    for k in range(2, total_removable):
-        # clear new subsets holder
-        new_subsets.clear()
-        # generate new subsets with one more element
-        for each_subset in old_subsets:
-            last_added = each_subset.back()
-            if(last_added < total_removable):
-                for new_index in range(last_added + 1, total_removable):
-                    # create subset
-                    test_subset = each_subset
-                    test_subset.push_back(new_index)
-                    # trimm smaller graph and test induced subgraph isomorphism
-                    if(params.directed_graphs):
-                        trimm_and_test_subgraph_isomorphism_directed(test_subset,
-                                                                     all_removable_nodes,
-                                                                     encoded_extensions,
-                                                                     params,
-                                                                     directed_bigger,
-                                                                     directed_smaller)
-                    else:
-                        trimm_and_test_subgraph_isomorphism_undirected(test_subset,
-                                                                       all_removable_nodes,
-                                                                       encoded_extensions,
-                                                                       params,
-                                                                       undirected_bigger,
-                                                                       undirected_smaller)
-                    # finish if one extension was found and no more are required
-                    if(not encoded_extensions.empty()):
-                        if(not params.all_extensions):
-                            return
-                    # save subset
-                    new_subsets.push_back(test_subset)
-        # update subsets holders
-        old_subsets.clear()
-        old_subsets = new_subsets
+        # test removal of singleton sets
+        for i in range(total_removable):
+            # créate singleton
+            test_subset.clear()
+            test_subset.push_back(i)
+            # trimm smaller graph and test induced subgraph isomorphism
+            if(params.directed_graphs):
+                trimm_and_test_subgraph_isomorphism_directed(test_subset,
+                                                             all_removable_nodes,
+                                                             encoded_extensions,
+                                                             params,
+                                                             directed_bigger,
+                                                             directed_smaller)
+            else:
+                trimm_and_test_subgraph_isomorphism_undirected(test_subset,
+                                                               all_removable_nodes,
+                                                               encoded_extensions,
+                                                               params,
+                                                               undirected_bigger,
+                                                               undirected_smaller)
+            # finish if one extension was found and no more are required
+            if(not encoded_extensions.empty()):
+                if(not params.all_extensions):
+                    return
+            # save singleton
+            old_subsets.push_back(test_subset)
         # finish if extensions were found; next trimmings produce smaller graphs
         if(not encoded_extensions.empty()):
             return
+
+        # test removal of sets with more than one element, and up to cardinality
+        # N-1 for N removable nodes, since removing the N nodes can only produce
+        # the trivial extension, i.e., return the input anchor itself
+        for k in range(2, total_removable):
+            # clear new subsets holder
+            new_subsets.clear()
+            # generate new subsets with one more element
+            for each_subset in old_subsets:
+                last_added = each_subset.back()
+                if(last_added < total_removable):
+                    for new_index in range(last_added + 1, total_removable):
+                        # create subset
+                        test_subset = each_subset
+                        test_subset.push_back(new_index)
+                        # trimm smaller graph and test induced subgraph isomorphism
+                        if(params.directed_graphs):
+                            trimm_and_test_subgraph_isomorphism_directed(test_subset,
+                                                                         all_removable_nodes,
+                                                                         encoded_extensions,
+                                                                         params,
+                                                                         directed_bigger,
+                                                                         directed_smaller)
+                        else:
+                            trimm_and_test_subgraph_isomorphism_undirected(test_subset,
+                                                                           all_removable_nodes,
+                                                                           encoded_extensions,
+                                                                           params,
+                                                                           undirected_bigger,
+                                                                           undirected_smaller)
+                        # finish if one extension was found and no more are required
+                        if(not encoded_extensions.empty()):
+                            if(not params.all_extensions):
+                                return
+                        # save subset
+                        new_subsets.push_back(test_subset)
+            # update subsets holders
+            old_subsets.clear()
+            old_subsets = new_subsets
+            # finish if extensions were found; next trimmings produce smaller graphs
+            if(not encoded_extensions.empty()):
+                return
 
     # end of function
 

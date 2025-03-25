@@ -31,7 +31,7 @@
 #     python Standalone_Example.py                                             #
 #                                                                              #
 #   * uninstalling gmapache from anaconda environment                          #
-#     pip uninstall gmapache                                                   #
+#     python -m pip uninstall gmapache                                         #
 #                                                                              #
 #   * removing anaconda environmnet completely                                 #
 #     conda remove -n [env_name] --all                                         #
@@ -248,7 +248,7 @@ print("***** Received anchor")
 print(initial_map)
 print("***** Were any proper extensions found?")
 print(found_extensions)
-print("***** Got proper extensions:")
+print("***** Anchor or Extensions:")
 print(extensions)
 print("***** Running time [s]")
 print(final_time - initial_time)
@@ -271,7 +271,7 @@ print("***** Received anchor")
 print(initial_map)
 print("***** Were any proper extensions found?")
 print(found_extensions)
-print("***** Got proper extensions:")
+print("***** Anchor or Extensions:")
 print(extensions)
 print("***** Running time [s]")
 print(final_time - initial_time)
