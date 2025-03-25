@@ -13,7 +13,7 @@
 # - Instructions:                                                              #
 #                                                                              #
 #   * installing required python version into anaconda environment             #
-#     conda create -n [env_name] python=3.11.10                                #
+#     conda create -n [env_name] python=3.11.0                                 #
 #                                                                              #
 #   * for all the following, activate anaconda environment with                #
 #     conda activate [env_name]                                                #
@@ -25,7 +25,7 @@
 #                                                                              #
 #   * installing the package and dependencies INSIDE anaconda environment,     #
 #     go to the folder where setup.py is located and run                       #
-#     pip install .                                                            #
+#     python -m pip install .                                                  #
 #                                                                              #
 #   * running Standalone_Example.py (make sure to "activate conda [env_name]") #
 #     python Standalone_Example.py                                             #
@@ -79,20 +79,20 @@ import gmapache as gm
 # examples #####################################################################
 
 
-# example: induced connected extensions ----------------------------------------
+# example: complete induced extension ------------------------------------------
 
 
 # We build two networkx graphs G and H with arbitrary vertex labels and edge labels,
 # and define a "partial map" as an injective match between the graphs, also refered
 # to as "anchor" given as a list of unrepeated 2-tuples (x, y) of vertices x in G and
-# y in H. This data is passed to the method gm.induced_connected_extensions(G, H, partial_map),
+# y in H. This data is passed to the method gm.search_complete_induced_extension(G, H, partial_map),
 # which extends the partial map and returns two results: (1) a list of all the possible
 # induced extensions of the reaction center also expressed as matches, and (2) a boolean
 # value indicating if the extensions form bijections and, equivalentely, if the "anchor"
 # was a good partial map.
 
 
-# buid first test graph for induced connected extension
+# buid first test graph for complete induced extension
 G = nx.Graph()
 G.add_node("g1", color = "blue", charge = "0")
 G.add_node("g2", color = "blue", charge = "0")
@@ -117,7 +117,7 @@ G.add_edge("g10", "g11", bond = "triple", strength = "weak")
 G.add_edge("g11", "g12", bond = "triple", strength = "weak")
 
 
-# buid second test graph for induced connected extension
+# buid second test graph for complete induced extension
 H = nx.Graph()
 H.add_node("h1", color = "blue", charge = "0")
 H.add_node("h2", color = "blue", charge = "0")
@@ -142,7 +142,7 @@ H.add_edge("h7", "h8", bond = "triple", strength = "weak")
 H.add_edge("h8", "h9", bond = "triple", strength = "weak")
 
 
-# buid test anchor for induced connected extension
+# buid test anchor for complete induced extension
 partial_map = [("g1", "h1"),
                ("g2", "h2"),
                ("g3", "h3"),
@@ -151,15 +151,15 @@ partial_map = [("g1", "h1"),
                ("g6", "h6")]
 
 
-# testing induced connected extension
+# testing complete induced extension
 initial_time = time.time()
-all_extensions, good_map = gm.induced_connected_extensions(G, H, partial_map)
+all_extensions, good_map = gm.search_complete_induced_extension(G, H, partial_map)
 final_time = time.time()
 
 
 # print results
 print("--------------------------------------------------")
-print("> Induced Connected Extension")
+print("> Complete Induced Extension")
 print("\n")
 print("***** Given anchor:")
 print(partial_map)
