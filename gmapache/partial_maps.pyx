@@ -343,8 +343,7 @@ def search_complete_induced_extension(nx_G = nx.Graph(),           # can also be
     * nx_G - first networkx (di)graph being matched.
     * nx_H - second networkx (di)graph being matched.
     * input_anchor - inyective map as a non-empty list of 2-tuples (x, y) of nodes x
-    from G and y from H. An exception is raised if the anchor is empty, or if it already
-    covers all vertices from G and H.
+    from G and y from H. An exception is raised if the anchor is empty.
     * node_labels - boolean indicating if all node labels should be considered for the
     search or if they should be ignored (default).
     * edge_labels - boolean indicating if all edge labels should be considered for the
@@ -767,8 +766,7 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
     * nx_G - first networkx (di)graph being matched.
     * nx_H - second networkx (di)graph being matched.
     * input_anchor - inyective map as a non-empty list of 2-tuples (x, y) of nodes x from G
-    and y from H. An exception is raised if the anchor is empty, or if it already covers all
-    vertices from G and H.
+    and y from H. An exception is raised if the anchor is empty.
     * node_labels - boolean indicating if all labels of nodes (outside the anchor) should be
     considered for the search or if all of them should be ignored (default).
     * edge_labels - boolean indicating if all labels of edges (with at least one end outside the
@@ -782,13 +780,12 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
     maximum-common-induced-connected-subgraph properly containing the anchor, if any.
 
     > output:
-    * extensions - non-empty list of maximum common induced subgraphs extending the anchor, i.e.,
-    containing the anchor and possibly bigger than it, each as a list of 2-tuples (x, y) of nodes
-    x from G and y from H representing the injective function preserving adjacency and also labels
-    outside the anchor, if required. If no proper extension was found then the anchor itself is
-    returned inside this list.
-    * found_proper_extensions - boolean value indicating if any maximum reachable extensions were
-    found, different from the anchor itself, i.e., non-trivial extensions (eq. proper extensions).
+    * extensions - non-empty list of maximum common induced subgraphs extending the anchor, each
+    as a list of 2-tuples (x, y) of nodes x from G and y from H representing the injective function
+    preserving adjacency and also labels outside the anchor, if required. If no proper extension
+    was found then the anchor itself is returned inside this list.
+    * found_proper_extensions - boolean value indicating if any proper maximum extensions of the
+    anchor were found, i.e., containing the matches from the anchor but strictly bigger than it.
 
     > calls:
     * gmapache.integerization.encode_graphs
@@ -873,7 +870,7 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
     # test input correctness
     input_correctness = partial_maps_input_correctness(nx_G, nx_H, input_anchor, node_labels, edge_labels, all_extensions, reachability, params.caller)
     if(not input_correctness):
-        return([], False)
+        return([input_anchor], False)
 
     # get order of graphs for local processing
     order_G = nx_G.order()
@@ -1871,7 +1868,7 @@ cdef cpp_bool partial_maps_input_correctness(nx_G, nx_H, input_anchor, node_labe
     # check that input graphs have the same number of nodes
     if(caller == 0):
         if(not nx_G.order() == nx_H.order()):
-            raise(ValueError("gmapache: input graphs must have the same number of nodes."))
+            return(False)
 
     # check correctness of input anchor and its entries
     if(len(input_anchor) == 0):
@@ -1897,20 +1894,12 @@ cdef cpp_bool partial_maps_input_correctness(nx_G, nx_H, input_anchor, node_labe
     # check that input anchor does not cover input graphs completely
     if(caller == 0):
         if(len(input_anchor) == nx_G.order()):
-            raise(ValueError("gmapache: input anchor already covers all nodes from input graphs; cannot find non-empty extension."))
+            return(False)
 
     # check that input anchor does not cover any or both input graphs
     if(caller == 1):
-        if(len(input_anchor) == nx_G.order()):
-            if(nx_G.order() == nx_H.order()):
-                raise(ValueError("gmapache: input anchor already covers all nodes from both input graphs; cannot find non-empty extension."))
-            else:
-                raise(ValueError("gmapache: input anchor already covers all nodes from first graph; cannot find non-empty extension."))
-        if(len(input_anchor) == nx_H.order()):
-            if(nx_G.order() == nx_H.order()):
-                raise(ValueError("gmapache: input anchor already covers all nodes from both input graphs; cannot find non-empty extension."))
-            else:
-                raise(ValueError("gmapache: input anchor already covers all nodes from second graph; cannot find non-empty extension."))
+        if((len(input_anchor) == nx_G.order()) or (len(input_anchor) == nx_H.order())):
+            return(False)
 
     # end of function
     return(True)
