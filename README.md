@@ -75,28 +75,36 @@ There you can find detailed information on the algorithms implemented here. This
 
 ###### 1) installing required python version into anaconda environment
 ```
-conda create -n [env_name] python=3.11.10
+conda create -n [env_name] python=3.11.0
 ```
+
 ###### 2) for all the following, activate anaconda environment with
 ```
 conda activate [env_name]
 ```
+
 ###### 3) In order to install this package you need to have C and C++ compilers. If you do not have these already in your system you can install them INSIDE the anaconda environment with the following command:
 ```
 conda install -c conda-forge cxx-compiler
 ```
+
 ###### 4) installing the package and dependencies INSIDE anaconda environment, go to the folder where setup.py is located and run
 ```
-pip install .
+python -m pip install .
 ```
+
+######  NOTE: that the last command includes "python -m pip", instead of just "pip", this allows one to use the pip version linked to the required python version instead of the default version of the system.
+
 ###### 5) there is a python script with an example on how to call the functions in the packages, called Standalone_Example.py inside the standalone directory. To run this use:
 ```
 python Standalone_Example.py
 ```
+
 ###### For uninstalling gmapache from anaconda environment
 ```
-pip uninstall gmapache
+python -m pip uninstall gmapache
 ```
+
 ###### For removing anaconda environmnet completely
 ```
 conda remove -n [env_name] --all
