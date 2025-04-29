@@ -30,6 +30,9 @@
 #     structures, contiguous memory traversals with vectors, and as well as    #
 #     for some linked-lists advantages.                                        #
 #                                                                              #
+#   * inside the intensive routines and in associated search-parameters, the   #
+#     domain graph is called G, while the codomain graph is always called H.   #
+#                                                                              #
 ################################################################################
 
 
@@ -1226,7 +1229,7 @@ cdef void search_subgraph_isomorphisms_undirected(subgraph_isomorphisms_search_p
                         # recursive call
                         search_subgraph_isomorphisms_undirected(params, current_state, G, H, all_matches)
 
-                        # finish if only one subgraph isosmorphism was requested and it was already found
+                        # finish if only one subgraph isomorphism was requested and it was already found
                         if(not all_matches.empty()):
                             if(not params.all_isomorphisms):
                                 return
@@ -1777,7 +1780,7 @@ cdef void search_subgraph_isomorphisms_directed(subgraph_isomorphisms_search_par
                             # recursive call
                             search_subgraph_isomorphisms_directed(params, current_state, G, H, all_matches)
 
-                            # finish if only one subgraph isosmorphism was requested and it was already found
+                            # finish if only one subgraph isomorphism was requested and it was already found
                             if(not all_matches.empty()):
                                 if(not params.all_isomorphisms):
                                     return

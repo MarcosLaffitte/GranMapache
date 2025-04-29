@@ -421,6 +421,7 @@ def search_complete_induced_extension(nx_G = nx.Graph(),           # can also be
     cdef cpp_vector[cpp_vector[int]] all_edges_H
     cdef cpp_vector[cpp_set[cpp_pair[int, int]]] encoded_extensions
     cdef cpp_set[cpp_pair[int, int]] each_extension
+    cdef cpp_unordered_map[int, int] node_degrees
     cdef partial_maps_search_params params
     cdef partial_maps_directed_graph directed_G
     cdef partial_maps_directed_graph directed_H
@@ -522,29 +523,53 @@ def search_complete_induced_extension(nx_G = nx.Graph(),           # can also be
         undirected_copy = undirected_copy.to_undirected()
         directed_G.connectivity_neighbors = {node:set(undirected_copy.neighbors(node)) for node in temp_nodes}
         directed_G.nodes = {node:encoded_graphs[0].nodes[node]["GMNL"] for node in temp_nodes}
+        # out degrees for ordering
+        node_degrees = {node:encoded_graphs[0].out_degree(node) for node in temp_nodes}
         # order for directed G
-        reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_G, temp_nodes, directed_G.connectivity_neighbors, all_nodes_G)
+        reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_G,
+                                                                     temp_nodes,
+                                                                     directed_G.connectivity_neighbors,
+                                                                     node_degrees,
+                                                                     all_nodes_G)
         # prepare information for ordering of H
         temp_nodes = list(encoded_graphs[1].nodes())
         undirected_copy = deepcopy(encoded_graphs[1])
         undirected_copy = undirected_copy.to_undirected()
         directed_H.connectivity_neighbors = {node:set(undirected_copy.neighbors(node)) for node in temp_nodes}
         directed_H.nodes = {node:encoded_graphs[1].nodes[node]["GMNL"] for node in temp_nodes}
+        # out degrees for ordering
+        node_degrees = {node:encoded_graphs[1].out_degree(node) for node in temp_nodes}
         # order for directed H
-        reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_H, temp_nodes, directed_H.connectivity_neighbors, all_nodes_H)
+        reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_H,
+                                                                     temp_nodes,
+                                                                     directed_H.connectivity_neighbors,
+                                                                     node_degrees,
+                                                                     all_nodes_H)
     else:
         # prepare information for ordering of G
         temp_nodes = list(encoded_graphs[0].nodes())
         undirected_G.neighbors = {node:set(encoded_graphs[0].neighbors(node)) for node in temp_nodes}
         undirected_G.nodes = {node:encoded_graphs[0].nodes[node]["GMNL"] for node in temp_nodes}
+        # degrees for ordering
+        node_degrees = {node:encoded_graphs[0].degree(node) for node in temp_nodes}
         # order for undirected G
-        reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_G, temp_nodes, undirected_G.neighbors, all_nodes_G)
+        reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_G,
+                                                                     temp_nodes,
+                                                                     undirected_G.neighbors,
+                                                                     node_degrees,
+                                                                     all_nodes_G)
         # prepare information for ordering of H
         temp_nodes = list(encoded_graphs[1].nodes())
         undirected_H.neighbors = {node:set(encoded_graphs[1].neighbors(node)) for node in temp_nodes}
         undirected_H.nodes = {node:encoded_graphs[1].nodes[node]["GMNL"] for node in temp_nodes}
+        # degrees for ordering
+        node_degrees = {node:encoded_graphs[1].degree(node) for node in temp_nodes}
         # order for undirected H
-        reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_H, temp_nodes, undirected_H.neighbors, all_nodes_H)
+        reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_H,
+                                                                     temp_nodes,
+                                                                     undirected_H.neighbors,
+                                                                     node_degrees,
+                                                                     all_nodes_H)
 
     # prepare total orders
     if(params.directed_graphs):
@@ -844,6 +869,7 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
     cdef cpp_set[cpp_pair[int, int]] each_extension
     cdef cpp_set[cpp_pair[int, int]] temp_extension
     cdef cpp_set[cpp_pair[int, int]] original_anchor_encoded
+    cdef cpp_unordered_map[int, int] node_degrees
     cdef cpp_unordered_map[int, int] all_removable_nodes
     cdef partial_maps_search_params params
     cdef partial_maps_directed_graph directed_bigger
@@ -1080,7 +1106,13 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
         directed_bigger.connectivity_neighbors = {node:set(undirected_copy.neighbors(node)) for node in temp_nodes}
         directed_bigger.in_neighbors = {node:set(nx_bigger.predecessors(node)) for node in temp_nodes}
         directed_bigger.out_neighbors = {node:set(nx_bigger.neighbors(node)) for node in temp_nodes}
-        reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_H, temp_nodes, directed_bigger.connectivity_neighbors, all_nodes_bigger)
+        # out degrees for ordering
+        node_degrees = {node:nx_bigger.out_degree(node) for node in temp_nodes}
+        reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_H,
+                                                                     temp_nodes,
+                                                                     directed_bigger.connectivity_neighbors,
+                                                                     node_degrees,
+                                                                     all_nodes_bigger)
     else:
         # prepare nodes and neighbors of smaller undirected graph
         undirected_smaller.loops = list(nx.nodes_with_selfloops(nx_smaller))
@@ -1098,7 +1130,13 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
         temp_nodes = list(nx_bigger.nodes())
         undirected_bigger.nodes = {node:nx_bigger.nodes[node]["GMNL"] for node in temp_nodes}
         undirected_bigger.neighbors = {node:set(nx_bigger.neighbors(node)) for node in temp_nodes}
-        reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_H, temp_nodes, undirected_bigger.neighbors, all_nodes_bigger)
+        # degrees for ordering
+        node_degrees = {node:nx_bigger.degree(node) for node in temp_nodes}
+        reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_H,
+                                                                     temp_nodes,
+                                                                     undirected_bigger.neighbors,
+                                                                     node_degrees,
+                                                                     all_nodes_bigger)
 
     # prepare total orders for bigger graph
     # NOTE: inside the intensive routines and in associated search-parameters, the
@@ -1392,6 +1430,7 @@ cdef void trimm_and_test_subgraph_isomorphism_undirected(cpp_vector[int] & test_
     cdef cpp_vector[int] ordered_nodes_in_trimmed
     cdef cpp_unordered_set[int] new_neighborhood
     cdef cpp_unordered_set[int] nodes_to_be_removed
+    cdef cpp_unordered_map[int, int] node_degrees
     cdef partial_maps_undirected_graph trimmed_graph
     cdef partial_maps_state_undirected initial_state_undirected
 
@@ -1403,6 +1442,15 @@ cdef void trimm_and_test_subgraph_isomorphism_undirected(cpp_vector[int] & test_
 
         # copy degree sequence
         deg_trimmed = undirected_smaller.degrees
+
+        # get nodes and their degree for ordering
+        for each_neighborhood in trimmed_graph.neighbors:
+            # save node
+            node = each_neighborhood.first
+            nodes_in_trimmed.push_back(node)
+            # save node with its degree
+            deg = <int>(each_neighborhood.second.size())
+            node_degrees[each_neighborhood.first] = deg
 
     else:
 
@@ -1455,6 +1503,7 @@ cdef void trimm_and_test_subgraph_isomorphism_undirected(cpp_vector[int] & test_
                 # save degree
                 deg = <int>(new_neighborhood.size())
                 deg_trimmed.push_back(deg)
+                node_degrees[each_neighborhood.first] = deg
 
     # get order of graphs
     params.expected_order = trimmed_graph.nodes.size()
@@ -1490,7 +1539,9 @@ cdef void trimm_and_test_subgraph_isomorphism_undirected(cpp_vector[int] & test_
     reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_G,
                                                                  nodes_in_trimmed,
                                                                  trimmed_graph.neighbors,
+                                                                 node_degrees,
                                                                  ordered_nodes_in_trimmed)
+
     # discard if reachability is requested and it doesnt hold for the trimmed graph
     if(params.reachability):
         if(not reachable):
@@ -1584,6 +1635,7 @@ cdef void trimm_and_test_subgraph_isomorphism_directed(cpp_vector[int] & test_su
     cdef cpp_vector[int] ordered_nodes_in_trimmed
     cdef cpp_unordered_set[int] new_neighborhood
     cdef cpp_unordered_set[int] nodes_to_be_removed
+    cdef cpp_unordered_map[int, int] node_degrees
     cdef partial_maps_directed_graph trimmed_graph
     cdef partial_maps_state_directed initial_state_directed
 
@@ -1596,6 +1648,15 @@ cdef void trimm_and_test_subgraph_isomorphism_directed(cpp_vector[int] & test_su
         # copy degree sequences
         in_deg_trimmed = directed_smaller.in_degrees
         out_deg_trimmed = directed_smaller.out_degrees
+
+        # get nodes and their out degree for ordering
+        for each_neighborhood in trimmed_graph.out_neighbors:
+            # save node
+            node = each_neighborhood.first
+            nodes_in_trimmed.push_back(node)
+            # save node with its degree
+            deg = <int>(each_neighborhood.second.size())
+            node_degrees[each_neighborhood.first] = deg
 
     else:
 
@@ -1658,6 +1719,7 @@ cdef void trimm_and_test_subgraph_isomorphism_directed(cpp_vector[int] & test_su
                 # save degree
                 deg = <int>(new_neighborhood.size())
                 out_deg_trimmed.push_back(deg)
+                node_degrees[each_neighborhood.first] = deg
 
         # prepare connectivity-neighborhoods for trimmed graph
         for each_neighborhood in directed_smaller.connectivity_neighbors:
@@ -1731,7 +1793,9 @@ cdef void trimm_and_test_subgraph_isomorphism_directed(cpp_vector[int] & test_su
     reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_G,
                                                                  nodes_in_trimmed,
                                                                  trimmed_graph.connectivity_neighbors,
+                                                                 node_degrees,
                                                                  ordered_nodes_in_trimmed)
+
     # discard if reachability is requested and it doesnt hold for the trimmed graph
     if(params.reachability):
         if(not reachable):
@@ -2068,10 +2132,51 @@ cdef cpp_bool partial_maps_label_consistency(int caller,
 
 
 
+# function: order nodes by decreasing (out) degree -----------------------------
+cdef void partial_maps_order_nodes_by_degree(cpp_vector[cpp_pair[int, int]] & nodes_info,
+                                             cpp_vector[int] & all_nodes) noexcept:
+
+    # local variables
+    cdef int deg = 0
+    cdef int node = 0
+    cdef cpp_pair[int, int] each_pair
+    cdef cpp_vector[int] all_degrees
+    cdef cpp_vector[int] temp_vector
+    cdef cpp_unordered_map[int, cpp_vector[int]] nodes_by_degree
+
+    # partition node information by node degree
+    for each_pair in nodes_info:
+        # determine if degree was already encountered
+        if(nodes_by_degree.find(each_pair.second) != nodes_by_degree.end()):
+            # save new pair associated to corresponding degree
+            nodes_by_degree[each_pair.second].push_back(each_pair.first)
+        else:
+            # save new degree and create vector of pairs with node information
+            all_degrees.push_back(each_pair.second)
+            temp_vector.clear()
+            temp_vector.push_back(each_pair.first)
+            nodes_by_degree[each_pair.second] = temp_vector
+
+    # sort encountered degrees in decreasing order
+    sort(all_degrees.begin(), all_degrees.end())
+    reverse(all_degrees.begin(), all_degrees.end())
+
+    # traverse nodes one to save them by decreasing degree
+    for deg in all_degrees:
+        for node in nodes_by_degree[deg]:
+            all_nodes.push_back(node)
+
+    # end of function
+
+
+
+
+
 # function: order nodes in concentric sets around the anchor -------------------
 cdef cpp_bool partial_maps_order_nodes_concentric_reachability(cpp_unordered_set[int] & initial_level,
                                                                cpp_vector[int] & temp_nodes,
                                                                cpp_unordered_map[int, cpp_unordered_set[int]] & connectivity_neighbors,
+                                                               cpp_unordered_map[int, int] & node_degrees,
                                                                cpp_vector[int] & all_nodes) noexcept:
 
     # local variables
@@ -2079,47 +2184,74 @@ cdef cpp_bool partial_maps_order_nodes_concentric_reachability(cpp_unordered_set
     cdef int node = 0
     cdef int node1 = 0
     cdef int node2 = 0
+    cdef cpp_pair[int, int] temp_pair
     cdef cpp_vector[int] next_level
     cdef cpp_vector[int] current_level
+    cdef cpp_vector[int] unmatched_level
+    cdef cpp_vector[cpp_pair[int, int]] pre_level
     cdef cpp_unordered_map[int, cpp_bool] visited
 
     # prepare visited-nodes array
     for node in temp_nodes:
         visited[node] = False
 
-    # prepare current level
+    # prepare nodes for current level
     for node in initial_level:
-        all_nodes.push_back(node)
-        current_level.push_back(node)
+        temp_pair.first = node
+        temp_pair.second = node_degrees[node]
+        pre_level.push_back(temp_pair)
         visited[node] = True
+
+    # order and save nodes in current level
+    partial_maps_order_nodes_by_degree(pre_level, current_level)
+    for node in current_level:
+        all_nodes.push_back(node)
 
     # multi-source DFS
     while(not current_level.empty()):
         # reinitialize next_level
+        pre_level.clear()
         next_level.clear()
         # iterate getting immediate neighbors not already ordered
         for node1 in current_level:
             for node2 in connectivity_neighbors[node1]:
                 # only assign oreder of not visited yet
                 if(not visited[node2]):
-                    # save node as visited
-                    all_nodes.push_back(node2)
+                    # prepare nodes for next level
+                    temp_pair.first = node2
+                    temp_pair.second = node_degrees[node2]
+                    pre_level.push_back(temp_pair)
                     visited[node2] = True
-                    # level management
-                    next_level.push_back(node2)
+        # level management
+        partial_maps_order_nodes_by_degree(pre_level, next_level)
+        for node in next_level:
+            all_nodes.push_back(node)
         # update nodes to be ordered
         current_level.clear()
         current_level = next_level
 
-    # enumerate unreachable nodes
+    # test for unreachable nodes
+    pre_level.clear()
+    unmatched_level.clear()
     for node in temp_nodes:
         if(not visited[node]):
-            all_nodes.push_back(node)
+            temp_pair.first = node
+            temp_pair.second = node_degrees[node]
+            pre_level.push_back(temp_pair)
             visited[node] = True
-            reachable = False
+
+    # enumerate unreachable nodes
+    if(not pre_level.empty()):
+        # set reachability to false
+        reachable = False
+        # order and save unmatched vertices
+        partial_maps_order_nodes_by_degree(pre_level, unmatched_level)
+        for node in unmatched_level:
+            all_nodes.push_back(node)
 
     # end of function
     return(reachable)
+
 
 
 

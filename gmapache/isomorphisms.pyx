@@ -23,6 +23,9 @@
 #     structures, contiguous memory traversals with vectors, and as well as    #
 #     for some linked-lists advantages.                                        #
 #                                                                              #
+#   * inside the intensive routines and in associated search-parameters, the   #
+#     domain graph is called G, while the codomain graph is always called H.   #
+#                                                                              #
 ################################################################################
 
 
