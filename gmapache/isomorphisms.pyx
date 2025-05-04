@@ -236,6 +236,10 @@ cdef struct isomorphisms_search_params:
     # inverse total order for VF2-like search
     cpp_unordered_map[int, int] inverse_total_order_G
     cpp_unordered_map[int, int] inverse_total_order_H
+    # information of label-induced anchor
+    cpp_unordered_set[int] labeled_anchor_G
+    cpp_unordered_set[int] labeled_anchor_H
+    cpp_vector[cpp_pair[int, int]] labeled_encoded_anchor
 
 
 
@@ -376,6 +380,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     cdef int required_limit = 0
     cdef cpp_bool input_correctness = True
     cdef cpp_bool consistent_labels = True
+    cdef cpp_bool feasible_labeled_anchor = True
     cdef cpp_string comma
     comma.push_back(44)
     cdef cpp_string temp_str
@@ -712,11 +717,13 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
         if(params.directed_graphs):
             consistent_labels = search_isomorphisms_label_consistency(params.node_labels, params.edge_labels,
                                                                       directed_G.nodes, directed_H.nodes,
-                                                                      directed_G.edges, directed_H.edges)
+                                                                      directed_G.edges, directed_H.edges,
+                                                                      params)
         else:
             consistent_labels = search_isomorphisms_label_consistency(params.node_labels, params.edge_labels,
                                                                       undirected_G.nodes, undirected_H.nodes,
-                                                                      undirected_G.edges, undirected_H.edges)
+                                                                      undirected_G.edges, undirected_H.edges,
+                                                                      params)
         # if labels are not consistent then the graphs cannot be isomorphic
         if(not consistent_labels):
             return([], False)
@@ -767,11 +774,19 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     if(current_limit < (scalation_value * required_limit)):
         setrecursionlimit(int(scalation_value * required_limit))
 
+    # prepare initial state with label-induced anchor (if any)
+    if(params.node_labels and (not params.labeled_encoded_anchor.empty())):
+        if(params.directed_graphs):
+            feasible_labeled_anchor = search_isomorphisms_prepare_feasible_initial_state_directed(params, directed_G, directed_H, initial_state_directed)
+        else:
+            feasible_labeled_anchor = search_isomorphisms_prepare_feasible_initial_state_undirected(params, undirected_G, undirected_H, initial_state_undirected)
+
     # evaluate isomorphisms
-    if(params.directed_graphs):
-        search_isomorphisms_directed(params, initial_state_directed, directed_G, directed_H, encoded_isomorphisms)
-    else:
-        search_isomorphisms_undirected(params, initial_state_undirected, undirected_G, undirected_H, encoded_isomorphisms)
+    if(feasible_labeled_anchor):
+        if(params.directed_graphs):
+            search_isomorphisms_directed(params, initial_state_directed, directed_G, directed_H, encoded_isomorphisms)
+        else:
+            search_isomorphisms_undirected(params, initial_state_undirected, undirected_G, undirected_H, encoded_isomorphisms)
 
     # decode isomorphisms
     for each_isomorphism in encoded_isomorphisms:
@@ -931,15 +946,20 @@ cdef cpp_bool search_isomorphisms_label_consistency(cpp_bool & node_labels,
                                                     cpp_unordered_map[int, int] & nodes_G,
                                                     cpp_unordered_map[int, int] & nodes_H,
                                                     cpp_unordered_map[cpp_string, int] & edges_G,
-                                                    cpp_unordered_map[cpp_string, int] & edges_H) noexcept:
+                                                    cpp_unordered_map[cpp_string, int] & edges_H,
+                                                    isomorphisms_search_params & params) noexcept:
 
     # local variables
     cdef int label = 0
+    cdef cpp_pair[int, int] temp_pair
     cdef cpp_pair[int, int] node_and_label
     cdef cpp_pair[int, int] label_and_count
     cdef cpp_pair[cpp_string, int] edge_and_label
+    cdef cpp_vector[int] empty_vector
     cdef cpp_unordered_map[int, int] count_labels_G
     cdef cpp_unordered_map[int, int] count_labels_H
+    cdef cpp_unordered_map[int, cpp_vector[int]] labels_to_nodes_G
+    cdef cpp_unordered_map[int, cpp_vector[int]] labels_to_nodes_H
 
     # consistency of node labels
     if(node_labels):
@@ -951,8 +971,11 @@ cdef cpp_bool search_isomorphisms_label_consistency(cpp_bool & node_labels,
             # count node label
             if(count_labels_G.find(label) != count_labels_G.end()):
                 count_labels_G[label] = count_labels_G[label] + 1
+                labels_to_nodes_G[label].push_back(node_and_label.first)
             else:
                 count_labels_G[label] = 1
+                labels_to_nodes_G[label] = empty_vector
+                labels_to_nodes_G[label].push_back(node_and_label.first)
 
         # get node label count on H
         for node_and_label in nodes_H:
@@ -961,8 +984,11 @@ cdef cpp_bool search_isomorphisms_label_consistency(cpp_bool & node_labels,
             # count node label
             if(count_labels_H.find(label) != count_labels_H.end()):
                 count_labels_H[label] = count_labels_H[label] + 1
+                labels_to_nodes_H[label].push_back(node_and_label.first)
             else:
                 count_labels_H[label] = 1
+                labels_to_nodes_H[label] = empty_vector
+                labels_to_nodes_H[label].push_back(node_and_label.first)
 
         # compare node counts in both graphs per label
         if(count_labels_G.size() != count_labels_H.size()):
@@ -973,6 +999,13 @@ cdef cpp_bool search_isomorphisms_label_consistency(cpp_bool & node_labels,
             else:
                 if(label_and_count.second != count_labels_H[label_and_count.first]):
                     return(False)
+                else:
+                    if(label_and_count.second == 1):
+                        temp_pair.first = labels_to_nodes_G[label_and_count.first][0]
+                        temp_pair.second = labels_to_nodes_H[label_and_count.first][0]
+                        params.labeled_anchor_G.insert(temp_pair.first)
+                        params.labeled_anchor_H.insert(temp_pair.second)
+                        params.labeled_encoded_anchor.push_back(temp_pair)
 
         # if there is only one node label then turn off node-label checking, since it is the same label
         if(count_labels_G.size() == 1):
@@ -1100,6 +1133,266 @@ cdef void search_isomorphisms_order_neighbors(cpp_vector[cpp_pair[int, int]] & a
             all_neighbors_ordered[each_pair.first].push_back(inverse_total_order[each_order])
 
     # end of function
+
+
+
+
+
+# function: prepare initial state with label-induced anchor - undirected -------
+cdef cpp_bool search_isomorphisms_prepare_feasible_initial_state_undirected(isomorphisms_search_params & params,
+                                                                            isomorphisms_undirected_graph & G,
+                                                                            isomorphisms_undirected_graph & H,
+                                                                            isomorphisms_state_undirected & current_state) noexcept:
+
+    # local variables
+    cdef cpp_bool inserted = False
+    cdef cpp_bool feasible_labeled_anchor = True
+    cdef cpp_bool semantic_feasibility = True
+    cdef cpp_bool syntactic_feasibility = True
+    cdef int node = 0
+    cdef int node1 = 0
+    cdef int node2 = 0
+    cdef int taken_from = 0
+    cdef cpp_pair[int, int] each_pair
+    cdef isomorphisms_change_in_state_undirected change_in_state
+
+    # extend initial search state with each pair in the anchor
+    for each_pair in params.labeled_encoded_anchor:
+
+        # reinitialize feasibility
+        semantic_feasibility = True
+        syntactic_feasibility = True
+
+        # split nodes
+        node1 = each_pair.first
+        node2 = each_pair.second
+
+        # both vertices should be in the ring or outside of it
+        if(current_state.ring_G.find(node1) != current_state.ring_G.end()):
+            taken_from = 0
+            if(current_state.ring_H.find(node2) == current_state.ring_H.end()):
+                feasible_labeled_anchor = False
+                break
+        else:
+            taken_from = 1
+            if(current_state.ring_H.find(node2) != current_state.ring_H.end()):
+                feasible_labeled_anchor = False
+                break
+
+        # evaluate syntactic feasibility (possibly over complement graph)
+        if(params.complement):
+            syntactic_feasibility = syntactic_feasibility_undirected(node1,
+                                                                     node2,
+                                                                     current_state.ring_G,
+                                                                     current_state.ring_H,
+                                                                     current_state.match_G,
+                                                                     current_state.match_H,
+                                                                     G.loops,
+                                                                     H.loops,
+                                                                     current_state.forward_match,
+                                                                     current_state.inverse_match,
+                                                                     G.neighbors_complement,
+                                                                     H.neighbors_complement,
+                                                                     G.neighbors_ordered,
+                                                                     H.neighbors_ordered)
+        else:
+            syntactic_feasibility = syntactic_feasibility_undirected(node1,
+                                                                     node2,
+                                                                     current_state.ring_G,
+                                                                     current_state.ring_H,
+                                                                     current_state.match_G,
+                                                                     current_state.match_H,
+                                                                     G.loops,
+                                                                     H.loops,
+                                                                     current_state.forward_match,
+                                                                     current_state.inverse_match,
+                                                                     G.neighbors,
+                                                                     H.neighbors,
+                                                                     G.neighbors_ordered,
+                                                                     H.neighbors_ordered)
+
+        # evaluate semantic feasibility (always over original graphs)
+        if(syntactic_feasibility):
+            if(params.edge_labels):
+                semantic_feasibility = semantic_feasibility_undirected(params.node_labels,
+                                                                       params.edge_labels,
+                                                                       node1,
+                                                                       node2,
+                                                                       current_state.match_G,
+                                                                       G.loops,
+                                                                       current_state.forward_match,
+                                                                       G.nodes,
+                                                                       H.nodes,
+                                                                       G.neighbors,
+                                                                       G.edges,
+                                                                       H.edges)
+
+            # push to stack if valid
+            if(semantic_feasibility):
+                # extend match with the new pair
+                change_in_state = extend_match_undirected(taken_from, node1, node2, G, H, current_state)
+
+        # discard and finish if feasibility tests were not passed
+        if((not syntactic_feasibility) or (not semantic_feasibility)):
+            feasible_labeled_anchor = False
+            break
+
+    # end of function
+    return(feasible_labeled_anchor)
+
+
+
+
+
+# function: prepare initial state with label-induced anchor - directed ---------
+cdef cpp_bool search_isomorphisms_prepare_feasible_initial_state_directed(isomorphisms_search_params & params,
+                                                                          isomorphisms_directed_graph & G,
+                                                                          isomorphisms_directed_graph & H,
+                                                                          isomorphisms_state_directed & current_state) noexcept:
+
+    # local variables
+    cdef cpp_bool inserted = False
+    cdef cpp_bool semantic_feasibility = True
+    cdef cpp_bool feasible_labeled_anchor = False
+    cdef cpp_bool in_syntactic_feasibility = True
+    cdef cpp_bool out_syntactic_feasibility = True
+    cdef int node = 0
+    cdef int node1 = 0
+    cdef int node2 = 0
+    cdef int taken_from = 0
+    cdef cpp_pair[int, int] each_pair
+    cdef isomorphisms_change_in_state_directed change_in_state
+
+    # extend initial search state with each pair in the anchor
+    for each_pair in params.labeled_encoded_anchor:
+
+        # split nodes
+        node1 = each_pair.first
+        node2 = each_pair.second
+
+        # both vertices should be in the same ring or outside of them
+        if(current_state.out_ring_G.find(node1) != current_state.out_ring_G.end()):
+            taken_from = 0
+            if(current_state.out_ring_H.find(node2) == current_state.out_ring_H.end()):
+                feasible_labeled_anchor = False
+                break
+        else:
+            if(current_state.in_ring_G.find(node1) != current_state.in_ring_G.end()):
+                taken_from = 1
+                if(current_state.in_ring_H.find(node2) == current_state.in_ring_H.end()):
+                    feasible_labeled_anchor = False
+                    break
+            else:
+                taken_from = 2
+                if(current_state.out_ring_H.find(node2) != current_state.out_ring_H.end()):
+                    feasible_labeled_anchor = False
+                    break
+                if(current_state.in_ring_H.find(node2) != current_state.in_ring_H.end()):
+                    feasible_labeled_anchor = False
+                    break
+
+        # evaluate in syntactic feasibility (possibly over complement graph)
+        if(params.complement):
+            in_syntactic_feasibility = syntactic_feasibility_directed(node1,
+                                                                      node2,
+                                                                      current_state.in_ring_G,
+                                                                      current_state.in_ring_H,
+                                                                      current_state.out_ring_G,
+                                                                      current_state.out_ring_H,
+                                                                      current_state.match_G,
+                                                                      current_state.match_H,
+                                                                      G.loops,
+                                                                      H.loops,
+                                                                      current_state.forward_match,
+                                                                      current_state.inverse_match,
+                                                                      G.in_neighbors_complement,
+                                                                      H.in_neighbors_complement,
+                                                                      G.in_neighbors_ordered,
+                                                                      H.in_neighbors_ordered)
+        else:
+            in_syntactic_feasibility = syntactic_feasibility_directed(node1,
+                                                                      node2,
+                                                                      current_state.in_ring_G,
+                                                                      current_state.in_ring_H,
+                                                                      current_state.out_ring_G,
+                                                                      current_state.out_ring_H,
+                                                                      current_state.match_G,
+                                                                      current_state.match_H,
+                                                                      G.loops,
+                                                                      H.loops,
+                                                                      current_state.forward_match,
+                                                                      current_state.inverse_match,
+                                                                      G.in_neighbors,
+                                                                      H.in_neighbors,
+                                                                      G.in_neighbors_ordered,
+                                                                      H.in_neighbors_ordered)
+
+        # evaluate out syntactic feasibility (possibly over complement graph)
+        if(in_syntactic_feasibility):
+            if(params.complement):
+                out_syntactic_feasibility = syntactic_feasibility_directed(node1,
+                                                                           node2,
+                                                                           current_state.in_ring_G,
+                                                                           current_state.in_ring_H,
+                                                                           current_state.out_ring_G,
+                                                                           current_state.out_ring_H,
+                                                                           current_state.match_G,
+                                                                           current_state.match_H,
+                                                                           G.loops,
+                                                                           H.loops,
+                                                                           current_state.forward_match,
+                                                                           current_state.inverse_match,
+                                                                           G.out_neighbors_complement,
+                                                                           H.out_neighbors_complement,
+                                                                           G.out_neighbors_ordered,
+                                                                           H.out_neighbors_ordered)
+            else:
+                out_syntactic_feasibility = syntactic_feasibility_directed(node1,
+                                                                           node2,
+                                                                           current_state.in_ring_G,
+                                                                           current_state.in_ring_H,
+                                                                           current_state.out_ring_G,
+                                                                           current_state.out_ring_H,
+                                                                           current_state.match_G,
+                                                                           current_state.match_H,
+                                                                           G.loops,
+                                                                           H.loops,
+                                                                           current_state.forward_match,
+                                                                           current_state.inverse_match,
+                                                                           G.out_neighbors,
+                                                                           H.out_neighbors,
+                                                                           G.out_neighbors_ordered,
+                                                                           H.out_neighbors_ordered)
+
+            # evaluate semantic feasibility (always over original graphs)
+            if(out_syntactic_feasibility):
+                if(params.edge_labels):
+                    semantic_feasibility = semantic_feasibility_directed(params.node_labels,
+                                                                         params.edge_labels,
+                                                                         node1,
+                                                                         node2,
+                                                                         current_state.match_G,
+                                                                         G.loops,
+                                                                         current_state.forward_match,
+                                                                         G.nodes,
+                                                                         H.nodes,
+                                                                         G.in_neighbors,
+                                                                         G.out_neighbors,
+                                                                         G.edges,
+                                                                         H.edges)
+
+                # push to stack if valid
+                if(semantic_feasibility):
+                    # extend match with the new pair
+                    change_in_state = extend_match_directed(taken_from, node1, node2, G, H, current_state)
+
+        # discard and finish if feasibility tests were not passed
+        if((not in_syntactic_feasibility) or (not out_syntactic_feasibility) or (not semantic_feasibility)):
+            feasible_labeled_anchor = False
+            break
+
+    # end of function
+    return(feasible_labeled_anchor)
 
 
 
