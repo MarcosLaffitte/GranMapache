@@ -79,20 +79,20 @@ import gmapache as gm
 # examples #####################################################################
 
 
-# example: complete induced extension ------------------------------------------
+# example: stable extension ----------------------------------------------------
 
 
 # We build two networkx graphs G and H with arbitrary vertex labels and edge labels,
 # and define a "partial map" as an injective match between the graphs, also refered
 # to as "anchor" given as a list of unrepeated 2-tuples (x, y) of vertices x in G and
-# y in H. This data is passed to the method gm.search_complete_induced_extension(G, H, partial_map),
+# y in H. This data is passed to the method gm.search_stable_extension(G, H, partial_map),
 # which extends the partial map and returns two results: (1) a list of all the possible
-# complete induced extensions of the reaction center also expressed as matches, and
+# stable extensions of the reaction center also expressed as matches, and
 # (2) a boolean value indicating if the extensions form bijections and, equivalentely,
 # if the "anchor" was a good partial map.
 
 
-# buid first test graph for complete induced extension
+# buid first test graph for stable extension
 G = nx.Graph()
 G.add_node("g1", color = "blue", charge = "0")
 G.add_node("g2", color = "blue", charge = "0")
@@ -117,7 +117,7 @@ G.add_edge("g10", "g11", bond = "triple", strength = "weak")
 G.add_edge("g11", "g12", bond = "triple", strength = "weak")
 
 
-# buid second test graph for complete induced extension
+# buid second test graph for stable extension
 H = nx.Graph()
 H.add_node("h1", color = "blue", charge = "0")
 H.add_node("h2", color = "blue", charge = "0")
@@ -142,7 +142,7 @@ H.add_edge("h7", "h8", bond = "triple", strength = "weak")
 H.add_edge("h8", "h9", bond = "triple", strength = "weak")
 
 
-# buid test anchor for complete induced extension
+# buid test anchor for stable extension
 partial_map = [("g1", "h1"),
                ("g2", "h2"),
                ("g3", "h3"),
@@ -151,15 +151,15 @@ partial_map = [("g1", "h1"),
                ("g6", "h6")]
 
 
-# testing complete induced extension
+# testing stable extension
 initial_time = time.time()
-all_extensions, good_map = gm.search_complete_induced_extension(G, H, partial_map)
+all_extensions, good_map = gm.search_stable_extension(G, H, partial_map)
 final_time = time.time()
 
 
 # print results
 print("--------------------------------------------------")
-print("> Complete Induced Extension")
+print("> Stable Extension")
 print("\n")
 print("***** Given anchor:")
 print(partial_map)
@@ -188,8 +188,8 @@ print("\n")
 # If both graphs have the same order, the function first will search for a complete-induced-
 # extension and only if no such extension is found it will continue with the search for the
 # maximum common induced anchored subgraphs, thus this function can be more time consuming
-# that simply running the search for the complete induced extension. Moreover, if both graphs
-# have the same order and a complete induced extension exists between them, this function
+# that simply running the search for the stable extension. Moreover, if both graphs
+# have the same order and a stable extension exists between them, this function
 # will return such extension independently of the parameter "reachability" and regardless
 # if the complete extension induces a connected ITS.
 

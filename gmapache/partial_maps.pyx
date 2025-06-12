@@ -219,7 +219,7 @@ cdef struct partial_maps_state_directed:
 # struct: overall search parameters and constant information -------------------
 cdef struct partial_maps_search_params:
     # flag from the caller wrapper
-    # caller = 0 -> gm.partial_maps.search_complete_induced_extension
+    # caller = 0 -> gm.partial_maps.search_stable_extension
     # caller = 1 -> gm.partial_maps.search_maximum_common_anchored_subgraphs
     int caller
     # use node labels
@@ -310,19 +310,19 @@ cdef struct partial_maps_change_in_state_directed:
 
 
 
-# functions - search for complete induced extension - wrapper ##################
+# functions - search for stable extension - wrapper ############################
 
 
 
 
 
-# function: callable wrapper for searching complete induced extension ----------
-def search_complete_induced_extension(nx_G = nx.Graph(),           # can also be a networkx DiGraph
-                                      nx_H = nx.Graph(),           # can also be a networkx DiGraph
-                                      input_anchor = [],           # anchor partial map, should be a non-empty list
-                                      node_labels = False,         # consider node labels when evaluating extension
-                                      edge_labels = False,         # consider edge labels when evaluating extension
-                                      all_extensions = False):     # by default stops when finding one extension (if any)
+# function: callable wrapper for searching stable extension --------------------
+def search_stable_extension(nx_G = nx.Graph(),           # can also be a networkx DiGraph
+                            nx_H = nx.Graph(),           # can also be a networkx DiGraph
+                            input_anchor = [],           # anchor partial map, should be a non-empty list
+                            node_labels = False,         # consider node labels when evaluating extension
+                            edge_labels = False,         # consider edge labels when evaluating extension
+                            all_extensions = False):     # by default stops when finding one extension (if any)
 
     # description
     """
@@ -360,7 +360,7 @@ def search_complete_induced_extension(nx_G = nx.Graph(),           # can also be
     isomorphic partial ITS graphs.
 
     > output:
-    * extensions - (possibly empty) list of complete induced extensions, each as a list
+    * extensions - (possibly empty) list of stable extensions, each as a list
     of 2-tuples (x, y) of nodes x from G and y from H representing the injective function
     preserving adjacency and (possibly) labels outside the anchor.
     * found_extensions - boolean value indicating if the extensions where found, i.e.,
@@ -447,7 +447,7 @@ def search_complete_induced_extension(nx_G = nx.Graph(),           # can also be
     undirected_copy = None
 
     # set caller parameter flag
-    # caller = 0 -> gm.partial_maps.search_complete_induced_extension
+    # caller = 0 -> gm.partial_maps.search_stable_extension
     # caller = 1 -> gm.partial_maps.search_maximum_common_anchored_subgraphs
     params.caller = 0
 
@@ -731,7 +731,7 @@ def search_complete_induced_extension(nx_G = nx.Graph(),           # can also be
     else:
         partial_maps_prepare_initial_state_undirected(params.encoded_anchor, params.anchor_G, params.anchor_H, undirected_G, undirected_H, initial_state_undirected)
 
-    # evaluate complete induced extension
+    # evaluate stable extension
     if(params.directed_graphs):
         partial_maps_directed(params, initial_state_directed, directed_G, directed_H, encoded_extensions)
     else:
@@ -783,7 +783,7 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
     graphs have the same order, the function first will search for a complete-induced-extension and
     only if no such extension is found it will continue with the search for the maximum common induced
     anchored subgraphs, thus this function can be more time consuming that simply running the search
-    for the complete induced extension. Moreover, if both graphs have the same order and a complete
+    for the stable extension. Moreover, if both graphs have the same order and a complete
     induced extension exists between them, this function will return such extension independently of
     the parameter "reachability" and regardless if the complete extension induces a connected ITS.
 
@@ -818,7 +818,7 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
     * gmapache.integerization.encode_match
     * gmapache.integerization.decode_match
     * gmapache.partial_maps.partial_maps_input_correctness
-    * gmapache.partial_maps.search_complete_induced_extension
+    * gmapache.partial_maps.search_stable_extension
     * gmapache.partial_maps.partial_maps_order_nodes_concentric_reachability
     * gmapache.partial_maps.partial_maps_order_neighbors
     * gmapache.partial_maps.partial_maps_iterative_trimming
@@ -889,7 +889,7 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
     undirected_copy = None
 
     # set caller parameter flag
-    # caller = 0 -> gm.partial_maps.search_complete_induced_extension
+    # caller = 0 -> gm.partial_maps.search_stable_extension
     # caller = 1 -> gm.partial_maps.search_maximum_common_anchored_subgraphs
     params.caller = 1
 
@@ -903,9 +903,9 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
     order_H = nx_H.order()
 
     # only if the graphs have the same order we test for complete extension
-    # NOTE: search_complete_induced_extension evaluates consistency of degree sequences
+    # NOTE: search_stable_extension evaluates consistency of degree sequences
     if(order_G == order_H):
-        extensions, found_proper_extensions = search_complete_induced_extension(nx_G = nx_G,
+        extensions, found_proper_extensions = search_stable_extension(nx_G = nx_G,
                                                                                 nx_H = nx_H,
                                                                                 input_anchor = input_anchor,
                                                                                 node_labels = node_labels,
@@ -1888,7 +1888,7 @@ cdef cpp_bool partial_maps_input_correctness(nx_G, nx_H, input_anchor, node_labe
     test_entry = None
 
     # NOTE: caller flag
-    # caller = 0 -> gm.partial_maps.search_complete_induced_extension
+    # caller = 0 -> gm.partial_maps.search_stable_extension
     # caller = 1 -> gm.partial_maps.search_maximum_common_anchored_subgraphs
 
     # check that first argument is networkx graph or digraph
@@ -2000,7 +2000,7 @@ cdef cpp_bool partial_maps_label_consistency(int caller,
     cdef cpp_unordered_map[int, int] count_labels_H
 
     # NOTE: caller flag
-    # caller = 0 -> gm.partial_maps.search_complete_induced_extension
+    # caller = 0 -> gm.partial_maps.search_stable_extension
     # caller = 1 -> gm.partial_maps.search_maximum_common_anchored_subgraphs
 
     # consistency of node labels
@@ -2824,7 +2824,7 @@ cdef cpp_bool syntactic_feasibility_undirected(int node1,
     cdef int neighbors_extern_H = 0
 
     # NOTE: caller flag
-    # caller = 0 -> gm.partial_maps.search_complete_induced_extension
+    # caller = 0 -> gm.partial_maps.search_stable_extension
     # caller = 1 -> gm.partial_maps.search_maximum_common_anchored_subgraphs
 
     # consistency of degree
@@ -3452,7 +3452,7 @@ cdef cpp_bool syntactic_feasibility_directed(int node1,
     cdef int neighbors_extern_H = 0
 
     # NOTE: caller flag
-    # caller = 0 -> gm.partial_maps.search_complete_induced_extension
+    # caller = 0 -> gm.partial_maps.search_stable_extension
     # caller = 1 -> gm.partial_maps.search_maximum_common_anchored_subgraphs
 
     # consistency of degrees
