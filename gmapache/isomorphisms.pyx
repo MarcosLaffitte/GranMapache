@@ -351,7 +351,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     cdef list isomorphisms = []
 
     # fixed threshold parameters
-    cdef float limit_edges = 0.98
+    cdef float limit_edges = 0.50
     cdef float bigger_graphs = 15
     cdef float scalation_value = 1.5
 
