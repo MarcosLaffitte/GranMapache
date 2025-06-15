@@ -42,7 +42,7 @@
 # conda remove -n devdep --all
 
 # Using setuptools, cython and numpy
-from setuptools import Extension, setup
+from setuptools import Extension, setup, find_packages
 from Cython.Build import cythonize
 import numpy
 
@@ -56,7 +56,7 @@ extensions = [
     Extension("gmapache.partial_maps",
               sources = ["gmapache/partial_maps.pyx"],
               language = "c++",
-              extra_compile_args=["-std=c++20"]),
+              extra_compile_args = ["-std=c++20"]),
     Extension("gmapache.isomorphisms",
               sources = ["gmapache/isomorphisms.pyx"],
               language = "c++",
@@ -65,16 +65,12 @@ extensions = [
               sources = ["gmapache/subgraph_isomorphisms.pyx"],
               language = "c++",
               extra_compile_args = ["-std=c++20"])
-    # Extension("package.module",
-    #           sources = ["package/module.pyx"],
-    #           include_dirs = [numpy.get_include()],
-    #           language = "c++",
-    #           extra_compile_args=["-std=c++20"])
 ]
 
 setup(
     name = "gmapache",
-    ext_modules = cythonize(extensions)
+    ext_modules = cythonize(extensions),
+    packages = find_packages(exclude = ("examples", "examples.*",))
 )
 
 ################################################################################
