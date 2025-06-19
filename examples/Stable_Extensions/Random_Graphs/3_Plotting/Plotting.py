@@ -96,16 +96,21 @@ rolling_average_times_by_order_nx_ismags_algo = []
 
 # plot attributes --------------------------------------------------------------
 plt.rcParams.update({"font.weight": "light", "font.family": "serif"})
+ylims = {100: (1, 6.0),
+         125: (1.5, 7.0),
+         150: (1.5, 7.0),
+         175: (1.5, 7.0),
+         200: (1.5, 7.0)}
 # ylims = {100: (1.4, 5.2),
 #          125: (1.4, 5.7),
 #          150: (2.0, 6.2),
 #          175: (2.3, 6.5),
 #          200: (2.5, 7.0)}
-ylims = {100: (1.4, 9.5),
-         125: (1.4, 9.5),
-         150: (2.0, 9.5),
-         175: (2.3, 9.5),
-         200: (2.5, 9.5)}
+# ylims = {100: (1.4, 9.5),
+#          125: (1.4, 9.5),
+#          150: (2.0, 9.5),
+#          175: (2.3, 9.5),
+#          200: (2.5, 9.5)}
 
 
 # analysis #####################################################################
@@ -174,7 +179,7 @@ for each_order in nodes_remainders:
     plt.plot(densities_remainders, average_times_by_order_gm_extender, linewidth = 1, marker = ".", markersize = 2.5, label = "gm_extender")
     plt.plot(densities_remainders, average_times_by_order_gm_isomorphism, linewidth = 1,  marker = ".", markersize = 2.5, label = "gm_isomorphism")
     plt.plot(densities_remainders, average_times_by_order_nx_isomorphism, linewidth = 1,  marker = ".", markersize = 2.5, label = "nx_isomorphism")
-    plt.plot(densities_remainders, average_times_by_order_nx_ismags_algo, linewidth = 1,  marker = ".", markersize = 2.5, label = "nx_ismags_algo")
+    # plt.plot(densities_remainders, average_times_by_order_nx_ismags_algo, linewidth = 1,  marker = ".", markersize = 2.5, label = "nx_ismags_algo")
 
     # legend
     # plt.legend(loc = "upper left", prop = font, fontsize = 15)
@@ -184,6 +189,9 @@ for each_order in nodes_remainders:
     if(each_order in [100, 125]):
         plt.xlabel("Proportion of edges in remainder graph [%]", labelpad = 10, size = 18)
         plt.ylabel("Log of running time [ms]", labelpad = 10, size = 18)
+    else:
+        plt.xlabel(" ", labelpad = 10, size = 18)
+        plt.ylabel(" ", labelpad = 10, size = 18)
     plt.xticks(fontsize = 12)
     plt.yticks(fontsize = 12)
     plt.ylim(ylims[each_order][0], ylims[each_order][1])
@@ -254,7 +262,7 @@ for each_order in nodes_remainders:
     plt.plot(densities_remainders, rolling_average_times_by_order_gm_extender, linewidth = 1, marker = ".", markersize = 2.5, label = "gm_extender")
     plt.plot(densities_remainders, rolling_average_times_by_order_gm_isomorphism, linewidth = 1, marker = ".", markersize = 2.5, label = "gm_isomorphism")
     plt.plot(densities_remainders, rolling_average_times_by_order_nx_isomorphism, linewidth = 1, marker = ".", markersize = 2.5, label = "nx_isomorphism")
-    plt.plot(densities_remainders, rolling_average_times_by_order_nx_ismags_algo, linewidth = 1, marker = ".", markersize = 2.5, label = "nx_ismags_algo")
+    # plt.plot(densities_remainders, rolling_average_times_by_order_nx_ismags_algo, linewidth = 1, marker = ".", markersize = 2.5, label = "nx_ismags_algo")
 
     # legend
     # plt.legend(loc = "upper left")
@@ -287,7 +295,7 @@ for each_order in nodes_remainders:
                  marker = ".", markersize = 2.5, label = "gm_extender")
     plt.plot(densities_remainders, rolling_average_times_by_order_gm_isomorphism, linewidth = 1, marker = ".", markersize = 2.5, label = "gm_isomorphism")
     plt.plot(densities_remainders, rolling_average_times_by_order_nx_isomorphism, linewidth = 1, marker = ".", markersize = 2.5, label = "nx_isomorphism")
-    plt.plot(densities_remainders, rolling_average_times_by_order_nx_ismags_algo, linewidth = 1, marker = ".", markersize = 2.5, label = "nx_ismags_algo")
+    # plt.plot(densities_remainders, rolling_average_times_by_order_nx_ismags_algo, linewidth = 1, marker = ".", markersize = 2.5, label = "nx_ismags_algo")
 
     # legend
     # plt.legend(loc = "upper left")
@@ -321,7 +329,7 @@ for each_order in nodes_remainders:
                  yerr = stddev_times_by_order_gm_isomorphism, elinewidth = 0.5,
                  marker = ".", markersize = 2.5, label = "gm_isomorphism")
     plt.plot(densities_remainders, rolling_average_times_by_order_nx_isomorphism, linewidth = 1, marker = ".", markersize = 2.5, label = "nx_isomorphism")
-    plt.plot(densities_remainders, rolling_average_times_by_order_nx_ismags_algo, linewidth = 1, marker = ".", markersize = 2.5, label = "nx_ismags_algo")
+    # plt.plot(densities_remainders, rolling_average_times_by_order_nx_ismags_algo, linewidth = 1, marker = ".", markersize = 2.5, label = "nx_ismags_algo")
 
     # legend
     # plt.legend(loc = "upper left")
@@ -355,7 +363,7 @@ for each_order in nodes_remainders:
     plt.errorbar(densities_remainders, rolling_average_times_by_order_nx_isomorphism, linewidth = 1,
                  yerr = stddev_times_by_order_nx_isomorphism, elinewidth = 0.5,
                  marker = ".", markersize = 2.5, label = "nx_isomorphism")
-    plt.plot(densities_remainders, rolling_average_times_by_order_nx_ismags_algo, linewidth = 1, marker = ".", markersize = 2.5, label = "nx_ismags_algo")
+    # plt.plot(densities_remainders, rolling_average_times_by_order_nx_ismags_algo, linewidth = 1, marker = ".", markersize = 2.5, label = "nx_ismags_algo")
 
     # legend
     # plt.legend(loc = "upper left")
@@ -379,34 +387,34 @@ for each_order in nodes_remainders:
 
 
 
-    # plot rolling average nx_ismags_algo
-    plt.text(3 - 1, ylims[each_order][1] + 0.05, "3%", fontsize = 12)
-    plt.text(97 - 2, ylims[each_order][1] + 0.05, "97%", fontsize = 12)
-    plt.vlines(3, ymin = ylims[each_order][0], ymax = ylims[each_order][1], color = "k", linestyle = "--", linewidth = 1.2)
-    plt.vlines(97, ymin = ylims[each_order][0], ymax = ylims[each_order][1], color = "k", linestyle = "--", linewidth = 1.2)
-    plt.plot(densities_remainders, rolling_average_times_by_order_gm_extender, linewidth = 1, marker = ".", markersize = 2.5, label = "gm_extender")
-    plt.plot(densities_remainders, rolling_average_times_by_order_gm_isomorphism, linewidth = 1, marker = ".", markersize = 2.5, label = "gm_isomorphism")
-    plt.plot(densities_remainders, rolling_average_times_by_order_nx_isomorphism, linewidth = 1, marker = ".", markersize = 2.5, label = "nx_isomorphism")
-    plt.errorbar(densities_remainders, rolling_average_times_by_order_nx_ismags_algo, linewidth = 1,
-                 yerr = stddev_times_by_order_nx_ismags_algo, elinewidth = 0.5,
-                 marker = ".", markersize = 2.5, label = "nx_ismags_algo")
+    # # plot rolling average nx_ismags_algo
+    # plt.text(3 - 1, ylims[each_order][1] + 0.05, "3%", fontsize = 12)
+    # plt.text(97 - 2, ylims[each_order][1] + 0.05, "97%", fontsize = 12)
+    # plt.vlines(3, ymin = ylims[each_order][0], ymax = ylims[each_order][1], color = "k", linestyle = "--", linewidth = 1.2)
+    # plt.vlines(97, ymin = ylims[each_order][0], ymax = ylims[each_order][1], color = "k", linestyle = "--", linewidth = 1.2)
+    # plt.plot(densities_remainders, rolling_average_times_by_order_gm_extender, linewidth = 1, marker = ".", markersize = 2.5, label = "gm_extender")
+    # plt.plot(densities_remainders, rolling_average_times_by_order_gm_isomorphism, linewidth = 1, marker = ".", markersize = 2.5, label = "gm_isomorphism")
+    # plt.plot(densities_remainders, rolling_average_times_by_order_nx_isomorphism, linewidth = 1, marker = ".", markersize = 2.5, label = "nx_isomorphism")
+    # plt.errorbar(densities_remainders, rolling_average_times_by_order_nx_ismags_algo, linewidth = 1,
+    #              yerr = stddev_times_by_order_nx_ismags_algo, elinewidth = 0.5,
+    #              marker = ".", markersize = 2.5, label = "nx_ismags_algo")
 
-    # legend
-    # plt.legend(loc = "upper left")
+    # # legend
+    # # plt.legend(loc = "upper left")
 
-    # figure attributes
-    plt.xlabel("Proportion of edges in ITS [%]", color = "w", labelpad = 10, size = 18)
-    plt.ylabel("Log of running time [ms]", color = "w", labelpad = 10, size = 18)
-    plt.xticks(fontsize = 12)
-    plt.yticks(fontsize = 12)
-    plt.ylim(ylims[each_order][0], ylims[each_order][1])
-    plt.grid(visible = True, axis = "both", color = "grey", linestyle = "--", linewidth = 0.4)
-    plt.tight_layout()
+    # # figure attributes
+    # plt.xlabel("Proportion of edges in ITS [%]", color = "w", labelpad = 10, size = 18)
+    # plt.ylabel("Log of running time [ms]", color = "w", labelpad = 10, size = 18)
+    # plt.xticks(fontsize = 12)
+    # plt.yticks(fontsize = 12)
+    # plt.ylim(ylims[each_order][0], ylims[each_order][1])
+    # plt.grid(visible = True, axis = "both", color = "grey", linestyle = "--", linewidth = 0.4)
+    # plt.tight_layout()
 
-    # save figure
-    file_name = "Rolling_Average_Times_Random_Graphs_" + str(each_order) + "_nodes_nx_ismags_algo.pdf"
-    plt.savefig(file_name)
-    plt.close()
+    # # save figure
+    # file_name = "Rolling_Average_Times_Random_Graphs_" + str(each_order) + "_nodes_nx_ismags_algo.pdf"
+    # plt.savefig(file_name)
+    # plt.close()
 
 
 
