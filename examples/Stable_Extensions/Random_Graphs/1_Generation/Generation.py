@@ -83,12 +83,14 @@ original_H = None
 randomized_G = None
 randomized_H = None
 randomized_anchor = []
+AAM = dict()
 
 
 # output -----------------------------------------------------------------------
 out_G = None
 out_H = None
 out_anchor = None
+out_AAM = dict()
 reactions_by_order = []
 reactions_with_fixed_density = []
 
@@ -278,6 +280,7 @@ def make_anchor_preserving_randomization(G, H):
     rand_H = None
     renamed_G = None
     renamed_H = None
+    the_names = []
     rand_anchor = []
     old_names_G = []
     old_names_H = []
@@ -285,6 +288,7 @@ def make_anchor_preserving_randomization(G, H):
     nodes_H_renamed = []
     edges_G_renamed = []
     edges_H_renamed = []
+    ground_AAM = dict()
     new_names_G = dict()
     new_names_H = dict()
 
@@ -295,6 +299,7 @@ def make_anchor_preserving_randomization(G, H):
     # rename vertices
     old_names_G = list(renamed_G.nodes())
     old_names_H = list(renamed_H.nodes())
+    the_names = deepcopy(old_names_G)
     for each_node in list(renamed_G.nodes()):
         new_name = random.choice(old_names_G)
         new_names_G[each_node] = "x_" + str(new_name)
@@ -305,6 +310,10 @@ def make_anchor_preserving_randomization(G, H):
         old_names_H.remove(new_name)
     nx.relabel_nodes(renamed_G, new_names_G, copy = False)
     nx.relabel_nodes(renamed_H, new_names_H, copy = False)
+
+    # get ground truth AAM
+    for each_node in the_names:
+        ground_AAM[new_names_G[each_node]] = new_names_H[each_node]
 
     # relabel anchor
     rand_anchor = []
@@ -330,7 +339,7 @@ def make_anchor_preserving_randomization(G, H):
     rand_H.add_edges_from(edges_H_renamed)
 
     # end of function
-    return(rand_G, rand_H, rand_anchor)
+    return(rand_G, rand_H, rand_anchor, ground_AAM)
 
 
 # analysis #####################################################################
@@ -408,13 +417,14 @@ for each_order in nodes_remainders:
 
                     # aleatorize node names and positions to prevent NetworkX VF2-isomorphism from using the construction-order for G and H,
                     # which should not be done in experiments with randomize data for the sake of a fair comparison
-                    randomized_G, randomized_H, randomized_anchor = make_anchor_preserving_randomization(original_G, original_H)
+                    randomized_G, randomized_H, randomized_anchor, AAM = make_anchor_preserving_randomization(original_G, original_H)
 
                     # store new reaction
                     out_G = deepcopy(randomized_G)
                     out_H = deepcopy(randomized_H)
                     out_anchor = deepcopy(randomized_anchor)
-                    reactions_with_fixed_density.append((out_G, out_H, out_anchor))
+                    out_AAM = deepcopy(AAM)
+                    reactions_with_fixed_density.append((out_G, out_H, out_anchor, out_AAM))
 
         # reinitialize variables
         reactions_by_order.append(reactions_with_fixed_density)

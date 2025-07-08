@@ -15,6 +15,7 @@
 
 
 # already in python ------------------------------------------------------------
+import sys
 import math
 import time
 import random
@@ -42,10 +43,16 @@ import gmapache as gm
 # parameters ###################################################################
 
 
+# control ----------------------------------------------------------------------
+print_maps = False
+run_ismags = False
+
+
 # input ------------------------------------------------------------------------
 in_G = None
 in_H = None
 in_anchor = None
+in_AAM = None
 
 
 # parameters of remainder graphs -----------------------------------------------
@@ -67,6 +74,11 @@ each_list_of_reactions_with_fixed_density = []
 
 
 # output -----------------------------------------------------------------------
+all_extensions = None
+extension_gm_ext = None
+extension_gm_iso = None
+extension_nx_iso = None
+extension_ismags = None
 out_time_gm_extender = 0
 out_time_gm_isomorphism = 0
 out_time_nx_isomorphism = 0
@@ -100,6 +112,7 @@ def inteligent_labeling_isomorphism(G, H, anchor, algorithm):
     rc_H = nx.Graph()
     remainder_G = nx.Graph()
     remainder_H = nx.Graph()
+    GM = None
     inteligent_node_match = None
     inteligent_edge_match = None
 
@@ -142,20 +155,151 @@ def inteligent_labeling_isomorphism(G, H, anchor, algorithm):
     # run specified algorithm
     if(algorithm == "gm_iso"):
         isomorphisms, are_isomorphic = gm.search_isomorphisms(remainder_G, remainder_H, node_labels = True, edge_labels = True, all_isomorphisms = False)
+
     if(algorithm == "nx_iso"):
         empty_dict = dict()
         inteligent_node_match = generic_node_match("inteligent_label", (0, empty_dict), eq)
         inteligent_edge_match = generic_edge_match("bond_type", "b0", eq)
-        are_isomorphic = nx.is_isomorphic(remainder_G, remainder_H, node_match = inteligent_node_match, edge_match = inteligent_edge_match)
+        GM = isomorphism.GraphMatcher(remainder_G, remainder_H, node_match = inteligent_node_match, edge_match = inteligent_edge_match)
+        iter_iso = GM.isomorphisms_iter()
+        iter_iso_first =  next(iter_iso)
+        isomorphisms = [iter_iso_first]
+
     if(algorithm == "ismags"):
         empty_dict = dict()
         inteligent_node_match = generic_node_match("inteligent_label", (0, empty_dict), eq)
         inteligent_edge_match = generic_edge_match("bond_type", "b0", eq)
         ismags = nx.isomorphism.ISMAGS(remainder_G, remainder_H, node_match = inteligent_node_match, edge_match = inteligent_edge_match)
-        are_isomorphic = ismags.is_isomorphic(symmetry = True)
+        iter_iso = ismags.isomorphisms_iter(symmetry = True)
+        iter_iso_first =  next(iter_iso)
+        isomorphisms = [iter_iso_first]
 
     # end of function
     return(isomorphisms, are_isomorphic)
+
+
+# compare ITS graphs -----------------------------------------------------------
+def compare_ITS_graphs(mapped_reactions):
+
+    # local variables
+    theClass = 0
+    lastClass = 0
+    someClass = 0
+    node_Attr_G = ""
+    node_Attr_H = ""
+    edgesG = []
+    edgesH = []
+    classes = []
+    edgesITS = []
+    classified = []
+    someTempITS = []
+    nodeLabelNames = []
+    nodeLabelDefault = []
+    nodeLabelOperator = []
+    typesDict = dict()
+    foundEquivalent = False
+    nodeMatch = None
+    edgeMatch = None
+    someG = None
+    someH = None
+    someITS = None
+
+    # obtain ITSs
+    for (someG, someH, someMap) in mapped_reactions:
+
+        # get inverse map
+        invMap = {y:x for (x, y) in list(someMap.items())}
+        # creat null from copy of G in order to preserve attributes
+        typesDict = dict()
+        someITS = nx.Graph()
+        someITS.add_nodes_from(list(someG.nodes()))
+
+        # add node labels to ITS graph
+        for v in list(someITS.nodes()):
+            # get attributes in G or default if missing
+            node_Attr_G = someG.nodes[v]["atom_type"]
+            # get attributes in H or default if missing
+            node_Attr_H = someH.nodes[someMap[v]]["atom_type"]
+            # make new label to be preserved
+            typesDict[v] = (node_Attr_G, node_Attr_H)
+        # set node labels
+        nx.set_node_attributes(someITS, typesDict, "atom_type_ITS")
+        # copy original graphs
+        edgesG = list(someG.edges())
+        edgesH = list(someH.edges())
+
+        # add edges from G
+        for (u, v) in edgesG:
+            # check if not already an edge of ITS
+            edgesITS = list(someITS.edges())
+            if((not (u, v) in edgesITS) and (not (v, u) in edgesITS)):
+                # check if also an edge in H
+                if(((someMap[u], someMap[v]) in edgesH) or ((someMap[v], someMap[u]) in edgesH)):
+                    # add edges
+                    if((someMap[u], someMap[v]) in edgesH):
+                        someLabel = (someG[u][v]["bond_type"], someH[someMap[u]][someMap[v]]["bond_type"])
+                        someITS.add_edge(u, v, bond_type_ITS = someLabel)
+                    if((someMap[v], someMap[u]) in edgesH):
+                        someLabel = (someG[u][v]["bond_type"], someH[someMap[v]][someMap[u]]["bond_type"])
+                        someITS.add_edge(u, v, bond_type_ITS = someLabel)
+                else:
+                    # if not then add "*" to the H-part of the label
+                    someLabel = (someG[u][v]["bond_type"], "*")
+                    someITS.add_edge(u, v, bond_type_ITS = someLabel)
+
+        # add edges from H
+        for (u, v) in edgesH:
+            # check if not already an edge of ITS
+            edgesITS = list(someITS.edges())
+            if((not (invMap[u], invMap[v]) in edgesITS) and (not (invMap[v], invMap[u]) in edgesITS)):
+                # check if also an edge in G
+                if(((invMap[u], invMap[v]) in edgesG) or ((invMap[v], invMap[u]) in edgesG)):
+                    # add edges
+                    if((invMap[u], invMap[v]) in edgesG):
+                        someLabel = (someG[invMap[u]][invMap[v]]["bond_type"], someH[u][v]["bond_type"])
+                        someITS.add_edge(invMap[u], invMap[v], bond_type_ITS = someLabel)
+                    if((invMap[v], invMap[u]) in edgesG):
+                        someLabel = (someG[invMap[v]][invMap[u]]["bond_type"], someH[u][v]["bond_type"])
+                        someITS.add_edge(invMap[u], invMap[v], bond_type_ITS = someLabel)
+                else:
+                    # if not then add "*" to the G-part of the label
+                    someLabel = ("*", someH[u][v]["bond_type"])
+                    someITS.add_edge(invMap[u], invMap[v], bond_type_ITS = someLabel)
+        # save auxiliary graph
+        someTempITS.append((someG, someH, someMap, someITS))
+
+    # compare ITSs
+    nodeMatch = generic_node_match("atom_type_ITS", "a0", eq)
+    edgeMatch = generic_edge_match("bond_type_ITS", "b0", eq)
+
+
+    # isomorphism of ITS
+    for (someG, someH, someMap, someITS) in someTempITS:
+
+        # restart control variables
+        foundEquivalent = False
+
+        # compare with classified ITSs (if any yet)
+        for (someClass, someGc, someHc, someMapc, someITSc) in classified:
+            if(nx.is_isomorphic(someITS, someITSc, node_match = nodeMatch, edge_match = edgeMatch)):
+                foundEquivalent = True
+                theClass = someClass
+                break
+
+        # if not equivalent make new mapping class
+        if(not foundEquivalent):
+            theClass = lastClass + 1
+            lastClass = theClass
+
+        # save results
+        classified.append((theClass, someG, someH, someMap, someITS))
+        classes = list(set(classes + [theClass]))
+
+    # end of function
+    if(len(classes) == 1):
+        return(True)
+    else:
+        return(False)
 
 
 # analysis #####################################################################
@@ -200,15 +344,22 @@ for each_order in nodes_remainders:
             times_by_fixed_density = []
 
             # get each reaction of a given density
-            for (in_G, in_H, in_anchor) in each_list_of_reactions_with_fixed_density:
+            for (in_G, in_H, in_anchor, in_AAM) in each_list_of_reactions_with_fixed_density:
 
-                # update reaction counter
+                # update reaction counter and container
                 reaction_counter = reaction_counter + 1
+                mapped_reactions = []
 
                 # task message
                 print("- reaction number: " + str(reaction_counter)
                       + " - density: " + str(densities_remainders[density_counter])
                       + " - order: " + str(each_order))
+
+                # save ground truth AAM
+                print("|| saving ground truth AAM" + tail)
+                mapped_reactions.append((in_G, in_H, in_AAM))
+                if(print_maps):
+                    print(in_AAM)
 
                 # analysis and time with gm_extender
                 print("|| running gm_extender" + tail)
@@ -219,6 +370,10 @@ for each_order in nodes_remainders:
                                                                       all_extensions = False)
                 final_time = time.time()
                 out_time_gm_extender = final_time - initial_time
+                extension_gm_ext = dict(all_extensions[0])
+                mapped_reactions.append((in_G, in_H, extension_gm_ext))
+                if(print_maps):
+                    print(extension_gm_ext)
 
                 # analysis and time gm_isomorphism
                 print("|| running gm_isomorphism" + tail)
@@ -226,6 +381,10 @@ for each_order in nodes_remainders:
                 all_extensions, good_map = inteligent_labeling_isomorphism(in_G, in_H, in_anchor, "gm_iso")
                 final_time = time.time()
                 out_time_gm_isomorphism = final_time - initial_time
+                extension_gm_iso = dict(all_extensions[0])
+                mapped_reactions.append((in_G, in_H, extension_gm_iso))
+                if(print_maps):
+                    print(extension_gm_iso)
 
                 # analysis and time nx_isomorphism
                 print("|| running nx_isomorphism" + tail)
@@ -233,13 +392,39 @@ for each_order in nodes_remainders:
                 all_extensions, good_map = inteligent_labeling_isomorphism(in_G, in_H, in_anchor, "nx_iso")
                 final_time = time.time()
                 out_time_nx_isomorphism = final_time - initial_time
+                extension_nx_iso = all_extensions[0]
+                mapped_reactions.append((in_G, in_H, extension_nx_iso))
+                if(print_maps):
+                    print(extension_nx_iso)
 
                 # analysis and time nx_ismags
-                print("|| running nx_ismags" + tail)
-                initial_time = time.time()
-                all_extensions, good_map = inteligent_labeling_isomorphism(in_G, in_H, in_anchor, "ismags")
-                final_time = time.time()
-                out_time_nx_ismags_algo = final_time - initial_time
+                if(run_ismags):
+                    print("|| running nx_ismags" + tail)
+                    initial_time = time.time()
+                    all_extensions, good_map = inteligent_labeling_isomorphism(in_G, in_H, in_anchor, "ismags")
+                    final_time = time.time()
+                    out_time_nx_ismags_algo = final_time - initial_time
+                    extension_ismags = all_extensions[0]
+                    mapped_reactions.append((in_G, in_H, extension_ismags))
+                    if(print_maps):
+                        print(extension_ismags)
+                else:
+                    out_time_nx_ismags_algo = 0
+
+                # compare stable extensions
+                if(run_ismags):
+                    # check if maps are identical and check ITS if not
+                    if((not extension_gm_ext == extension_gm_iso) or (not extension_gm_iso == extension_nx_iso) or (not extension_nx_iso == extension_gm_ext) or
+                       (not extension_gm_ext == extension_ismags) or (not extension_gm_iso == extension_ismags) or (not extension_nx_iso == extension_ismags)):
+                        # build and compare ITS graphs
+                        if(not compare_ITS_graphs(mapped_reactions)):
+                            sys.exit("--- INCONSISTENT ---")
+                else:
+                    # check if maps are identical and check ITS if not
+                    if((not extension_gm_ext == extension_gm_iso) or (not extension_gm_iso == extension_nx_iso) or (not extension_nx_iso == extension_gm_ext)):
+                        # build and compare ITS graphs
+                        if(not compare_ITS_graphs(mapped_reactions)):
+                            sys.exit("--- INCONSISTENT ---")
 
                 # save times of reaction
                 times_by_fixed_density.append((out_time_gm_extender, out_time_gm_isomorphism, out_time_nx_isomorphism, out_time_nx_ismags_algo))
