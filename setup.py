@@ -70,7 +70,10 @@ extensions = [
 setup(
     name = "gmapache",
     ext_modules = cythonize(extensions),
-    packages = find_packages(exclude = ("examples", "examples.*",))
+    packages = find_packages(exclude = ("examples",
+                                        "examples*",
+                                        "standalone",
+                                        "standalone*"))
 )
 
 ################################################################################

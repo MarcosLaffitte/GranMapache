@@ -339,11 +339,15 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     * gmapache.integerization.decode_graphs
     * gmapache.integerization.decode_match
     * gmapache.isomorphisms.search_isomorphisms_input_correctness
-    * gmapache.isomorphisms.search_isomorphisms_order_nodes_by_degree
     * gmapache.isomorphisms.search_isomorphisms_label_consistency
+    * gmapache.isomorphisms.search_isomorphisms_test_degree_induced_anchor
+    * gmapache.isomorphisms.search_isomorphisms_order_nodes_by_concentric_reachability
+    * gmapache.isomorphisms.search_isomorphisms_order_nodes_by_degree
     * gmapache.isomorphisms.search_isomorphisms_order_neighbors
     * gmapache.isomorphisms.search_isomorphisms_undirected
     * gmapache.isomorphisms.search_isomorphisms_directed
+    * gmapache.isomorphisms.search_isomorphisms_prepare_feasible_initial_state_directed
+    * gmapache.isomorphisms.search_isomorphisms_prepare_feasible_initial_state_undirected
     """
 
     # output holders
@@ -867,11 +871,11 @@ cdef cpp_bool search_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edg
 
     # check that input graphs have the same number of nodes
     if(not nx_G.order() == nx_H.order()):
-        return(False)
+        raise(ValueError("gmapache: the given graphs do not have the same number of nodes."))
 
     # check that input graphs have the same number of edges
     if(not nx_G.size() == nx_H.size()):
-        return(False)
+        raise(ValueError("gmapache: the given graphs do not have the same number of edges."))
 
     # end of function
     return(True)
