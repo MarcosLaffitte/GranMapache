@@ -333,11 +333,12 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
     same number of nodes and egdes of each label) and (2) if the provided partial map is
     a good atom map, i.e., if it already covers all the changing edges. Such extension,
     if it exists, is unique up to equivalence of atom maps, and by default the function
-    will stop when finding it. This can be changed with the boolean parameter all_extensions,
-    but it should be noted that such search can be more time consuming depending on the
-    number of automotphisms of the input graphs. Such an extension, if it exists, is an
-    isomorphism between the "reminder graphs", i.e., the graphs obtained from G and H
-    when removing the reaction edges.
+    will stop when finding it. This can be changed with the boolean parameter
+    all_extensions, but it should be noted that such search can be more time consuming
+    depending on the number of automotphisms of the input graphs. Such an extension, if
+    it exists, is an isomorphism between the "reminder graphs", i.e., the graphs obtained
+    from G and H when removing the reaction edges. If no stable extension exists, then the
+    function returns an empty list and a boolean variable "found_extensions" set to false.
 
     > input:
     * nx_G - first networkx (di)graph being matched.
@@ -517,53 +518,66 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
 
     # prepare and order nodes in concentric sets around the anchor
     if(params.directed_graphs):
+
         # prepare information for ordering of G
         temp_nodes = list(encoded_graphs[0].nodes())
         undirected_copy = deepcopy(encoded_graphs[0])
         undirected_copy = undirected_copy.to_undirected()
         directed_G.connectivity_neighbors = {node:set(undirected_copy.neighbors(node)) for node in temp_nodes}
         directed_G.nodes = {node:encoded_graphs[0].nodes[node]["GMNL"] for node in temp_nodes}
+
         # out degrees for ordering
         node_degrees = {node:encoded_graphs[0].out_degree(node) for node in temp_nodes}
+
         # order for directed G
         reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_G,
                                                                      temp_nodes,
                                                                      directed_G.connectivity_neighbors,
                                                                      node_degrees,
                                                                      all_nodes_G)
+
         # prepare information for ordering of H
         temp_nodes = list(encoded_graphs[1].nodes())
         undirected_copy = deepcopy(encoded_graphs[1])
         undirected_copy = undirected_copy.to_undirected()
         directed_H.connectivity_neighbors = {node:set(undirected_copy.neighbors(node)) for node in temp_nodes}
         directed_H.nodes = {node:encoded_graphs[1].nodes[node]["GMNL"] for node in temp_nodes}
+
         # out degrees for ordering
         node_degrees = {node:encoded_graphs[1].out_degree(node) for node in temp_nodes}
+
         # order for directed H
         reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_H,
                                                                      temp_nodes,
                                                                      directed_H.connectivity_neighbors,
                                                                      node_degrees,
                                                                      all_nodes_H)
+
     else:
+
         # prepare information for ordering of G
         temp_nodes = list(encoded_graphs[0].nodes())
         undirected_G.neighbors = {node:set(encoded_graphs[0].neighbors(node)) for node in temp_nodes}
         undirected_G.nodes = {node:encoded_graphs[0].nodes[node]["GMNL"] for node in temp_nodes}
+
         # degrees for ordering
         node_degrees = {node:encoded_graphs[0].degree(node) for node in temp_nodes}
+
         # order for undirected G
         reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_G,
                                                                      temp_nodes,
                                                                      undirected_G.neighbors,
                                                                      node_degrees,
                                                                      all_nodes_G)
+
         # prepare information for ordering of H
         temp_nodes = list(encoded_graphs[1].nodes())
         undirected_H.neighbors = {node:set(encoded_graphs[1].neighbors(node)) for node in temp_nodes}
         undirected_H.nodes = {node:encoded_graphs[1].nodes[node]["GMNL"] for node in temp_nodes}
+
         # degrees for ordering
         node_degrees = {node:encoded_graphs[1].degree(node) for node in temp_nodes}
+
         # order for undirected H
         reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_H,
                                                                      temp_nodes,
@@ -573,6 +587,7 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
 
     # prepare total orders
     if(params.directed_graphs):
+
         # nodes of directed G
         directed_G.loops = list(nx.nodes_with_selfloops(encoded_graphs[0]))
         counter = 0
@@ -586,6 +601,7 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
             params.inverse_total_order_G[counter] = node
             initial_state_directed.unmatched_G.insert(node)
             initial_state_directed.unmatched_G_ordered.push_back(node)
+
         # nodes of directed H
         directed_H.loops = list(nx.nodes_with_selfloops(encoded_graphs[1]))
         counter = 0
@@ -599,7 +615,9 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
             params.inverse_total_order_H[counter] = node
             initial_state_directed.unmatched_H.insert(node)
             initial_state_directed.unmatched_H_ordered.push_back(node)
+
     else:
+
         # nodes of undirected G
         undirected_G.loops = list(nx.nodes_with_selfloops(encoded_graphs[0]))
         counter = 0
@@ -610,6 +628,7 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
             params.inverse_total_order_G[counter] = node
             initial_state_undirected.unmatched_G.insert(node)
             initial_state_undirected.unmatched_G_ordered.push_back(node)
+
         # nodes of undirected H
         undirected_H.loops = list(nx.nodes_with_selfloops(encoded_graphs[1]))
         counter = 0
@@ -624,6 +643,7 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
     # prepare edges
     if(params.edge_labels):
         if(params.directed_graphs):
+
             # edges for G
             all_edges_G = [(node1, node2, info["GMEL"]) for (node1, node2, info) in encoded_graphs[0].edges(data = True)]
             for each_vector in all_edges_G:
@@ -634,6 +654,7 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
                 # save labeled edge
                 temp_str = to_string(each_vector[0]) + comma + to_string(each_vector[1])
                 directed_G.edges[temp_str] = each_vector[2]
+
             # edges for H
             all_edges_H = [(node1, node2, info["GMEL"]) for (node1, node2, info) in encoded_graphs[1].edges(data = True)]
             for each_vector in all_edges_H:
@@ -644,7 +665,9 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
                 # save labeled edge
                 temp_str = to_string(each_vector[0]) + comma + to_string(each_vector[1])
                 directed_H.edges[temp_str] = each_vector[2]
+
         else:
+
             # edges for G
             all_edges_G = [(node1, node2, info["GMEL"]) for (node1, node2, info) in encoded_graphs[0].edges(data = True)]
             for each_vector in all_edges_G:
@@ -652,6 +675,7 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
                 temp_pair.first = each_vector[0]
                 temp_pair.second = each_vector[1]
                 undirected_G.raw_edges.push_back(temp_pair)
+
                 # save labeled edge
                 if(each_vector[0] == each_vector[1]):
                     temp_str = to_string(each_vector[0]) + comma + to_string(each_vector[0])
@@ -662,6 +686,7 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
                     undirected_G.edges[temp_str] = each_vector[2]
                     temp_str = to_string(each_vector[1]) + comma + to_string(each_vector[0])
                     undirected_G.edges[temp_str] = each_vector[2]
+
             # edges for H
             all_edges_H = [(node1, node2, info["GMEL"]) for (node1, node2, info) in encoded_graphs[1].edges(data = True)]
             for each_vector in all_edges_H:
@@ -669,6 +694,7 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
                 temp_pair.first = each_vector[0]
                 temp_pair.second = each_vector[1]
                 undirected_H.raw_edges.push_back(temp_pair)
+
                 # save labeled edge
                 if(each_vector[0] == each_vector[1]):
                     temp_str = to_string(each_vector[0]) + comma + to_string(each_vector[0])
@@ -701,20 +727,25 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
 
     # prepare ordered neighbors
     if(params.directed_graphs):
+
         # order nodes of G
         partial_maps_order_neighbors(all_nodes_G, directed_G.in_neighbors, directed_G.in_neighbors_ordered,
                                      params.total_order_G, params.inverse_total_order_G)
         partial_maps_order_neighbors(all_nodes_G, directed_G.out_neighbors, directed_G.out_neighbors_ordered,
                                      params.total_order_G, params.inverse_total_order_G)
+
         # order nodes of H
         partial_maps_order_neighbors(all_nodes_H, directed_H.in_neighbors, directed_H.in_neighbors_ordered,
                                      params.total_order_H, params.inverse_total_order_H)
         partial_maps_order_neighbors(all_nodes_H, directed_H.out_neighbors, directed_H.out_neighbors_ordered,
                                      params.total_order_H, params.inverse_total_order_H)
+
     else:
+
         # order nodes of G
         partial_maps_order_neighbors(all_nodes_G, undirected_G.neighbors, undirected_G.neighbors_ordered,
                                      params.total_order_G, params.inverse_total_order_G)
+
         # order nodes of H
         partial_maps_order_neighbors(all_nodes_H, undirected_H.neighbors, undirected_H.neighbors_ordered,
                                      params.total_order_H, params.inverse_total_order_H)
@@ -782,7 +813,7 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
     function will equivalently get a maximum-common-induced-connected-anchored-subgraph. If both
     graphs have the same order, the function first will search for a complete-induced-extension and
     only if no such extension is found it will continue with the search for the maximum common induced
-    anchored subgraphs, thus this function can be more time consuming that simply running the search
+    anchored subgraphs, thus this function can be more time consuming than simply running the search
     for the stable extension. Moreover, if both graphs have the same order and a complete
     induced extension exists between them, this function will return such extension independently of
     the parameter "reachability" and regardless if the complete extension induces a connected ITS.
@@ -930,32 +961,18 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
     encoded_graphs, encoded_node_names, encoded_node_labels, encoded_edge_labels = encode_graphs([nx_G, nx_H])
 
     # determine aliases for the smaller and bigger graph
-    if(params.directed_graphs):
-        if(order_G <= order_H):
-            # set twisted flag
-            twisted = False
-            # take graphs preserving input order
-            nx_smaller = encoded_graphs[0]
-            nx_bigger = encoded_graphs[1]
-        else:
-            # set twisted flag
-            twisted = True
-            # take graphs inverting input order
-            nx_smaller = encoded_graphs[1]
-            nx_bigger = encoded_graphs[0]
+    if(order_G <= order_H):
+        # set twisted flag
+        twisted = False
+        # take graphs preserving input order
+        nx_smaller = encoded_graphs[0]
+        nx_bigger = encoded_graphs[1]
     else:
-        if(order_G <= order_H):
-            # set twisted flag
-            twisted = False
-            # take graphs preserving input order
-            nx_smaller = encoded_graphs[0]
-            nx_bigger = encoded_graphs[1]
-        else:
-            # set twisted flag
-            twisted = True
-            # take graphs inverting input order
-            nx_smaller = encoded_graphs[1]
-            nx_bigger = encoded_graphs[0]
+        # set twisted flag
+        twisted = True
+        # take graphs inverting input order
+        nx_smaller = encoded_graphs[1]
+        nx_bigger = encoded_graphs[0]
 
     # get order of graphs under aliases
     if(twisted):
@@ -970,15 +987,19 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
     # test for cover of degree sequences between original graphs. If the cover doesnt hold then
     # we test for the cover in each candidate subgraph produced by the iterative trimming
     if(params.directed_graphs):
+
         # get in-degrees
         in_deg_smaller = [deg for (node_obj, deg) in list(nx_smaller.in_degree())]
         in_deg_bigger = [deg for (node_obj, deg) in list(nx_bigger.in_degree())]
+
         # sort in-degrees
         sort(in_deg_smaller.begin(), in_deg_smaller.end())
         sort(in_deg_bigger.begin(), in_deg_bigger.end())
+
         # save in-degree sequence of bigger for future references
         directed_smaller.in_degrees = in_deg_smaller
         directed_bigger.in_degrees = in_deg_bigger
+
         # test if in-degrees of bigger cover in-degrees of smaller
         i = 0
         offset = 0
@@ -995,18 +1016,23 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
                         break
                 # get next offset
                 offset = i + 1
+
         # test for in-cover
         if(covered < order_smaller):
             params.test_unbalanced_in_degree_cover = True
+
         # get out-degrees
         out_deg_smaller = [deg for (node_obj, deg) in list(nx_smaller.out_degree())]
         out_deg_bigger = [deg for (node_obj, deg) in list(nx_bigger.out_degree())]
+
         # sort out-degrees
         sort(out_deg_smaller.begin(), out_deg_smaller.end())
         sort(out_deg_bigger.begin(), out_deg_bigger.end())
+
         # save out-degree sequence of bigger for future references
         directed_smaller.out_degrees = out_deg_smaller
         directed_bigger.out_degrees = out_deg_bigger
+
         # test if out-degrees of bigger cover out-degrees of smaller
         i = 0
         offset = 0
@@ -1023,19 +1049,25 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
                         break
                 # get next offset
                 offset = i + 1
+
         # test for out-cover
         if(covered < order_smaller):
             params.test_unbalanced_out_degree_cover = True
+
     else:
+
         # get degrees
         deg_smaller = [deg for (node_obj, deg) in list(nx_smaller.degree())]
         deg_bigger = [deg for (node_obj, deg) in list(nx_bigger.degree())]
+
         # sort degrees
         sort(deg_smaller.begin(), deg_smaller.end())
         sort(deg_bigger.begin(), deg_bigger.end())
+
         # save degree sequence of bigger for future references
         undirected_smaller.degrees = deg_smaller
         undirected_bigger.degrees = deg_bigger
+
         # test if degrees of bigger cover degrees of smaller
         i = 0
         offset = 0
@@ -1052,6 +1084,7 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
                         break
                 # get next offset
                 offset = i + 1
+
         # test for cover of all degrees
         if(covered < order_smaller):
             params.test_unbalanced_degree_cover = True
@@ -1082,6 +1115,7 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
     # NOTE: inside the intensive routines and in associated search-parameters, the
     # domain graph is called G, while the codomain graph is always called H.
     if(params.directed_graphs):
+
         # prepare nodes and neighbors of smaller directed graph
         directed_smaller.loops = list(nx.nodes_with_selfloops(nx_smaller))
         temp_nodes = list(nx_smaller.nodes())
@@ -1091,12 +1125,14 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
         directed_smaller.connectivity_neighbors = {node:set(undirected_copy.neighbors(node)) for node in temp_nodes}
         directed_smaller.in_neighbors = {node:set(nx_smaller.predecessors(node)) for node in temp_nodes}
         directed_smaller.out_neighbors = {node:set(nx_smaller.neighbors(node)) for node in temp_nodes}
+
         # save removable nodes from smaller graph (nodes outside the anchor)
         counter = 0
         for node in temp_nodes:
             if(params.anchor_G.find(node) == params.anchor_G.end()):
                 all_removable_nodes[counter] = node
                 counter = counter + 1
+
         # prepare information of bigger directed graph
         directed_bigger.loops = list(nx.nodes_with_selfloops(nx_bigger))
         temp_nodes = list(nx_bigger.nodes())
@@ -1106,6 +1142,7 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
         directed_bigger.connectivity_neighbors = {node:set(undirected_copy.neighbors(node)) for node in temp_nodes}
         directed_bigger.in_neighbors = {node:set(nx_bigger.predecessors(node)) for node in temp_nodes}
         directed_bigger.out_neighbors = {node:set(nx_bigger.neighbors(node)) for node in temp_nodes}
+
         # out degrees for ordering
         node_degrees = {node:nx_bigger.out_degree(node) for node in temp_nodes}
         reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_H,
@@ -1113,23 +1150,28 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
                                                                      directed_bigger.connectivity_neighbors,
                                                                      node_degrees,
                                                                      all_nodes_bigger)
+
     else:
+
         # prepare nodes and neighbors of smaller undirected graph
         undirected_smaller.loops = list(nx.nodes_with_selfloops(nx_smaller))
         temp_nodes = list(nx_smaller.nodes())
         undirected_smaller.nodes = {node:nx_smaller.nodes[node]["GMNL"] for node in temp_nodes}
         undirected_smaller.neighbors = {node:set(nx_smaller.neighbors(node)) for node in temp_nodes}
+
         # save removable nodes from smaller graph (nodes outside the anchor)
         counter = 0
         for node in temp_nodes:
             if(params.anchor_G.find(node) == params.anchor_G.end()):
                 all_removable_nodes[counter] = node
                 counter = counter + 1
+
         # prepare information of bigger undirected graph
         undirected_bigger.loops = list(nx.nodes_with_selfloops(nx_bigger))
         temp_nodes = list(nx_bigger.nodes())
         undirected_bigger.nodes = {node:nx_bigger.nodes[node]["GMNL"] for node in temp_nodes}
         undirected_bigger.neighbors = {node:set(nx_bigger.neighbors(node)) for node in temp_nodes}
+
         # degrees for ordering
         node_degrees = {node:nx_bigger.degree(node) for node in temp_nodes}
         reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_H,
@@ -1161,6 +1203,7 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
     # prepare edges
     if(params.edge_labels):
         if(params.directed_graphs):
+
             # edges for smaller directed graph
             all_edges_smaller = [(node1, node2, info["GMEL"]) for (node1, node2, info) in nx_smaller.edges(data = True)]
             for each_vector in all_edges_smaller:
@@ -1171,6 +1214,7 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
                 # save labeled edge
                 temp_str = to_string(each_vector[0]) + comma + to_string(each_vector[1])
                 directed_smaller.edges[temp_str] = each_vector[2]
+
             # edges for bigger directed graph
             all_edges_bigger = [(node1, node2, info["GMEL"]) for (node1, node2, info) in nx_bigger.edges(data = True)]
             for each_vector in all_edges_bigger:
@@ -1181,7 +1225,9 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
                 # save labeled edge
                 temp_str = to_string(each_vector[0]) + comma + to_string(each_vector[1])
                 directed_bigger.edges[temp_str] = each_vector[2]
+
         else:
+
             # edges for smaller undirected graph
             all_edges_smaller = [(node1, node2, info["GMEL"]) for (node1, node2, info) in nx_smaller.edges(data = True)]
             for each_vector in all_edges_smaller:
@@ -1199,6 +1245,7 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
                     undirected_smaller.edges[temp_str] = each_vector[2]
                     temp_str = to_string(each_vector[1]) + comma + to_string(each_vector[0])
                     undirected_smaller.edges[temp_str] = each_vector[2]
+
             # edges for bigger undirected graph
             all_edges_bigger = [(node1, node2, info["GMEL"]) for (node1, node2, info) in nx_bigger.edges(data = True)]
             for each_vector in all_edges_bigger:
@@ -1300,36 +1347,46 @@ cdef void partial_maps_iterative_trimming(cpp_unordered_map[int, int] & all_remo
     total_removable = <int>(all_removable_nodes.size())
 
     # test "removal" of empty set (only for graphs with different order)
-    if(undirected_smaller.nodes.size() < undirected_bigger.nodes.size()):
-        # prepare empty test subset
-        test_subset.clear()
-        # test smaller graph as induced subgraph of bigger
-        if(params.directed_graphs):
+    if(params.directed_graphs):
+
+        if(directed_smaller.nodes.size() < directed_bigger.nodes.size()):
+            # prepare empty test subset
+            test_subset.clear()
+            # test smaller graph as induced subgraph of bigger
             trimm_and_test_subgraph_isomorphism_directed(test_subset,
                                                          all_removable_nodes,
                                                          encoded_extensions,
                                                          params,
                                                          directed_bigger,
                                                          directed_smaller)
-        else:
+
+    else:
+
+        if(undirected_smaller.nodes.size() < undirected_bigger.nodes.size()):
+            # prepare empty test subset
+            test_subset.clear()
+            # test smaller graph as induced subgraph of bigger
             trimm_and_test_subgraph_isomorphism_undirected(test_subset,
                                                            all_removable_nodes,
                                                            encoded_extensions,
                                                            params,
                                                            undirected_bigger,
                                                            undirected_smaller)
-        # finish if extensions were found; next trimmings produce smaller graphs
-        if(not encoded_extensions.empty()):
-            return
+
+    # finish if extensions were found; next trimmings produce only smaller graphs
+    if(not encoded_extensions.empty()):
+        return
 
     # test removing non-empty sets only if there are at least 2 removable nodes
     if(total_removable >= 2):
 
-        # test removal of singleton sets
+        # case 1: test removal of singleton sets
         for i in range(total_removable):
-            # créate singleton
+
+            # create singleton
             test_subset.clear()
             test_subset.push_back(i)
+
             # trimm smaller graph and test induced subgraph isomorphism
             if(params.directed_graphs):
                 trimm_and_test_subgraph_isomorphism_directed(test_subset,
@@ -1345,12 +1402,15 @@ cdef void partial_maps_iterative_trimming(cpp_unordered_map[int, int] & all_remo
                                                                params,
                                                                undirected_bigger,
                                                                undirected_smaller)
+
             # finish if one extension was found and no more are required
             if(not encoded_extensions.empty()):
                 if(not params.all_extensions):
                     return
+
             # save singleton
             old_subsets.push_back(test_subset)
+
         # finish if extensions were found; next trimmings produce smaller graphs
         if(not encoded_extensions.empty()):
             return
@@ -1359,16 +1419,20 @@ cdef void partial_maps_iterative_trimming(cpp_unordered_map[int, int] & all_remo
         # N-1 for N removable nodes, since removing the N nodes can only produce
         # the trivial extension, i.e., return the input anchor itself
         for k in range(2, total_removable):
+
             # clear new subsets holder
             new_subsets.clear()
+
             # generate new subsets with one more element
             for each_subset in old_subsets:
                 last_added = each_subset.back()
                 if(last_added < total_removable):
                     for new_index in range(last_added + 1, total_removable):
+
                         # create subset
                         test_subset = each_subset
                         test_subset.push_back(new_index)
+
                         # trimm smaller graph and test induced subgraph isomorphism
                         if(params.directed_graphs):
                             trimm_and_test_subgraph_isomorphism_directed(test_subset,
@@ -1384,15 +1448,19 @@ cdef void partial_maps_iterative_trimming(cpp_unordered_map[int, int] & all_remo
                                                                            params,
                                                                            undirected_bigger,
                                                                            undirected_smaller)
+
                         # finish if one extension was found and no more are required
                         if(not encoded_extensions.empty()):
                             if(not params.all_extensions):
                                 return
+
                         # save subset
                         new_subsets.push_back(test_subset)
+
             # update subsets holders
             old_subsets.clear()
             old_subsets = new_subsets
+
             # finish if extensions were found; next trimmings produce smaller graphs
             if(not encoded_extensions.empty()):
                 return
