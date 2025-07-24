@@ -1349,29 +1349,37 @@ cdef void partial_maps_iterative_trimming(cpp_unordered_map[int, int] & all_remo
     # test "removal" of empty set (only for graphs with different order)
     if(params.directed_graphs):
 
+        # run test only if different sizes and if degree cover already holds
         if(directed_smaller.nodes.size() < directed_bigger.nodes.size()):
-            # prepare empty test subset
-            test_subset.clear()
-            # test smaller graph as induced subgraph of bigger
-            trimm_and_test_subgraph_isomorphism_directed(test_subset,
-                                                         all_removable_nodes,
-                                                         encoded_extensions,
-                                                         params,
-                                                         directed_bigger,
-                                                         directed_smaller)
+            if((not params.test_unbalanced_in_degree_cover) and (not params.test_unbalanced_out_degree_cover)):
+
+                # prepare empty test subset
+                test_subset.clear()
+
+                # test smaller graph as induced subgraph of bigger
+                trimm_and_test_subgraph_isomorphism_directed(test_subset,
+                                                             all_removable_nodes,
+                                                             encoded_extensions,
+                                                             params,
+                                                             directed_bigger,
+                                                             directed_smaller)
 
     else:
 
+        # run test only if different sizes and if degree cover already holds
         if(undirected_smaller.nodes.size() < undirected_bigger.nodes.size()):
-            # prepare empty test subset
-            test_subset.clear()
-            # test smaller graph as induced subgraph of bigger
-            trimm_and_test_subgraph_isomorphism_undirected(test_subset,
-                                                           all_removable_nodes,
-                                                           encoded_extensions,
-                                                           params,
-                                                           undirected_bigger,
-                                                           undirected_smaller)
+            if(not params.test_unbalanced_degree_cover):
+
+                # prepare empty test subset
+                test_subset.clear()
+
+                # test smaller graph as induced subgraph of bigger
+                trimm_and_test_subgraph_isomorphism_undirected(test_subset,
+                                                               all_removable_nodes,
+                                                               encoded_extensions,
+                                                               params,
+                                                               undirected_bigger,
+                                                               undirected_smaller)
 
     # finish if extensions were found; next trimmings produce only smaller graphs
     if(not encoded_extensions.empty()):
@@ -1541,11 +1549,14 @@ cdef void trimm_and_test_subgraph_isomorphism_undirected(cpp_vector[int] & test_
 
         # prepare edges nodes of trimmed graph
         for each_pair in undirected_smaller.raw_edges:
+
             # add edge only if its ends are not nodes to be removed
             if(nodes_to_be_removed.find(each_pair.first) == nodes_to_be_removed.end()):
                 if(nodes_to_be_removed.find(each_pair.second) == nodes_to_be_removed.end()):
+
                     # add raw edge
                     trimmed_graph.raw_edges.push_back(each_pair)
+
                     # add label edge
                     if(each_pair.first == each_pair.second):
                         temp_str = to_string(each_pair.first) + comma + to_string(each_pair.second)
@@ -1558,16 +1569,21 @@ cdef void trimm_and_test_subgraph_isomorphism_undirected(cpp_vector[int] & test_
 
         # prepare neighborhoods for trimmed graph
         for each_neighborhood in undirected_smaller.neighbors:
+
             # add neighborhood only if node is not to be removed
             if(nodes_to_be_removed.find(each_neighborhood.first) == nodes_to_be_removed.end()):
+
                 # initialize new neighborhood
                 new_neighborhood.clear()
+
                 # add all nodes that are not to be removed
                 for node in each_neighborhood.second:
                     if(nodes_to_be_removed.find(node) == nodes_to_be_removed.end()):
                         new_neighborhood.insert(node)
+
                 # assign neighborhood
                 trimmed_graph.neighbors[each_neighborhood.first] = new_neighborhood
+
                 # save degree
                 deg = <int>(new_neighborhood.size())
                 deg_trimmed.push_back(deg)
@@ -1580,9 +1596,10 @@ cdef void trimm_and_test_subgraph_isomorphism_undirected(cpp_vector[int] & test_
 
     # test for degree cover if necessary
     if(params.test_unbalanced_degree_cover):
-        # sort degrees of trimmed graph if necessary
-        if(not test_subset.empty()):
-            sort(deg_trimmed.begin(), deg_trimmed.end())
+
+        # sort degrees of trimmed graph
+        sort(deg_trimmed.begin(), deg_trimmed.end())
+
         # test if degrees of bigger cover degrees of trimmed
         i = 0
         offset = 0
@@ -1599,6 +1616,7 @@ cdef void trimm_and_test_subgraph_isomorphism_undirected(cpp_vector[int] & test_
                         break
                 # get next offset
                 offset = i + 1
+
         # test for cover of all degrees
         if(covered < params.expected_order_int):
             return
@@ -1615,7 +1633,7 @@ cdef void trimm_and_test_subgraph_isomorphism_undirected(cpp_vector[int] & test_
         if(not reachable):
             return
 
-    # reinitialize parameters of node and edge labes
+    # initialize parameters of node and edge label
     params.node_labels = params.node_labels_backup
     params.edge_labels = params.edge_labels_backup
 
@@ -1636,7 +1654,7 @@ cdef void trimm_and_test_subgraph_isomorphism_undirected(cpp_vector[int] & test_
         if(not consistent_labels):
             return
 
-    # reinitialize information in search state for bigger graph
+    # initialize information in search state for bigger graph
     initial_state_undirected.unmatched_H = params.unmatched_H_backup
     initial_state_undirected.unmatched_H_ordered = params.unmatched_H_ordered_backup
 
@@ -1747,43 +1765,56 @@ cdef void trimm_and_test_subgraph_isomorphism_directed(cpp_vector[int] & test_su
 
         # prepare edges nodes of trimmed graph
         for each_pair in directed_smaller.raw_edges:
+
             # add edge only if its ends are not nodes to be removed
             if(nodes_to_be_removed.find(each_pair.first) == nodes_to_be_removed.end()):
                 if(nodes_to_be_removed.find(each_pair.second) == nodes_to_be_removed.end()):
+
                     # add raw edge
                     trimmed_graph.raw_edges.push_back(each_pair)
+
                     # add label edge
                     temp_str = to_string(each_pair.first) + comma + to_string(each_pair.second)
                     trimmed_graph.edges[temp_str] = directed_smaller.edges[temp_str]
 
         # prepare in-neighborhoods for trimmed graph
         for each_neighborhood in directed_smaller.in_neighbors:
+
             # add in-neighborhood only if node is not to be removed
             if(nodes_to_be_removed.find(each_neighborhood.first) == nodes_to_be_removed.end()):
+
                 # initialize new neighborhood
                 new_neighborhood.clear()
+
                 # add all nodes that are not to be removed
                 for node in each_neighborhood.second:
                     if(nodes_to_be_removed.find(node) == nodes_to_be_removed.end()):
                         new_neighborhood.insert(node)
+
                 # assign neighborhood
                 trimmed_graph.in_neighbors[each_neighborhood.first] = new_neighborhood
+
                 # save degree
                 deg = <int>(new_neighborhood.size())
                 in_deg_trimmed.push_back(deg)
 
         # prepare out-neighborhoods for trimmed graph
         for each_neighborhood in directed_smaller.out_neighbors:
+
             # add out-neighborhood only if node is not to be removed
             if(nodes_to_be_removed.find(each_neighborhood.first) == nodes_to_be_removed.end()):
+
                 # initialize new neighborhood
                 new_neighborhood.clear()
+
                 # add all nodes that are not to be removed
                 for node in each_neighborhood.second:
                     if(nodes_to_be_removed.find(node) == nodes_to_be_removed.end()):
                         new_neighborhood.insert(node)
+
                 # assign neighborhood
                 trimmed_graph.out_neighbors[each_neighborhood.first] = new_neighborhood
+
                 # save degree
                 deg = <int>(new_neighborhood.size())
                 out_deg_trimmed.push_back(deg)
@@ -1791,14 +1822,18 @@ cdef void trimm_and_test_subgraph_isomorphism_directed(cpp_vector[int] & test_su
 
         # prepare connectivity-neighborhoods for trimmed graph
         for each_neighborhood in directed_smaller.connectivity_neighbors:
+
             # add connectivity-neighbors only if node is not to be removed
             if(nodes_to_be_removed.find(each_neighborhood.first) == nodes_to_be_removed.end()):
+
                 # initialize new neighborhood
                 new_neighborhood.clear()
+
                 # add all nodes that are not to be removed
                 for node in each_neighborhood.second:
                     if(nodes_to_be_removed.find(node) == nodes_to_be_removed.end()):
                         new_neighborhood.insert(node)
+
                 # assign neighborhood
                 trimmed_graph.connectivity_neighbors[each_neighborhood.first] = new_neighborhood
 
@@ -1809,9 +1844,10 @@ cdef void trimm_and_test_subgraph_isomorphism_directed(cpp_vector[int] & test_su
 
     # test for in-degree cover if necessary
     if(params.test_unbalanced_in_degree_cover):
-        # sort in-degrees of trimmed graph if necessary
-        if(not test_subset.empty()):
-            sort(in_deg_trimmed.begin(), in_deg_trimmed.end())
+
+        # sort in-degrees of trimmed graph
+        sort(in_deg_trimmed.begin(), in_deg_trimmed.end())
+
         # test if in-degrees of bigger cover in-degrees of trimmed
         i = 0
         offset = 0
@@ -1828,15 +1864,17 @@ cdef void trimm_and_test_subgraph_isomorphism_directed(cpp_vector[int] & test_su
                         break
                 # get next offset
                 offset = i + 1
+
         # test for cover of all degrees
         if(covered < params.expected_order_int):
             return
 
     # test for out-degree cover if necessary
     if(params.test_unbalanced_out_degree_cover):
-        # sort out-degrees of trimmed graph if necessary
-        if(not test_subset.empty()):
-            sort(out_deg_trimmed.begin(), out_deg_trimmed.end())
+
+        # sort out-degrees of trimmed graph
+        sort(out_deg_trimmed.begin(), out_deg_trimmed.end())
+
         # test if out-degrees of bigger cover out-degrees of trimmed
         i = 0
         offset = 0
@@ -1853,6 +1891,7 @@ cdef void trimm_and_test_subgraph_isomorphism_directed(cpp_vector[int] & test_su
                         break
                 # get next offset
                 offset = i + 1
+
         # test for cover of all degrees
         if(covered < params.expected_order_int):
             return
@@ -1869,7 +1908,7 @@ cdef void trimm_and_test_subgraph_isomorphism_directed(cpp_vector[int] & test_su
         if(not reachable):
             return
 
-    # reinitialize parameters of node and edge labes
+    # initialize parameters of node and edge labes
     params.node_labels = params.node_labels_backup
     params.edge_labels = params.edge_labels_backup
 
@@ -1890,7 +1929,7 @@ cdef void trimm_and_test_subgraph_isomorphism_directed(cpp_vector[int] & test_su
         if(not consistent_labels):
             return
 
-    # reinitialize information in search state for bigger graph
+    # initialize information in search state for bigger graph
     initial_state_directed.unmatched_H = params.unmatched_H_backup
     initial_state_directed.unmatched_H_ordered = params.unmatched_H_ordered_backup
 
