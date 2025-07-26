@@ -8,12 +8,26 @@
 # - Description: convert node "names", node attributes and edge attributes     #
 #   into integers to simplify their comparison in the other routines.          #
 #                                                                              #
+#  --------------------------------------------------------------------------  #
+#                                                                              #
+# - LICENSE:                                                                   #
+#                                                                              #
+#   This file is part of the academic work published in                        #
+#            TBA                                                               #
+#   and it is released under                                                   #
+#            MIT License Copyright (c) 2024 Marcos E. González Laffitte        #
+#   See LICENSE file in                                                        #
+#            https://github.com/MarcosLaffitte/GranMapache                     #
+#   for full license details.                                                  #
+#                                                                              #
 ################################################################################
 
 
 
 
+
 # dependencies #################################################################
+
 
 
 
@@ -24,8 +38,10 @@ from copy import deepcopy
 
 
 
+
 # not in python ----------------------------------------------------------------
 import networkx as nx
+
 
 
 
@@ -36,12 +52,15 @@ import cython
 
 
 
+
 # algorithms ###################################################################
 
 
 
 
+
 # functions - encoding and decoding of graphs ##################################
+
 
 
 
@@ -76,9 +95,11 @@ def encode_graphs(input_graphs = []):
     test_dir = nx.DiGraph()
     test_count_undir = 0
     test_count_dir = 0
+
     # check argument list type
     if(not type(input_graphs) in [type(test_list)]):
         raise(ValueError("gmapache: argument must be a list of networkx graphs or digraphs."))
+
     # check type of entries input list
     for test_entry in input_graphs:
         if(type(test_entry) not in [type(test_undir)]):
@@ -88,6 +109,7 @@ def encode_graphs(input_graphs = []):
                 test_count_dir = test_count_dir + 1
         else:
             test_count_undir = test_count_undir + 1
+
     # check homogeneity of etries in input list
     if(not test_count_undir == len(input_graphs)):
         if(not test_count_dir == len(input_graphs)):
@@ -150,17 +172,20 @@ def encode_graphs(input_graphs = []):
 
     # create integerized copies of input graphs
     for i in range(0, N1):
+
         # initialize graph with original type
         if(input_graphs[i].is_directed()):
             int_graph = nx.DiGraph()
         else:
             int_graph = nx.Graph()
+
         # add encoded nodes with encoded node labels
         for (v, nodeInfo) in list(input_graphs[i].nodes(data = True)):
             encoded_node = node_name_encoding_inv[v]
             encoded_label = node_label_encoding_inv.index(nodeInfo)
             int_graph.add_node(encoded_node,
                                GMNL = encoded_label) # gran_mapache_node_label
+
         # add encoded edges with encoded edge labels
         for (u, v, edgeInfo) in list(input_graphs[i].edges(data = True)):
             encoded_node_a = node_name_encoding_inv[u]
@@ -168,11 +193,13 @@ def encode_graphs(input_graphs = []):
             encoded_label = edge_label_encoding_inv.index(edgeInfo)
             int_graph.add_edge(encoded_node_a, encoded_node_b,
                                GMEL = encoded_label) # gran_mapache_edge_label
+
         # save graph in list
         encoded_graphs.append(deepcopy(int_graph))
 
     # end of function
     return(encoded_graphs, node_name_encoding, node_label_encoding, edge_label_encoding)
+
 
 
 
@@ -207,24 +234,34 @@ def decode_graphs(encoded_graphs = [],
     test_count_dir = 0
     test_undir = nx.Graph()
     test_dir = nx.DiGraph()
+
     # check that the first argument is a list
     if(not type(encoded_graphs) in [type(test_list)]):
         raise(ValueError("gmapache: first argument must be a list of networkx graphs or digraphs encoded with granmapache."))
+
     # check that second argument is a dicitonary
     if(not type(node_name_encoding) in [type(test_dict)]):
         raise(ValueError("gmapache: second argument must be a dictionary."))
+
     # check that third argument is a dicitonary
     if(not type(node_label_encoding) in [type(test_dict)]):
         raise(ValueError("gmapache: third argument must be a dictionary."))
+
     # check that fourth argument is a dicitonary
     if(not type(edge_label_encoding) in [type(test_dict)]):
         raise(ValueError("gmapache: fourth argument must be a dictionary."))
+
     # check that all the vertices and labels are correctly encoded by the dictionaries
     for test_entry in encoded_graphs:
+
         if(type(test_entry) not in [type(test_undir)]):
+
             if(type(test_entry) not in [type(test_dir)]):
+
                 raise(ValueError("gmapache: elements in list must be networkx graphs or digraphs."))
+
             else:
+
                 test_count_dir = test_count_dir + 1
                 for (test_node, test_info) in list(test_entry.nodes(data = True)):
                     if(test_node not in list(node_name_encoding.keys())):
@@ -233,12 +270,15 @@ def decode_graphs(encoded_graphs = [],
                         raise(ValueError("gmapache: one of the input (di)graphs is not encoded by granmapache."))
                     if(test_info["GMNL"] not in list(node_label_encoding.keys())):
                         raise(ValueError("gmapache: all the node-labels of the input (di)graphs must be encoded by the input dictionaries."))
+
                 for (test_edge, test_info) in list(test_entry.edges(data = True)):
                     if("GMEL" not in list(test_info.keys())):
                         raise(ValueError("gmapache: one of the input (di)graphs is not encoded by granmapache."))
                     if(test_info["GMEL"] not in list(edge_label_encoding.keys())):
                         raise(ValueError("gmapache: all the edge-labels of the input (di)graphs must be encoded by the input dictionaries."))
+
         else:
+
             test_count_undir = test_count_undir + 1
             for (test_node, test_info) in list(test_entry.nodes(data = True)):
                 if(test_node not in list(node_name_encoding.keys())):
@@ -247,11 +287,13 @@ def decode_graphs(encoded_graphs = [],
                     raise(ValueError("gmapache: one of the input (di)graphs is not encoded by granmapache."))
                 if(test_info["GMNL"] not in list(node_label_encoding.keys())):
                     raise(ValueError("gmapache: all the node-labels of the input (di)graphs must be encoded by the input dictionaries."))
+
             for (test_edge, test_info) in list(test_entry.edges(data = True)):
                 if("GMEL" not in list(test_info.keys())):
                     raise(ValueError("gmapache: one of the input (di)graphs is not encoded by granmapache."))
                 if(test_info["GMEL"] not in list(edge_label_encoding.keys())):
                     raise(ValueError("gmapache: all the edge-labels of the input (di)graphs must be encoded by the input dictionaries."))
+
     # check that the input graphs in list ahve the same type
     if(not test_count_undir == len(encoded_graphs)):
         if(not test_count_dir == len(encoded_graphs)):
@@ -278,22 +320,26 @@ def decode_graphs(encoded_graphs = [],
     # iterate decoding graphs
     N1 = len(encoded_graphs)
     for i in range(0, N1):
+
         # initialize graph with original type
         if(encoded_graphs[i].is_directed()):
             dec_graph = nx.DiGraph()
         else:
             dec_graph = nx.Graph()
+
         # compare vertices
         for (v, nodeInfo) in list(encoded_graphs[i].nodes(data = True)):
             decoded_node = node_name_encoding[v]
             decoded_label = node_label_encoding[nodeInfo["GMNL"]]   # gran_mapache_node_label
             dec_graph.add_nodes_from([(deepcopy(decoded_node), deepcopy(decoded_label))])
+
         # compare edges
         for (u, v, edgeInfo) in list(encoded_graphs[i].edges(data = True)):
             decoded_node_a = node_name_encoding[u]
             decoded_node_b = node_name_encoding[v]
             decoded_label = edge_label_encoding[edgeInfo["GMEL"]]   # gran_mapache_edge_label
             dec_graph.add_edges_from([(deepcopy(decoded_node_a), deepcopy(decoded_node_b), deepcopy(decoded_label))])
+
         # save graph in list
         decoded_graphs.append(deepcopy(dec_graph))
 
@@ -303,7 +349,9 @@ def decode_graphs(encoded_graphs = [],
 
 
 
+
 # functions - encoding and decoding of matches #################################
+
 
 
 
@@ -329,12 +377,15 @@ def encode_match(input_match = [],
     test_list = [0, 0]
     test_tuple = (0, 0)
     test_dict = dict()
+
     # check that first argument is a list
     if(not type(input_match) in [type(test_list)]):
         raise(ValueError("gmapache: first argument must be a list of 2-tuples."))
+
     # check that second argument is a dictionary
     if(not type(node_name_encoding) in [type(test_dict)]):
         raise(ValueError("gmapache: second argument must be a dictionary."))
+
     # check correctnes of entries in input list
     for test_entry in input_match:
         if(not type(test_entry) in [type(test_tuple)]):
@@ -374,6 +425,7 @@ def encode_match(input_match = [],
 
 
 
+
 # function: decode match given an encoding of node names -----------------------
 def decode_match(encoded_match = [],
                  node_name_encoding = dict()):
@@ -395,12 +447,15 @@ def decode_match(encoded_match = [],
     test_list = [0, 0]
     test_tuple = (0, 0)
     test_dict = dict()
+
     # check that first argument is a list
     if(not type(encoded_match) in [type(test_list)]):
         raise(ValueError("gmapache: first argument must be a list of 2-tuples."))
+
     # check that second argument is a dictionary
     if(not type(node_name_encoding) in [type(test_dict)]):
         raise(ValueError("gmapache: second argument must be a dictionary."))
+
     # check correctnes of entries in input list
     for test_entry in encoded_match:
         if(not type(test_entry) in [type(test_tuple)]):
@@ -432,6 +487,7 @@ def decode_match(encoded_match = [],
 
     # end of function
     return(decoded_match)
+
 
 
 

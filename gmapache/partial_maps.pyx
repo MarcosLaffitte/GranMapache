@@ -27,6 +27,18 @@
 #   * inside the intensive routines and in associated search-parameters, the   #
 #     domain graph is called G, while the codomain graph is always called H.   #
 #                                                                              #
+#  --------------------------------------------------------------------------  #
+#                                                                              #
+# - LICENSE:                                                                   #
+#                                                                              #
+#   This file is part of the academic work published in                        #
+#            TBA                                                               #
+#   and it is released under                                                   #
+#            MIT License Copyright (c) 2024 Marcos E. González Laffitte        #
+#   See LICENSE file in                                                        #
+#            https://github.com/MarcosLaffitte/GranMapache                     #
+#   for full license details.                                                  #
+#                                                                              #
 ################################################################################
 
 
