@@ -271,6 +271,9 @@ cdef struct partial_maps_search_params:
     cpp_bool edge_labels_backup
     cpp_unordered_set[int] unmatched_H_backup
     cpp_list[int] unmatched_H_ordered_backup
+    # ambiguous neighbors in G and H (for constant look-ups)
+    cpp_unordered_map[int, cpp_unordered_set[int]] ambiguous_neighbors_G
+    cpp_unordered_map[int, cpp_unordered_set[int]] ambiguous_neighbors_H
 
 
 
@@ -420,6 +423,7 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
     comma.push_back(44)
     cdef cpp_string temp_str
     cdef cpp_pair[int, int] temp_pair
+    cdef cpp_pair[int, int] each_pair
     cdef cpp_vector[int] deg_G
     cdef cpp_vector[int] deg_H
     cdef cpp_vector[int] in_deg_G
@@ -451,6 +455,8 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
     cdef dict encoded_node_names = dict()
     cdef dict encoded_node_labels = dict()
     cdef dict encoded_edge_labels = dict()
+    cdef dict ambiguous_neighbors_G = dict()
+    cdef dict ambiguous_neighbors_H = dict()
     reachability = True
     x_obj = None
     y_obj = None
@@ -465,7 +471,12 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
     params.caller = 0
 
     # test input correctness
-    input_correctness = partial_maps_input_correctness(nx_G, nx_H, input_anchor, node_labels, edge_labels, all_extensions, reachability, params.caller)
+    input_correctness = partial_maps_input_correctness(nx_G, nx_H, input_anchor,
+                                                       node_labels, edge_labels,
+                                                       all_extensions, reachability,
+                                                       ambiguous_neighbors_G,
+                                                       ambiguous_neighbors_H,
+                                                       params.caller)
     if(not input_correctness):
         return([], False)
 
@@ -802,15 +813,17 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
 
 
 # function: callable wrapper for maximum common induced anchored subgraphs -----
-def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can also be a networkx DiGraph
-                                             nx_H = nx.Graph(),           # can also be a networkx DiGraph
-                                             input_anchor = [],           # anchor partial map, should be a non-empty list
-                                             node_labels = False,         # consider node labels when evaluating extension
-                                             edge_labels = False,         # consider edge labels when evaluating extension
-                                             all_extensions = False,      # by default stops when finding one extension (if any)
-                                             reachability = True):        # all nodes should be reachable from at least one anchor node
+def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),                 # can also be a networkx DiGraph
+                                             nx_H = nx.Graph(),                 # can also be a networkx DiGraph
+                                             input_anchor = [],                 # anchor partial map, should be a non-empty list
+                                             node_labels = False,               # consider node labels when evaluating extension
+                                             edge_labels = False,               # consider edge labels when evaluating extension
+                                             all_extensions = False,            # by default stops when finding one extension (if any)
+                                             reachability = True,               # all nodes should be reachable from at least one anchor node
+                                             ambiguous_neighbors_G = dict(),    # ambiguous neighbors or "wildcard" virtual-edges in nx_G
+                                             ambiguous_neighbors_H = dict()):   # ambiguous neighbors or "wildcard" virtual-edges in nx_H
 
-    # description
+   # description
     """
     > description: receives two non-null networkx (di-) graphs G and H (possibly with different number
     of nodes), and a non-empty injective map between them (here called anchor), and uses a variant
@@ -846,6 +859,14 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
     should contain at least one path between each node and at least one anchor node (default).
     If the anchor is connected and reachability is set to True, then the search will return a
     maximum-common-induced-connected-subgraph properly containing the anchor, if any.
+    * ambiguous_neighbors_G - dictionary mapping each node to its ambiguous neighborhoods in G
+    implied by the ambiguous edges, i.e., pairs of nodes that are not actual edges, but override
+    non-adjacency of G, allowing the matching of vertices with not-equivalent "real" neighborhoods.
+    These "virtual" edges have no edge-label and only have a roll inside the syntactic feasability.
+    * ambiguous_neighbors_H - dictionary mapping each node to its ambiguous neighborhoods in H
+    implied by the ambiguous edges, i.e., pairs of nodes that are not actual edges, but override
+    non-adjacency of H, allowing the matching of vertices with not-equivalent "real" neighborhoods.
+    These "virtual" edges have no edge-label and only have a roll inside the syntactic feasability.
 
     > output:
     * extensions - non-empty list of maximum common induced subgraphs extending the anchor, each
@@ -907,11 +928,14 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
     cdef cpp_vector[int] all_nodes_bigger
     cdef cpp_vector[cpp_vector[int]] all_edges_bigger
     cdef cpp_vector[cpp_vector[int]] all_edges_smaller
+    cdef cpp_vector[cpp_pair[int, int]] encoded_ambiguous_neighbors_G
+    cdef cpp_vector[cpp_pair[int, int]] encoded_ambiguous_neighbors_H
     cdef cpp_vector[cpp_set[cpp_pair[int, int]]] encoded_extensions
     cdef cpp_vector[cpp_set[cpp_pair[int, int]]] untwisted_extensions
     cdef cpp_set[cpp_pair[int, int]] each_extension
     cdef cpp_set[cpp_pair[int, int]] temp_extension
     cdef cpp_set[cpp_pair[int, int]] original_anchor_encoded
+    cdef cpp_unordered_set[int] temp_set
     cdef cpp_unordered_map[int, int] node_degrees
     cdef cpp_unordered_map[int, int] all_removable_nodes
     cdef partial_maps_search_params params
@@ -922,6 +946,8 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
 
     # local variables (python)
     cdef list encoded_graphs = []
+    cdef list ambiguous_neighbors_G_items = []
+    cdef list ambiguous_neighbors_H_items = []
     cdef dict info = dict()
     cdef dict encoded_node_names = dict()
     cdef dict encoded_node_labels = dict()
@@ -937,7 +963,12 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
     params.caller = 1
 
     # test input correctness
-    input_correctness = partial_maps_input_correctness(nx_G, nx_H, input_anchor, node_labels, edge_labels, all_extensions, reachability, params.caller)
+    input_correctness = partial_maps_input_correctness(nx_G, nx_H, input_anchor,
+                                                       node_labels, edge_labels,
+                                                       all_extensions, reachability,
+                                                       ambiguous_neighbors_G,
+                                                       ambiguous_neighbors_H,
+                                                       params.caller)
     if(not input_correctness):
         return([input_anchor], False)
 
@@ -1293,6 +1324,36 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),           # can 
     current_limit = getrecursionlimit()
     if(current_limit < (scalation_value * required_limit)):
         setrecursionlimit(int(scalation_value * required_limit))
+
+    # unpack and encode ambiguous neighbors in G
+    if(len(ambiguous_neighbors_G) > 0):
+        # get input ambiguous neighbors G as list of pairs
+        ambiguous_neighbors_G_items = list(ambiguous_neighbors_G.items())
+        # encode pairs into integers
+        encoded_ambiguous_neighbors_G = encode_match(input_match = ambiguous_neighbors_G_items, node_name_encoding = encoded_node_names)
+        # save pairs in unordered map in params
+        for each_pair in encoded_ambiguous_neighbors_G:
+            if(params.ambiguous_neighbors_G.count(each_pair.first) > 0):
+                params.ambiguous_neighbors_G[each_pair.first].insert(each_pair.second)
+            else:
+                temp_set.clear()
+                temp_set.insert(each_pair.second)
+                params.ambiguous_neighbors_G[each_pair.first] = temp_set
+
+    # unpack and encode ambiguous neighbors in H
+    if(len(ambiguous_neighbors_H) > 0):
+        # get input ambiguous neighbors H as list of pairs
+        ambiguous_neighbors_H_items = list(ambiguous_neighbors_H.items())
+        # encode pairs into integers
+        encoded_ambiguous_neighbors_H = encode_match(input_match = ambiguous_neighbors_H_items, node_name_encoding = encoded_node_names)
+        # save pairs in unordered map in params
+        for each_pair in encoded_ambiguous_neighbors_H:
+            if(params.ambiguous_neighbors_H.count(each_pair.first) > 0):
+                params.ambiguous_neighbors_H[each_pair.first].insert(each_pair.second)
+            else:
+                temp_set.clear()
+                temp_set.insert(each_pair.second)
+                params.ambiguous_neighbors_H[each_pair.first] = temp_set
 
     # obtain maximum reachable extension through iterative trimming
     partial_maps_iterative_trimming(all_removable_nodes,
@@ -1992,7 +2053,12 @@ cdef void trimm_and_test_subgraph_isomorphism_directed(cpp_vector[int] & test_su
 
 
 # function: test input correctness ---------------------------------------------
-cdef cpp_bool partial_maps_input_correctness(nx_G, nx_H, input_anchor, node_labels, edge_labels, all_extensions, reachability, caller):
+cdef cpp_bool partial_maps_input_correctness(nx_G, nx_H, input_anchor,
+                                             node_labels, edge_labels,
+                                             all_extensions, reachability,
+                                             ambiguous_neighbors_G,
+                                             ambiguous_neighbors_H,
+                                             caller):
 
     # local variables (python)
     test_int = 0
@@ -2001,10 +2067,14 @@ cdef cpp_bool partial_maps_input_correctness(nx_G, nx_H, input_anchor, node_labe
     cdef list nodes_H = []
     cdef list test_list = [0, 0]
     cdef tuple test_tuple = (0, 0)
+    cdef dict test_dict = dict()
     test_undir = nx.Graph()
     test_dir = nx.DiGraph()
     each_node = None
     test_entry = None
+    node_obj_1 = None
+    node_obj_2 = None
+    node_obj_list = None
 
     # NOTE: caller flag
     # caller = 0 -> gm.partial_maps.search_stable_extension
@@ -2037,6 +2107,10 @@ cdef cpp_bool partial_maps_input_correctness(nx_G, nx_H, input_anchor, node_labe
     # check that seventh argument is boolean
     if(type(reachability) not in [type(test_bool)]):
         raise(ValueError("gmapache: argument reachability must be a boolean variable."))
+
+    # check that eigth and nineth arguments are dicts
+    if((type(ambiguous_neighbors_G) not in [type(test_dict)]) or (type(ambiguous_neighbors_H) not in [type(test_dict)])):
+        raise(ValueError("gmapache: both arguments for ambiguous_neighbors must be dictionaries."))
 
     # check that input graphs are of the same type
     if((nx.is_directed(nx_G)) and (not nx.is_directed(nx_H))):
@@ -2083,6 +2157,32 @@ cdef cpp_bool partial_maps_input_correctness(nx_G, nx_H, input_anchor, node_labe
     if(caller == 1):
         if((len(input_anchor) == nx_G.order()) or (len(input_anchor) == nx_H.order())):
             return(False)
+
+    # check consistency of dictionary of ambiguous neighbors in G
+    if(caller == 1):
+        for (node_obj_1, node_obj_list) in ambiguous_neighbors_G.items():
+            if(node_obj_1 not in nodes_G):
+                raise(ValueError("gmapache: a key in ambiguous_neighbors_G is not a node of G."))
+            if(type(node_obj_list) not in [type(test_list)]):
+                raise(ValueError("gmapache: all values in ambiguous_neighbors_G should be lists."))
+            if(len(node_obj_list) == 0):
+                raise(ValueError("gmapache: a value in ambiguous_neighbors_G is an empty list."))
+            for node_obj_2 in node_obj_list:
+                if(node_obj_2 not in nodes_G):
+                    raise(ValueError("gmapache: an element in one value of ambiguous_neighbors_G is not a node of G."))
+
+    # check consistency of dictionary of ambiguous neighbors in H
+    if(caller == 1):
+        for (node_obj_1, node_obj_list) in ambiguous_neighbors_H.items():
+            if(node_obj_1 not in nodes_H):
+                raise(ValueError("gmapache: a key in ambiguous_neighbors_H is not a node of H."))
+            if(type(node_obj_list) not in [type(test_list)]):
+                raise(ValueError("gmapache: all values in ambiguous_neighbors_H should be lists."))
+            if(len(node_obj_list) == 0):
+                raise(ValueError("gmapache: a value in ambiguous_neighbors_H is an empty list."))
+            for node_obj_2 in node_obj_list:
+                if(node_obj_2 not in nodes_H):
+                    raise(ValueError("gmapache: an element in one value of ambiguous_neighbors_H is not a node of H."))
 
     # end of function
     return(True)
@@ -2661,12 +2761,14 @@ cdef void partial_maps_undirected(partial_maps_search_params & params,
                                                                                params.edge_labels,
                                                                                matchable_node_G,
                                                                                candidate_node_H,
+                                                                               params,
                                                                                current_state.match_G,
                                                                                G.loops,
                                                                                current_state.forward_match,
                                                                                G.nodes,
                                                                                H.nodes,
                                                                                G.neighbors,
+                                                                               H.neighbors,
                                                                                G.edges,
                                                                                H.edges)
 
@@ -2950,6 +3052,7 @@ cdef cpp_bool syntactic_feasibility_undirected(int node1,
     if(params.caller == 0):
         if(neigh_G[node1].size() != neigh_H[node2].size()):
             return(False)
+
     if(params.caller == 1):
         if(neigh_G[node1].size() > neigh_H[node2].size()):
             return(False)
@@ -2959,6 +3062,7 @@ cdef cpp_bool syntactic_feasibility_undirected(int node1,
         if(loops_H.find(node2) == loops_H.end()):
             # node1 has a loop in G but node2 has no loop in H
             return(False)
+
     if(params.induced_subgraph):
         if(loops_G.find(node1) == loops_G.end()):
             if(loops_H.find(node2) != loops_H.end()):
@@ -2968,11 +3072,25 @@ cdef cpp_bool syntactic_feasibility_undirected(int node1,
     # look ahead 0: consistency of neighbors in match, while doing tripartition of neighbors
     for node in ordered_neigh_G[node1]:
         if(current_match_G.find(node) != current_match_G.end()):
-            # check that the mapping is also the corresponding neighbor
+
+            # get map of corresponding neighbor
             mapped = forward_match[node]
+
+            # check that the mapping is also the corresponding neighbor
             if(neigh_H[node2].find(mapped) == neigh_H[node2].end()):
-                return(False)
+
+                # test for ambiguous neighbors (if any)
+                if(not params.ambiguous_neighbors_H.empty()):
+                    if(params.ambiguous_neighbors_H.count(node2) > 0):
+                        if(params.ambiguous_neighbors_H[node2].find(mapped) == params.ambiguous_neighbors_H[node2].end()):
+                            return(False)
+                    else:
+                        return(False)
+                else:
+                    return(False)
+
         else:
+
             if(ring_G.find(node) != ring_G.end()):
                 # save neighbor since we are just comparing numbers later
                 neighbors_ring_G = neighbors_ring_G + 1
@@ -2983,18 +3101,34 @@ cdef cpp_bool syntactic_feasibility_undirected(int node1,
     if(params.induced_subgraph):
         for node in ordered_neigh_H[node2]:
             if(current_match_H.find(node) != current_match_H.end()):
-                # check that the mapping is also the corresponding neighbor
+
+                # get map of corresponding neighbor
                 mapped = inverse_match[node]
+
+                # check that the mapping is also the corresponding neighbor
                 if(neigh_G[node1].find(mapped) == neigh_G[node1].end()):
-                    return(False)
+
+                    # test for ambiguous neighbors (if any)
+                    if(not params.ambiguous_neighbors_G.empty()):
+                        if(params.ambiguous_neighbors_G.count(node1) > 0):
+                            if(params.ambiguous_neighbors_G[node1].find(mapped) == params.ambiguous_neighbors_G[node1].end()):
+                                return(False)
+                        else:
+                            return(False)
+                    else:
+                        return(False)
+
             else:
+
                 if(ring_H.find(node) != ring_H.end()):
                     # save neighbor since we are just comparing numbers later
                     neighbors_ring_H = neighbors_ring_H + 1
                 else:
                     # save neighbor since we are just comparing numbers later
                     neighbors_extern_H = neighbors_extern_H + 1
+
     else:
+
         for node in ordered_neigh_H[node2]:
             # consistency of match was already checked for non-induced search
             if(current_match_H.find(node) == current_match_H.end()):
@@ -3006,6 +3140,7 @@ cdef cpp_bool syntactic_feasibility_undirected(int node1,
     if(params.caller == 0):
         if(neighbors_ring_G != neighbors_ring_H):
             return(False)
+
     if(params.caller == 1):
         if(neighbors_ring_G > neighbors_ring_H):
             return(False)
@@ -3013,9 +3148,11 @@ cdef cpp_bool syntactic_feasibility_undirected(int node1,
     # look ahead 2: consistency of extern neighbors (neither in match nor adjacent to match)
     # extern neighbors are not preserved in non-induced case, because non-edges are not necessarily preserved
     if(params.induced_subgraph):
+
         if(params.caller == 0):
             if(neighbors_extern_G != neighbors_extern_H):
                 return(False)
+
         if(params.caller == 1):
             if(neighbors_extern_G > neighbors_extern_H):
                 return(False)
@@ -3032,12 +3169,14 @@ cdef cpp_bool semantic_feasibility_undirected(cpp_bool node_labels,
                                               cpp_bool edge_labels,
                                               int node1,
                                               int node2,
+                                              partial_maps_search_params & params,
                                               cpp_unordered_set[int] & current_match_G,
                                               cpp_unordered_set[int] & loops_G,
                                               cpp_unordered_map[int, int] & forward_match,
                                               cpp_unordered_map[int, int] & nodes_G,
                                               cpp_unordered_map[int, int] & nodes_H,
                                               cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_G,
+                                              cpp_unordered_map[int, cpp_unordered_set[int]] & neigh_H,
                                               cpp_unordered_map[cpp_string, int] & edges_G,
                                               cpp_unordered_map[cpp_string, int] & edges_H) noexcept:
 
@@ -3065,15 +3204,31 @@ cdef cpp_bool semantic_feasibility_undirected(cpp_bool node_labels,
                 return(False)
 
         # compare non-loop labels
-        for node in neigh_G[node1]:
-            if(current_match_G.find(node) != current_match_G.end()):
-                # edge in G with only one end in match
-                labeled_edge_G = to_string(node1) + comma + to_string(node)
-                # edge in H with only one end in match
-                labeled_edge_H = to_string(node2) + comma + to_string(forward_match[node])
-                # compare labeled edges
-                if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
-                    return(False)
+        if(params.caller == 0):
+            for node in neigh_G[node1]:
+                if(current_match_G.find(node) != current_match_G.end()):
+                    # edge in G with only one end in match
+                    labeled_edge_G = to_string(node1) + comma + to_string(node)
+                    # edge in H with only one end in match
+                    labeled_edge_H = to_string(node2) + comma + to_string(forward_match[node])
+                    # compare labeled edges
+                    if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
+                        return(False)
+
+        # compare non-loop labels for MCS search
+        # NOTE: at this point we only have true neighbors or ambiguous neighbors
+        if(params.caller == 1):
+            for node in neigh_G[node1]:
+                if(current_match_G.find(node) != current_match_G.end()):
+                    mapped = forward_match[node]
+                    if(neigh_H[node2].find(mapped) != neigh_H[node2].end()):
+                        # edge in G with only one end in match
+                        labeled_edge_G = to_string(node1) + comma + to_string(node)
+                        # edge in H with only one end in match
+                        labeled_edge_H = to_string(node2) + comma + to_string(mapped)
+                        # compare labeled edges
+                        if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
+                            return(False)
 
     # end of function
     return(True)
@@ -3223,13 +3378,16 @@ cdef void partial_maps_directed(partial_maps_search_params & params,
                                                                                  params.edge_labels,
                                                                                  matchable_node_G,
                                                                                  candidate_node_H,
+                                                                                 params,
                                                                                  current_state.match_G,
                                                                                  G.loops,
                                                                                  current_state.forward_match,
                                                                                  G.nodes,
                                                                                  H.nodes,
                                                                                  G.in_neighbors,
+                                                                                 H.in_neighbors,
                                                                                  G.out_neighbors,
+                                                                                 H.out_neighbors,
                                                                                  G.edges,
                                                                                  H.edges)
 
@@ -3578,6 +3736,7 @@ cdef cpp_bool syntactic_feasibility_directed(int node1,
     if(params.caller == 0):
         if(neigh_G[node1].size() != neigh_H[node2].size()):
             return(False)
+
     if(params.caller == 1):
         if(neigh_G[node1].size() > neigh_H[node2].size()):
             return(False)
@@ -3587,6 +3746,7 @@ cdef cpp_bool syntactic_feasibility_directed(int node1,
         if(loops_H.find(node2) == loops_H.end()):
             # node1 has a loop in G but node2 has no loop in H
             return(False)
+
     if(params.induced_subgraph):
         if(loops_G.find(node1) == loops_G.end()):
             if(loops_H.find(node2) != loops_H.end()):
@@ -3596,21 +3756,38 @@ cdef cpp_bool syntactic_feasibility_directed(int node1,
     # look ahead 0: consistency of neighbors in match, while doing tripartition of neighbors
     for node in ordered_neigh_G[node1]:
         if(current_match_G.find(node) != current_match_G.end()):
-            # check that the mapping is also the corresponding neighbor
+
+            # get map of corresponding neighbor
             mapped = forward_match[node]
+
+            # check that the mapping is also the corresponding neighbor
             if(neigh_H[node2].find(mapped) == neigh_H[node2].end()):
-                return(False)
+
+                # test for ambiguous neighbors (if any)
+                if(not params.ambiguous_neighbors_H.empty()):
+                    if(params.ambiguous_neighbors_H.count(node2) > 0):
+                        if(params.ambiguous_neighbors_H[node2].find(mapped) == params.ambiguous_neighbors_H[node2].end()):
+                            return(False)
+                    else:
+                        return(False)
+                else:
+                    return(False)
+
         else:
+
             # reinitialize flag
             ring_neighbor = False
+
             # neighbor in in-ring
             if(in_ring_G.find(node) != in_ring_G.end()):
                 neighbors_in_ring_G = neighbors_in_ring_G + 1
                 ring_neighbor = True
+
             # neighbor (possibly also) in out-ring
             if(out_ring_G.find(node) != out_ring_G.end()):
                 neighbors_out_ring_G = neighbors_out_ring_G + 1
                 ring_neighbor = True
+
             # neighbor not in any ring nor in match
             if(not ring_neighbor):
                 neighbors_extern_G = neighbors_extern_G + 1
@@ -3618,25 +3795,44 @@ cdef cpp_bool syntactic_feasibility_directed(int node1,
     if(params.induced_subgraph):
         for node in ordered_neigh_H[node2]:
             if(current_match_H.find(node) != current_match_H.end()):
-                # check that the mapping is also the corresponding neighbor
+
+                # get map of corresponding neighbor
                 mapped = inverse_match[node]
+
+                # check that the mapping is also the corresponding neighbor
                 if(neigh_G[node1].find(mapped) == neigh_G[node1].end()):
-                    return(False)
+
+                    # test for ambiguous neighbors (if any)
+                    if(not params.ambiguous_neighbors_G.empty()):
+                        if(params.ambiguous_neighbors_G.count(node1) > 0):
+                            if(params.ambiguous_neighbors_G[node1].find(mapped) == params.ambiguous_neighbors_G[node1].end()):
+                                return(False)
+                        else:
+                            return(False)
+                    else:
+                        return(False)
+
             else:
+
                 # reinitialize flag
                 ring_neighbor = False
+
                 # neighbor in in-ring
                 if(in_ring_H.find(node) != in_ring_H.end()):
                     neighbors_in_ring_H = neighbors_in_ring_H + 1
                     ring_neighbor = True
+
                 # neighbor (possibly also) in out-ring
                 if(out_ring_H.find(node) != out_ring_H.end()):
                     neighbors_out_ring_H = neighbors_out_ring_H + 1
                     ring_neighbor = True
+
                 # neighbor not in any ring nor in match
                 if(not ring_neighbor):
                     neighbors_extern_H = neighbors_extern_H + 1
+
     else:
+
         for node in ordered_neigh_H[node2]:
             # consistency of match was already checked for non-induced search
             if(current_match_H.find(node) == current_match_H.end()):
@@ -3649,22 +3845,29 @@ cdef cpp_bool syntactic_feasibility_directed(int node1,
 
     # look ahead 1: consistency of neighbors in rings (not in match but adjacent to match)
     if(params.caller == 0):
+
         if(neighbors_in_ring_G != neighbors_in_ring_H):
             return(False)
+
         if(neighbors_out_ring_G != neighbors_out_ring_H):
             return(False)
+
     if(params.caller == 1):
+
         if(neighbors_in_ring_G > neighbors_in_ring_H):
             return(False)
+
         if(neighbors_out_ring_G > neighbors_out_ring_H):
             return(False)
 
     # look ahead 2: consistency of extern neighbors (neither in match nor adjacent to match)
     # extern neighbors are not preserved in non-induced case, because non-edges are not necessarily preserved
     if(params.induced_subgraph):
+
         if(params.caller == 0):
             if(neighbors_extern_G != neighbors_extern_H):
                 return(False)
+
         if(params.caller == 1):
             if(neighbors_extern_G > neighbors_extern_H):
                 return(False)
@@ -3681,13 +3884,16 @@ cdef cpp_bool semantic_feasibility_directed(cpp_bool node_labels,
                                             cpp_bool edge_labels,
                                             int node1,
                                             int node2,
+                                            partial_maps_search_params & params,
                                             cpp_unordered_set[int] & current_match_G,
                                             cpp_unordered_set[int] & loops_G,
                                             cpp_unordered_map[int, int] & forward_match,
                                             cpp_unordered_map[int, int] & nodes_G,
                                             cpp_unordered_map[int, int] & nodes_H,
                                             cpp_unordered_map[int, cpp_unordered_set[int]] & in_neigh_G,
+                                            cpp_unordered_map[int, cpp_unordered_set[int]] & in_neigh_H,
                                             cpp_unordered_map[int, cpp_unordered_set[int]] & out_neigh_G,
+                                            cpp_unordered_map[int, cpp_unordered_set[int]] & out_neigh_H,
                                             cpp_unordered_map[cpp_string, int] & edges_G,
                                             cpp_unordered_map[cpp_string, int] & edges_H) noexcept:
 
@@ -3715,26 +3921,56 @@ cdef cpp_bool semantic_feasibility_directed(cpp_bool node_labels,
                 return(False)
 
         # compare non-loop edge labels with in-neighbors
-        for node in in_neigh_G[node1]:
-            if(current_match_G.find(node) != current_match_G.end()):
-                # edge in G with in-neighbor in match
-                labeled_edge_G = to_string(node) + comma + to_string(node1)
-                # edge in H with out-neighbor in match
-                labeled_edge_H = to_string(forward_match[node]) + comma + to_string(node2)
-                # compare labeled edges
-                if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
-                    return(False)
+        if(params.caller == 0):
+            for node in in_neigh_G[node1]:
+                if(current_match_G.find(node) != current_match_G.end()):
+                    # edge in G with in-neighbor in match
+                    labeled_edge_G = to_string(node) + comma + to_string(node1)
+                    # edge in H with out-neighbor in match
+                    labeled_edge_H = to_string(forward_match[node]) + comma + to_string(node2)
+                    # compare labeled edges
+                    if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
+                        return(False)
 
         # compare non-loop edge labels with out-neighbors
-        for node in out_neigh_G[node1]:
-            if(current_match_G.find(node) != current_match_G.end()):
-                # edge in G with out-neighbor in match
-                labeled_edge_G = to_string(node1) + comma + to_string(node)
-                # edge in H with out-neighbor in match
-                labeled_edge_H = to_string(node2) + comma + to_string(forward_match[node])
-                # compare labeled edges
-                if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
-                    return(False)
+        if(params.caller == 0):
+            for node in out_neigh_G[node1]:
+                if(current_match_G.find(node) != current_match_G.end()):
+                    # edge in G with out-neighbor in match
+                    labeled_edge_G = to_string(node1) + comma + to_string(node)
+                    # edge in H with out-neighbor in match
+                    labeled_edge_H = to_string(node2) + comma + to_string(forward_match[node])
+                    # compare labeled edges
+                    if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
+                        return(False)
+
+        # compare non-loop edge labels with in-neighbors
+        if(params.caller == 1):
+            for node in in_neigh_G[node1]:
+                if(current_match_G.find(node) != current_match_G.end()):
+                    mapped = forward_match[node]
+                    if(in_neigh_H[node2].find(mapped) != in_neigh_H[node2].end()):
+                        # edge in G with in-neighbor in match
+                        labeled_edge_G = to_string(node) + comma + to_string(node1)
+                        # edge in H with out-neighbor in match
+                        labeled_edge_H = to_string(mapped) + comma + to_string(node2)
+                        # compare labeled edges
+                        if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
+                            return(False)
+
+        # compare non-loop edge labels with out-neighbors
+        if(params.caller == 1):
+            for node in out_neigh_G[node1]:
+                if(current_match_G.find(node) != current_match_G.end()):
+                    mapped = forward_match[node]
+                    if(out_neigh_H[node2].find(mapped) != out_neigh_H[node2].end()):
+                        # edge in G with out-neighbor in match
+                        labeled_edge_G = to_string(node1) + comma + to_string(node)
+                        # edge in H with out-neighbor in match
+                        labeled_edge_H = to_string(node2) + comma + to_string(mapped)
+                        # compare labeled edges
+                        if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
+                            return(False)
 
     # end of function
     return(True)
