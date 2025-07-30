@@ -3944,7 +3944,8 @@ cdef cpp_bool semantic_feasibility_directed(cpp_bool node_labels,
                     if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
                         return(False)
 
-        # compare non-loop edge labels with in-neighbors
+        # compare non-loop edge labels of in-neighbors for MCS search
+        # NOTE: at this point we only have true in-neighbors or ambiguous neighbors
         if(params.caller == 1):
             for node in in_neigh_G[node1]:
                 if(current_match_G.find(node) != current_match_G.end()):
@@ -3958,7 +3959,8 @@ cdef cpp_bool semantic_feasibility_directed(cpp_bool node_labels,
                         if(edges_G[labeled_edge_G] != edges_H[labeled_edge_H]):
                             return(False)
 
-        # compare non-loop edge labels with out-neighbors
+        # compare non-loop edge labels of out-neighbors for MCS search
+        # NOTE: at this point we only have true out-neighbors or ambiguous neighbors
         if(params.caller == 1):
             for node in out_neigh_G[node1]:
                 if(current_match_G.find(node) != current_match_G.end()):
