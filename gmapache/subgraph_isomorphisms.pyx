@@ -107,7 +107,7 @@ cdef extern from "<algorithm>" namespace "std":
 
 
 # custom dependencies ----------------------------------------------------------
-from .integerization import encode_graphs, decode_graphs, decode_match
+from .integerization import encode_graphs, decode_match
 from .isomorphisms import search_isomorphisms
 
 
@@ -316,7 +316,8 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
                                  node_labels = False,         # consider node labels when evaluating subgraph isomorphisms
                                  edge_labels = False,         # consider edge labels when evaluating subgraph isomorphisms
                                  all_isomorphisms = False,    # by default stops when finding one subgraph isomorphism (if any)
-                                 induced = True):             # search for induced subgraph isomorphism or general subgraph isomorphism
+                                 induced = True,              # search for induced subgraph isomorphism or general subgraph isomorphism
+                                 correctness = True):         # evaluate the correctness of the input
 
     # description
     """
@@ -362,7 +363,6 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
     > calls:
     * gmapache.isomorphisms.search_isomorphisms
     * gmapache.integerization.encode_graphs
-    * gmapache.integerization.decode_graphs
     * gmapache.integerization.decode_match
     * gmapache.subgraph_isomorphisms.search_subgraph_isomorphisms_input_correctness
     * gmapache.subgraph_isomorphisms.search_subgraph_isomorphisms_order_nodes_by_degree
@@ -443,7 +443,8 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
     node_obj = None
 
     # test input correctness
-    input_correctness = search_subgraph_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_labels, all_isomorphisms, induced)
+    if(correctness):
+        input_correctness = search_subgraph_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_labels, all_isomorphisms, induced)
     if(not input_correctness):
         return([], False)
 
@@ -564,7 +565,7 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
     params.induced_subgraph = induced
 
     # encode graphs
-    encoded_graphs, encoded_node_names, encoded_node_labels, encoded_edge_labels = encode_graphs([nx_G, nx_H])
+    encoded_graphs, encoded_node_names, encoded_node_labels, encoded_edge_labels = encode_graphs([nx_G, nx_H], correctness = correctness)
 
     # prototype list of nodes
     if(params.directed_graphs):
@@ -808,7 +809,7 @@ def search_subgraph_isomorphisms(nx_G = nx.Graph(),           # can also be a ne
 
     # decode subgraph isomorphisms
     for each_isomorphism in encoded_isomorphisms:
-        isomorphisms.append(decode_match(list(each_isomorphism), encoded_node_names))
+        isomorphisms.append(decode_match(list(each_isomorphism), encoded_node_names, correctness = correctness))
 
     # check if there were subgraph isomorphisms
     if(len(isomorphisms) > 0):

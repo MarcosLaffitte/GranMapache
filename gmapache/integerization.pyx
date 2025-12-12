@@ -66,7 +66,7 @@ import cython
 
 
 # function: homogenizes nodes, node labels, and edgelabels of list of graphs ---
-def encode_graphs(input_graphs = []):
+def encode_graphs(input_graphs = [], correctness = True):
 
     # description
     """
@@ -90,32 +90,35 @@ def encode_graphs(input_graphs = []):
     """
 
     # exception handling and input correctness
-    test_list = [0, 0]
-    test_undir = nx.Graph()
-    test_dir = nx.DiGraph()
-    test_count_undir = 0
-    test_count_dir = 0
+    if(correctness):
 
-    # check argument list type
-    if(not type(input_graphs) in [type(test_list)]):
-        raise(ValueError("gmapache: argument must be a list of networkx graphs or digraphs."))
+        # initialize sample types
+        test_list = [0, 0]
+        test_undir = nx.Graph()
+        test_dir = nx.DiGraph()
+        test_count_undir = 0
+        test_count_dir = 0
 
-    # check type of entries input list
-    for test_entry in input_graphs:
-        if(type(test_entry) not in [type(test_undir)]):
-            if(type(test_entry) not in [type(test_dir)]):
-                raise(ValueError("gmapache: elements in list must be networkx graphs or digraphs."))
+        # check argument list type
+        if(not type(input_graphs) in [type(test_list)]):
+            raise(ValueError("gmapache: argument must be a list of networkx graphs or digraphs."))
+
+        # check type of entries input list
+        for test_entry in input_graphs:
+            if(type(test_entry) not in [type(test_undir)]):
+                if(type(test_entry) not in [type(test_dir)]):
+                    raise(ValueError("gmapache: elements in list must be networkx graphs or digraphs."))
+                else:
+                    test_count_dir = test_count_dir + 1
             else:
-                test_count_dir = test_count_dir + 1
-        else:
-            test_count_undir = test_count_undir + 1
+                test_count_undir = test_count_undir + 1
 
-    # check homogeneity of etries in input list
-    if(not test_count_undir == len(input_graphs)):
-        if(not test_count_dir == len(input_graphs)):
-            raise(ValueError("gmapache: elements in list must be networkx graphs or digraphs of the same type."))
+        # check homogeneity of etries in input list
+        if(not test_count_undir == len(input_graphs)):
+            if(not test_count_dir == len(input_graphs)):
+                raise(ValueError("gmapache: elements in list must be networkx graphs or digraphs of the same type."))
 
-    # output holders
+    # Output holders
     cdef list encoded_graphs = []
     cdef dict node_name_encoding = dict()    # from ints to node names
     cdef dict node_label_encoding = dict()   # from ints to node label-dicts
@@ -208,7 +211,8 @@ def encode_graphs(input_graphs = []):
 def decode_graphs(encoded_graphs = [],
                   node_name_encoding = dict(),
                   node_label_encoding = dict(),
-                  edge_label_encoding = dict()):
+                  edge_label_encoding = dict(),
+                  correctness = True):
 
     # description
     """
@@ -228,41 +232,61 @@ def decode_graphs(encoded_graphs = [],
     """
 
     # exception handling and input correctness
-    test_list = [0, 0]
-    test_dict = dict()
-    test_count_undir = 0
-    test_count_dir = 0
-    test_undir = nx.Graph()
-    test_dir = nx.DiGraph()
+    if(correctness):
 
-    # check that the first argument is a list
-    if(not type(encoded_graphs) in [type(test_list)]):
-        raise(ValueError("gmapache: first argument must be a list of networkx graphs or digraphs encoded with granmapache."))
+        # initialize sample types
+        test_list = [0, 0]
+        test_dict = dict()
+        test_count_undir = 0
+        test_count_dir = 0
+        test_undir = nx.Graph()
+        test_dir = nx.DiGraph()
 
-    # check that second argument is a dicitonary
-    if(not type(node_name_encoding) in [type(test_dict)]):
-        raise(ValueError("gmapache: second argument must be a dictionary."))
+        # check that the first argument is a list
+        if(not type(encoded_graphs) in [type(test_list)]):
+            raise(ValueError("gmapache: first argument must be a list of networkx graphs or digraphs encoded with granmapache."))
 
-    # check that third argument is a dicitonary
-    if(not type(node_label_encoding) in [type(test_dict)]):
-        raise(ValueError("gmapache: third argument must be a dictionary."))
+        # check that second argument is a dicitonary
+        if(not type(node_name_encoding) in [type(test_dict)]):
+            raise(ValueError("gmapache: second argument must be a dictionary."))
 
-    # check that fourth argument is a dicitonary
-    if(not type(edge_label_encoding) in [type(test_dict)]):
-        raise(ValueError("gmapache: fourth argument must be a dictionary."))
+        # check that third argument is a dicitonary
+        if(not type(node_label_encoding) in [type(test_dict)]):
+            raise(ValueError("gmapache: third argument must be a dictionary."))
 
-    # check that all the vertices and labels are correctly encoded by the dictionaries
-    for test_entry in encoded_graphs:
+        # check that fourth argument is a dicitonary
+        if(not type(edge_label_encoding) in [type(test_dict)]):
+            raise(ValueError("gmapache: fourth argument must be a dictionary."))
 
-        if(type(test_entry) not in [type(test_undir)]):
+        # check that all the vertices and labels are correctly encoded by the dictionaries
+        for test_entry in encoded_graphs:
 
-            if(type(test_entry) not in [type(test_dir)]):
+            if(type(test_entry) not in [type(test_undir)]):
 
-                raise(ValueError("gmapache: elements in list must be networkx graphs or digraphs."))
+                if(type(test_entry) not in [type(test_dir)]):
+
+                    raise(ValueError("gmapache: elements in list must be networkx graphs or digraphs."))
+
+                else:
+
+                    test_count_dir = test_count_dir + 1
+                    for (test_node, test_info) in list(test_entry.nodes(data = True)):
+                        if(test_node not in list(node_name_encoding.keys())):
+                            raise(ValueError("gmapache: all the nodes of the input (di)graphs must be encoded by the input dictionaries."))
+                        if("GMNL" not in list(test_info.keys())):
+                            raise(ValueError("gmapache: one of the input (di)graphs is not encoded by granmapache."))
+                        if(test_info["GMNL"] not in list(node_label_encoding.keys())):
+                            raise(ValueError("gmapache: all the node-labels of the input (di)graphs must be encoded by the input dictionaries."))
+
+                    for (test_edge, test_info) in list(test_entry.edges(data = True)):
+                        if("GMEL" not in list(test_info.keys())):
+                            raise(ValueError("gmapache: one of the input (di)graphs is not encoded by granmapache."))
+                        if(test_info["GMEL"] not in list(edge_label_encoding.keys())):
+                            raise(ValueError("gmapache: all the edge-labels of the input (di)graphs must be encoded by the input dictionaries."))
 
             else:
 
-                test_count_dir = test_count_dir + 1
+                test_count_undir = test_count_undir + 1
                 for (test_node, test_info) in list(test_entry.nodes(data = True)):
                     if(test_node not in list(node_name_encoding.keys())):
                         raise(ValueError("gmapache: all the nodes of the input (di)graphs must be encoded by the input dictionaries."))
@@ -277,27 +301,10 @@ def decode_graphs(encoded_graphs = [],
                     if(test_info["GMEL"] not in list(edge_label_encoding.keys())):
                         raise(ValueError("gmapache: all the edge-labels of the input (di)graphs must be encoded by the input dictionaries."))
 
-        else:
-
-            test_count_undir = test_count_undir + 1
-            for (test_node, test_info) in list(test_entry.nodes(data = True)):
-                if(test_node not in list(node_name_encoding.keys())):
-                    raise(ValueError("gmapache: all the nodes of the input (di)graphs must be encoded by the input dictionaries."))
-                if("GMNL" not in list(test_info.keys())):
-                    raise(ValueError("gmapache: one of the input (di)graphs is not encoded by granmapache."))
-                if(test_info["GMNL"] not in list(node_label_encoding.keys())):
-                    raise(ValueError("gmapache: all the node-labels of the input (di)graphs must be encoded by the input dictionaries."))
-
-            for (test_edge, test_info) in list(test_entry.edges(data = True)):
-                if("GMEL" not in list(test_info.keys())):
-                    raise(ValueError("gmapache: one of the input (di)graphs is not encoded by granmapache."))
-                if(test_info["GMEL"] not in list(edge_label_encoding.keys())):
-                    raise(ValueError("gmapache: all the edge-labels of the input (di)graphs must be encoded by the input dictionaries."))
-
-    # check that the input graphs in list ahve the same type
-    if(not test_count_undir == len(encoded_graphs)):
-        if(not test_count_dir == len(encoded_graphs)):
-            raise(ValueError("gmapache: elements in list must be networkx graphs or digraphs of the same type."))
+        # check that the input graphs in list ahve the same type
+        if(not test_count_undir == len(encoded_graphs)):
+            if(not test_count_dir == len(encoded_graphs)):
+                raise(ValueError("gmapache: elements in list must be networkx graphs or digraphs of the same type."))
 
     # output holders
     cdef list decoded_graphs = []
@@ -358,7 +365,8 @@ def decode_graphs(encoded_graphs = [],
 
 # function: encode match given an encoding of node names -----------------------
 def encode_match(input_match = [],
-                 node_name_encoding = dict()):
+                 node_name_encoding = dict(),
+                 correctness = True):
 
     # description
     """
@@ -374,28 +382,31 @@ def encode_match(input_match = [],
     """
 
     # exception handling and input correctness
-    test_list = [0, 0]
-    test_tuple = (0, 0)
-    test_dict = dict()
+    if(correctness):
 
-    # check that first argument is a list
-    if(not type(input_match) in [type(test_list)]):
-        raise(ValueError("gmapache: first argument must be a list of 2-tuples."))
+        # initialize sample types
+        test_list = [0, 0]
+        test_tuple = (0, 0)
+        test_dict = dict()
 
-    # check that second argument is a dictionary
-    if(not type(node_name_encoding) in [type(test_dict)]):
-        raise(ValueError("gmapache: second argument must be a dictionary."))
+        # check that first argument is a list
+        if(not type(input_match) in [type(test_list)]):
+            raise(ValueError("gmapache: first argument must be a list of 2-tuples."))
 
-    # check correctnes of entries in input list
-    for test_entry in input_match:
-        if(not type(test_entry) in [type(test_tuple)]):
-            raise(ValueError("gmapache: all elements in input list must be tuples."))
-        if(not len(test_entry) == 2):
-            raise(ValueError("gmapache: all tuples in input list must be of lenght 2."))
-        if(test_entry[0] not in list(node_name_encoding.values())):
-            raise(ValueError("gmapache: input dictionary must encode all elements being matched."))
-        if(test_entry[1] not in list(node_name_encoding.values())):
-            raise(ValueError("gmapache: input dictionary must encode all elements being matched."))
+        # check that second argument is a dictionary
+        if(not type(node_name_encoding) in [type(test_dict)]):
+            raise(ValueError("gmapache: second argument must be a dictionary."))
+
+        # check correctnes of entries in input list
+        for test_entry in input_match:
+            if(not type(test_entry) in [type(test_tuple)]):
+                raise(ValueError("gmapache: all elements in input list must be tuples."))
+            if(not len(test_entry) == 2):
+                raise(ValueError("gmapache: all tuples in input list must be of lenght 2."))
+            if(test_entry[0] not in list(node_name_encoding.values())):
+                raise(ValueError("gmapache: input dictionary must encode all elements being matched."))
+            if(test_entry[1] not in list(node_name_encoding.values())):
+                raise(ValueError("gmapache: input dictionary must encode all elements being matched."))
 
     # output holders
     cdef list encoded_match = []
@@ -428,7 +439,8 @@ def encode_match(input_match = [],
 
 # function: decode match given an encoding of node names -----------------------
 def decode_match(encoded_match = [],
-                 node_name_encoding = dict()):
+                 node_name_encoding = dict(),
+                 correctness = True):
 
     # description
     """
@@ -444,28 +456,31 @@ def decode_match(encoded_match = [],
     """
 
     # exception handling and input correctness
-    test_list = [0, 0]
-    test_tuple = (0, 0)
-    test_dict = dict()
+    if(correctness):
 
-    # check that first argument is a list
-    if(not type(encoded_match) in [type(test_list)]):
-        raise(ValueError("gmapache: first argument must be a list of 2-tuples."))
+        # initialize sample types
+        test_list = [0, 0]
+        test_tuple = (0, 0)
+        test_dict = dict()
 
-    # check that second argument is a dictionary
-    if(not type(node_name_encoding) in [type(test_dict)]):
-        raise(ValueError("gmapache: second argument must be a dictionary."))
+        # check that first argument is a list
+        if(not type(encoded_match) in [type(test_list)]):
+            raise(ValueError("gmapache: first argument must be a list of 2-tuples."))
 
-    # check correctnes of entries in input list
-    for test_entry in encoded_match:
-        if(not type(test_entry) in [type(test_tuple)]):
-            raise(ValueError("gmapache: all elements in input list must be tuples."))
-        if(not len(test_entry) == 2):
-            raise(ValueError("gmapache: all tuples in input list must be of lenght 2."))
-        if(test_entry[0] not in list(node_name_encoding.keys())):
-            raise(ValueError("gmapache: input dictionary must encode all elements being matched."))
-        if(test_entry[1] not in list(node_name_encoding.keys())):
-            raise(ValueError("gmapache: input dictionary must encode all elements being matched."))
+        # check that second argument is a dictionary
+        if(not type(node_name_encoding) in [type(test_dict)]):
+            raise(ValueError("gmapache: second argument must be a dictionary."))
+
+        # check correctnes of entries in input list
+        for test_entry in encoded_match:
+            if(not type(test_entry) in [type(test_tuple)]):
+                raise(ValueError("gmapache: all elements in input list must be tuples."))
+            if(not len(test_entry) == 2):
+                raise(ValueError("gmapache: all tuples in input list must be of lenght 2."))
+            if(test_entry[0] not in list(node_name_encoding.keys())):
+                raise(ValueError("gmapache: input dictionary must encode all elements being matched."))
+            if(test_entry[1] not in list(node_name_encoding.keys())):
+                raise(ValueError("gmapache: input dictionary must encode all elements being matched."))
 
     # output holders
     cdef list decoded_match = []

@@ -100,7 +100,7 @@ cdef extern from "<algorithm>" namespace "std":
 
 
 # custom dependencies ----------------------------------------------------------
-from .integerization import encode_graphs, decode_graphs, decode_match
+from .integerization import encode_graphs, decode_match
 
 
 
@@ -312,7 +312,8 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                         nx_H = nx.Graph(),           # can also be a networkx DiGraph
                         node_labels = False,         # consider node labels when evaluating isomorphisms
                         edge_labels = False,         # consider edge labels when evaluating isomorphisms
-                        all_isomorphisms = False):   # by default stops when finding one isomorphism (if any)
+                        all_isomorphisms = False,    # by default stops when finding one isomorphism (if any)
+                        correctness = True):         # evaluate the correctness of the input
 
     # description
     """
@@ -348,7 +349,6 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
 
     > calls:
     * gmapache.integerization.encode_graphs
-    * gmapache.integerization.decode_graphs
     * gmapache.integerization.decode_match
     * gmapache.isomorphisms.search_isomorphisms_input_correctness
     * gmapache.isomorphisms.search_isomorphisms_label_consistency
@@ -428,7 +428,8 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     undirected_copy = None
 
     # test input correctness
-    input_correctness = search_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_labels, all_isomorphisms)
+    if(correctness):
+        input_correctness = search_isomorphisms_input_correctness(nx_G, nx_H, node_labels, edge_labels, all_isomorphisms)
     if(not input_correctness):
         return([], False)
 
@@ -486,7 +487,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
         params.complement = (nx_G.size() > (ceil((params.expected_order * (params.expected_order-1)/2) * limit_edges) + params.expected_order)) and (params.expected_order >= bigger_graphs)
 
     # encode graphs
-    encoded_graphs, encoded_node_names, encoded_node_labels, encoded_edge_labels = encode_graphs([nx_G, nx_H])
+    encoded_graphs, encoded_node_names, encoded_node_labels, encoded_edge_labels = encode_graphs([nx_G, nx_H], correctness = correctness)
 
     # get complement if necessary
     if(params.complement):
@@ -812,7 +813,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
 
     # decode isomorphisms
     for each_isomorphism in encoded_isomorphisms:
-        isomorphisms.append(decode_match(list(each_isomorphism), encoded_node_names))
+        isomorphisms.append(decode_match(list(each_isomorphism), encoded_node_names, correctness = correctness))
 
     # check if the graphs were isomorphic
     if(len(isomorphisms) > 0):

@@ -101,7 +101,7 @@ cdef extern from "<algorithm>" namespace "std":
 
 
 # custom dependencies ----------------------------------------------------------
-from .integerization import encode_graphs, decode_graphs, encode_match, decode_match
+from .integerization import encode_graphs, encode_match, decode_match
 
 
 
@@ -337,7 +337,8 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
                             input_anchor = [],           # anchor partial map, should be a non-empty list
                             node_labels = False,         # consider node labels when evaluating extension
                             edge_labels = False,         # consider edge labels when evaluating extension
-                            all_extensions = False):     # by default stops when finding one extension (if any)
+                            all_extensions = False,      # by default stops when finding one extension (if any)
+                            correctness = True):         # evaluate the correctness of the input
 
     # description
     """
@@ -387,7 +388,6 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
 
     > calls:
     * gmapache.integerization.encode_graphs
-    * gmapache.integerization.decode_graphs
     * gmapache.integerization.encode_match
     * gmapache.integerization.decode_match
     * gmapache.partial_maps.partial_maps_input_correctness
@@ -470,13 +470,14 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
     # caller = 1 -> gm.partial_maps.search_maximum_common_anchored_subgraphs
     params.caller = 0
 
-    # test input correctness
-    input_correctness = partial_maps_input_correctness(nx_G, nx_H, input_anchor,
-                                                       node_labels, edge_labels,
-                                                       all_extensions, reachability,
-                                                       ambiguous_neighbors_G,
-                                                       ambiguous_neighbors_H,
-                                                       params.caller)
+    # test input correctness (by default unless otherwise specified)
+    if(correctness):
+        input_correctness = partial_maps_input_correctness(nx_G, nx_H, input_anchor,
+                                                           node_labels, edge_labels,
+                                                           all_extensions, reachability,
+                                                           ambiguous_neighbors_G,
+                                                           ambiguous_neighbors_H,
+                                                           params.caller)
     if(not input_correctness):
         return([], False)
 
@@ -531,10 +532,10 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
     params.induced_subgraph = True
 
     # encode graphs
-    encoded_graphs, encoded_node_names, encoded_node_labels, encoded_edge_labels = encode_graphs([nx_G, nx_H])
+    encoded_graphs, encoded_node_names, encoded_node_labels, encoded_edge_labels = encode_graphs([nx_G, nx_H], correctness = correctness)
 
     # encode match
-    params.encoded_anchor = encode_match(input_anchor, encoded_node_names)
+    params.encoded_anchor = encode_match(input_anchor, encoded_node_names, correctness = correctness)
     for each_pair in params.encoded_anchor:
         params.anchor_G.insert(each_pair.first)
         params.anchor_H.insert(each_pair.second)
@@ -793,7 +794,7 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
 
     # decode extensions
     for each_extension in encoded_extensions:
-        extensions.append(decode_match(list(each_extension), encoded_node_names))
+        extensions.append(decode_match(list(each_extension), encoded_node_names, correctness = correctness))
 
     # check if there were any extensions
     if(len(extensions) > 0):
@@ -821,9 +822,10 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),                 
                                              all_extensions = False,            # by default stops when finding one extension (if any)
                                              reachability = True,               # all nodes should be reachable from at least one anchor node
                                              ambiguous_neighbors_G = dict(),    # ambiguous neighbors or "wildcard" virtual-edges in nx_G
-                                             ambiguous_neighbors_H = dict()):   # ambiguous neighbors or "wildcard" virtual-edges in nx_H
+                                             ambiguous_neighbors_H = dict(),    # ambiguous neighbors or "wildcard" virtual-edges in nx_H
+                                             correctness = True):               # evaluate the correctness of the input
 
-   # description
+    # description
     """
     > description: receives two non-null networkx (di-) graphs G and H (possibly with different number
     of nodes), and a non-empty injective map between them (here called anchor), and uses a variant
@@ -878,7 +880,6 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),                 
 
     > calls:
     * gmapache.integerization.encode_graphs
-    * gmapache.integerization.decode_graphs
     * gmapache.integerization.encode_match
     * gmapache.integerization.decode_match
     * gmapache.partial_maps.partial_maps_input_correctness
@@ -962,13 +963,14 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),                 
     # caller = 1 -> gm.partial_maps.search_maximum_common_anchored_subgraphs
     params.caller = 1
 
-    # test input correctness
-    input_correctness = partial_maps_input_correctness(nx_G, nx_H, input_anchor,
-                                                       node_labels, edge_labels,
-                                                       all_extensions, reachability,
-                                                       ambiguous_neighbors_G,
-                                                       ambiguous_neighbors_H,
-                                                       params.caller)
+    # test input correctness (by default unless otherwise specified)
+    if(correctness):
+        input_correctness = partial_maps_input_correctness(nx_G, nx_H, input_anchor,
+                                                           node_labels, edge_labels,
+                                                           all_extensions, reachability,
+                                                           ambiguous_neighbors_G,
+                                                           ambiguous_neighbors_H,
+                                                           params.caller)
     if(not input_correctness):
         return([input_anchor], False)
 
@@ -1001,7 +1003,7 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),                 
     params.test_unbalanced_out_degree_cover = False
 
     # encode graphs
-    encoded_graphs, encoded_node_names, encoded_node_labels, encoded_edge_labels = encode_graphs([nx_G, nx_H])
+    encoded_graphs, encoded_node_names, encoded_node_labels, encoded_edge_labels = encode_graphs([nx_G, nx_H], correctness = correctness)
 
     # determine aliases for the smaller and bigger graph
     if(order_G <= order_H):
@@ -1133,7 +1135,7 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),                 
             params.test_unbalanced_degree_cover = True
 
     # encode anchor preserving original order as given in the input
-    original_anchor_encoded = encode_match(input_anchor, encoded_node_names)
+    original_anchor_encoded = encode_match(input_anchor, encoded_node_names, correctness = correctness)
 
     # save encoded anchor into search parameters inverting input order if necessary
     # NOTE: inside the intensive routines and in associated search-parameters, the
@@ -1330,7 +1332,7 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),                 
         # get input ambiguous neighbors G as list of pairs
         ambiguous_neighbors_G_items = list(ambiguous_neighbors_G.items())
         # encode pairs into integers
-        encoded_ambiguous_neighbors_G = encode_match(input_match = ambiguous_neighbors_G_items, node_name_encoding = encoded_node_names)
+        encoded_ambiguous_neighbors_G = encode_match(input_match = ambiguous_neighbors_G_items, node_name_encoding = encoded_node_names, correctness = correctness)
         # save pairs in unordered map in params
         for each_pair in encoded_ambiguous_neighbors_G:
             if(params.ambiguous_neighbors_G.count(each_pair.first) > 0):
@@ -1345,7 +1347,7 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),                 
         # get input ambiguous neighbors H as list of pairs
         ambiguous_neighbors_H_items = list(ambiguous_neighbors_H.items())
         # encode pairs into integers
-        encoded_ambiguous_neighbors_H = encode_match(input_match = ambiguous_neighbors_H_items, node_name_encoding = encoded_node_names)
+        encoded_ambiguous_neighbors_H = encode_match(input_match = ambiguous_neighbors_H_items, node_name_encoding = encoded_node_names, correctness = correctness)
         # save pairs in unordered map in params
         for each_pair in encoded_ambiguous_neighbors_H:
             if(params.ambiguous_neighbors_H.count(each_pair.first) > 0):
@@ -1376,11 +1378,11 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),                 
             untwisted_extensions.push_back(temp_extension)
         # decode extensions into python objects
         for each_extension in untwisted_extensions:
-            extensions.append(decode_match(list(each_extension), encoded_node_names))
+            extensions.append(decode_match(list(each_extension), encoded_node_names, correctness = correctness))
     else:
         # decode extensions python objects
         for each_extension in encoded_extensions:
-            extensions.append(decode_match(list(each_extension), encoded_node_names))
+            extensions.append(decode_match(list(each_extension), encoded_node_names, correctness = correctness))
 
     # check if there were any proper extensions, if not return the anchor and the value false
     if(len(extensions) > 0):
