@@ -313,7 +313,8 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
                         node_labels = False,         # consider node labels when evaluating isomorphisms
                         edge_labels = False,         # consider edge labels when evaluating isomorphisms
                         all_isomorphisms = False,    # by default stops when finding one isomorphism (if any)
-                        correctness = True):         # evaluate the correctness of the input
+                        correctness = True,          # evaluate the correctness of the input
+                        concentric_order = False):   # use concentric-ordering instead of degree-ordering of nodes whenever possible
 
     # description
     """
@@ -339,6 +340,11 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
     * all_isomorphisms - boolean variable indicating if the function should stop
     as soon as one isomorphism is found (if any) -default behavior- or if it
     should search for all possible isomorphisms between the graphs.
+    * correctness - test corrrectness of input (defaul True), may consume more time
+    beacuse the test has to be done over python objects before conversion.
+    * concentric_order - use a concentric order heuristic expanding from the
+    anchor (if any), instead of the degree-based ordering heuristic for prepareing
+    the vertices before the search.
 
     > output:
     * isomorphisms - (possibly empty) list of isomorphisms, each as a list of
@@ -651,7 +657,7 @@ def search_isomorphisms(nx_G = nx.Graph(),           # can also be a networkx Di
             return([], False)
 
     # determine and create total orders
-    if(not params.induced_encoded_anchor.empty()):
+    if(concentric_order and (not params.induced_encoded_anchor.empty())):
         if(params.directed_graphs):
 
             # get concentric order for directed G

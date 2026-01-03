@@ -338,7 +338,8 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
                             node_labels = False,         # consider node labels when evaluating extension
                             edge_labels = False,         # consider edge labels when evaluating extension
                             all_extensions = False,      # by default stops when finding one extension (if any)
-                            correctness = True):         # evaluate the correctness of the input
+                            correctness = True,          # evaluate the correctness of the input
+                            concentric_order = False):   # use concentric-ordering instead of degree-ordering of nodes
 
     # description
     """
@@ -375,6 +376,10 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
     (mathematically) produce only one complete extension, but calls with different
     anchors can produce non-equivalent extensions, even if the anchors themselves produce
     isomorphic partial ITS graphs.
+    * correctness - test corrrectness of input (defaul True), may consume more time
+    beacuse the test has to be done over python objects before conversion.
+    * concentric_order - use a concentric order heuristic expanding from the anchor, instead
+    of the degree-based ordering heuristic for prepareing the vertices before the search.
 
     > output:
     * extensions - (possibly empty) list of stable extensions, each as a list
@@ -436,6 +441,8 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
     cdef cpp_vector[int] all_nodes_H
     cdef cpp_vector[cpp_vector[int]] all_edges_G
     cdef cpp_vector[cpp_vector[int]] all_edges_H
+    cdef cpp_vector[cpp_pair[int, int]] nodes_and_degrees_G
+    cdef cpp_vector[cpp_pair[int, int]] nodes_and_degrees_H
     cdef cpp_vector[cpp_set[cpp_pair[int, int]]] encoded_extensions
     cdef cpp_set[cpp_pair[int, int]] each_extension
     cdef cpp_unordered_map[int, int] node_degrees
@@ -540,42 +547,46 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
         params.anchor_G.insert(each_pair.first)
         params.anchor_H.insert(each_pair.second)
 
-    # prepare and order nodes in concentric sets around the anchor
+    # prepare and order nodes by (out) degree or in concentric sets around the anchor
     if(params.directed_graphs):
 
         # prepare information for ordering of G
         temp_nodes = list(encoded_graphs[0].nodes())
-        undirected_copy = deepcopy(encoded_graphs[0])
-        undirected_copy = undirected_copy.to_undirected()
-        directed_G.connectivity_neighbors = {node:set(undirected_copy.neighbors(node)) for node in temp_nodes}
         directed_G.nodes = {node:encoded_graphs[0].nodes[node]["GMNL"] for node in temp_nodes}
 
-        # out degrees for ordering
-        node_degrees = {node:encoded_graphs[0].out_degree(node) for node in temp_nodes}
-
         # order for directed G
-        reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_G,
-                                                                     temp_nodes,
-                                                                     directed_G.connectivity_neighbors,
-                                                                     node_degrees,
-                                                                     all_nodes_G)
+        if(concentric_order):
+            undirected_copy = deepcopy(encoded_graphs[0])
+            undirected_copy = undirected_copy.to_undirected()
+            directed_G.connectivity_neighbors = {node:set(undirected_copy.neighbors(node)) for node in temp_nodes}
+            node_degrees = {node:encoded_graphs[0].out_degree(node) for node in temp_nodes}
+            reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_G,
+                                                                         temp_nodes,
+                                                                         directed_G.connectivity_neighbors,
+                                                                         node_degrees,
+                                                                         all_nodes_G)
+        else:
+            nodes_and_degrees_G = [(node, encoded_graphs[0].out_degree(node)) for node in temp_nodes]
+            partial_maps_order_nodes_by_degree(nodes_and_degrees_G, all_nodes_G)
 
         # prepare information for ordering of H
         temp_nodes = list(encoded_graphs[1].nodes())
-        undirected_copy = deepcopy(encoded_graphs[1])
-        undirected_copy = undirected_copy.to_undirected()
-        directed_H.connectivity_neighbors = {node:set(undirected_copy.neighbors(node)) for node in temp_nodes}
         directed_H.nodes = {node:encoded_graphs[1].nodes[node]["GMNL"] for node in temp_nodes}
 
-        # out degrees for ordering
-        node_degrees = {node:encoded_graphs[1].out_degree(node) for node in temp_nodes}
-
         # order for directed H
-        reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_H,
-                                                                     temp_nodes,
-                                                                     directed_H.connectivity_neighbors,
-                                                                     node_degrees,
-                                                                     all_nodes_H)
+        if(concentric_order):
+            undirected_copy = deepcopy(encoded_graphs[1])
+            undirected_copy = undirected_copy.to_undirected()
+            directed_H.connectivity_neighbors = {node:set(undirected_copy.neighbors(node)) for node in temp_nodes}
+            node_degrees = {node:encoded_graphs[1].out_degree(node) for node in temp_nodes}
+            reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_H,
+                                                                         temp_nodes,
+                                                                         directed_H.connectivity_neighbors,
+                                                                         node_degrees,
+                                                                         all_nodes_H)
+        else:
+            nodes_and_degrees_H = [(node, encoded_graphs[1].out_degree(node)) for node in temp_nodes]
+            partial_maps_order_nodes_by_degree(nodes_and_degrees_H, all_nodes_H)
 
     else:
 
@@ -584,30 +595,34 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
         undirected_G.neighbors = {node:set(encoded_graphs[0].neighbors(node)) for node in temp_nodes}
         undirected_G.nodes = {node:encoded_graphs[0].nodes[node]["GMNL"] for node in temp_nodes}
 
-        # degrees for ordering
-        node_degrees = {node:encoded_graphs[0].degree(node) for node in temp_nodes}
-
         # order for undirected G
-        reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_G,
-                                                                     temp_nodes,
-                                                                     undirected_G.neighbors,
-                                                                     node_degrees,
-                                                                     all_nodes_G)
+        if(concentric_order):
+            node_degrees = {node:encoded_graphs[0].degree(node) for node in temp_nodes}
+            reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_G,
+                                                                         temp_nodes,
+                                                                         undirected_G.neighbors,
+                                                                         node_degrees,
+                                                                         all_nodes_G)
+        else:
+            nodes_and_degrees_G = [(node, encoded_graphs[0].degree(node)) for node in temp_nodes]
+            partial_maps_order_nodes_by_degree(nodes_and_degrees_G, all_nodes_G)
 
         # prepare information for ordering of H
         temp_nodes = list(encoded_graphs[1].nodes())
         undirected_H.neighbors = {node:set(encoded_graphs[1].neighbors(node)) for node in temp_nodes}
         undirected_H.nodes = {node:encoded_graphs[1].nodes[node]["GMNL"] for node in temp_nodes}
 
-        # degrees for ordering
-        node_degrees = {node:encoded_graphs[1].degree(node) for node in temp_nodes}
-
         # order for undirected H
-        reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_H,
-                                                                     temp_nodes,
-                                                                     undirected_H.neighbors,
-                                                                     node_degrees,
-                                                                     all_nodes_H)
+        if(concentric_order):
+            node_degrees = {node:encoded_graphs[1].degree(node) for node in temp_nodes}
+            reachable = partial_maps_order_nodes_concentric_reachability(params.anchor_H,
+                                                                         temp_nodes,
+                                                                         undirected_H.neighbors,
+                                                                         node_degrees,
+                                                                         all_nodes_H)
+        else:
+            nodes_and_degrees_H = [(node, encoded_graphs[1].degree(node)) for node in temp_nodes]
+            partial_maps_order_nodes_by_degree(nodes_and_degrees_H, all_nodes_H)
 
     # prepare total orders
     if(params.directed_graphs):
