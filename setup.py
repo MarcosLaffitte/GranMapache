@@ -10,19 +10,24 @@
 #                                                                              #
 ################################################################################
 
+
 # Installing required python version with anaconda
 # conda create -n devdep python=3.11.0
+
 
 # In order to install this package you need C and C++ compilers. If you dont have these
 # already in your system you can install them INSIDE the anaconda environment with
 # conda install -c conda-forge cxx-compiler
 
+
 # Building the package and install dependencies inside anaconda environment
 # python -m pip install .
+
 
 # note that the last command includes "python -m pip", instead of just "pip",
 # this allows one to use the pip version linked to the required python version
 # instead of the default version of the system
+
 
 # Builing cython code IN PLACE if dependencies are already satisfied
 # LINUX:
@@ -32,27 +37,37 @@
 # Note - about Numpy Api Warning see:
 # https://stackoverflow.com/questions/52749662/using-deprecated-numpy-api
 
+
 # Running the main inside the module
 # python -m gmapache
+
 
 # Uninstalling gmapache from anaconda environment
 # python -m pip uninstall gmapache
 
+
 # Removing anaconda environmnet completely
 # conda remove -n devdep --all
+
 
 # Using setuptools, cython and numpy
 from setuptools import Extension, setup, find_packages
 from Cython.Build import cythonize
 import numpy
 
+
 # Turn on annotations with the following
 import Cython.Compiler.Options
 Cython.Compiler.Options.annotate = True
 
+
 extensions = [
+    # python-and-cython scripts
     Extension("gmapache.integerization",
               sources = ["gmapache/integerization.pyx"]),
+    Extension("gmapache.progressive_alignment",
+              sources = ["gmapache/progressive_alignment.pyx"]),
+    # cython-and-cpp scripts
     Extension("gmapache.partial_maps",
               sources = ["gmapache/partial_maps.pyx"],
               language = "c++",
@@ -67,6 +82,7 @@ extensions = [
               extra_compile_args = ["-std=c++20"])
 ]
 
+
 setup(
     name = "gmapache",
     ext_modules = cythonize(extensions),
@@ -75,6 +91,7 @@ setup(
                                         "standalone",
                                         "standalone*"))
 )
+
 
 ################################################################################
 ################################################################################

@@ -14,6 +14,9 @@ from gmapache.isomorphisms import *
 # subgraph isomorphisms ------------------------------------
 from gmapache.subgraph_isomorphisms import *
 
+# progressive alignment ------------------------------------
+from gmapache.progressive_alignment import *
+
 # import submodules ########################################
 # submodule: common subgraphs ------------------------------
 # from gmapache import submodule

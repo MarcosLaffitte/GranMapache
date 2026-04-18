@@ -694,5 +694,65 @@ print(final_time - initial_time)
 print("\n")
 
 
+print("############################################")
+print("> Anchored Progressive Graph Alignment Test")
+
+
+A1 = nx.Graph()
+A1.add_node("x1", color = "B")
+A1.add_node("x2", color = "G")
+A1.add_node("x3", color = "K")
+A1.add_node("x4", color = "K")
+A1.add_edge("x1", "x2", flavor = "X")
+A1.add_edge("x2", "x3", flavor = "X")
+A1.add_edge("x3", "x4", flavor = "X")
+
+A2 = nx.Graph()
+A2.add_node("y1", color = "B")
+A2.add_node("y2", color = "K")
+A2.add_node("y3", color = "R")
+A2.add_node("y4", color = "K")
+A2.add_edge("y1", "y3", flavor = "X")
+A2.add_edge("y3", "y2", flavor = "X")
+A2.add_edge("y2", "y4", flavor = "X")
+
+A3 = nx.Graph()
+A3.add_node("z1", color = "B")
+A3.add_node("z2", color = "G")
+A3.add_node("z3", color = "R")
+A3.add_node("z4", color = "K")
+A3.add_edge("z1", "z2", flavor = "X")
+A3.add_edge("z2", "z3", flavor = "X")
+A3.add_edge("z3", "z1", flavor = "X")
+A3.add_edge("z1", "z4", flavor = "X")
+
+my_graphs = [A1, A2, A3]
+
+my_anchors = [("x1", "y1", "z1")]
+
+the_alignment = gm.anchored_progressive_graph_alignment(input_graphs = my_graphs,
+                                                        anchor_classes = my_anchors,
+                                                        node_labels = True,
+                                                        edge_labels = True,
+                                                        reachability = True,
+                                                        ambiguous_edges = True,
+                                                        test_correctness = True,
+                                                        verbose = True)
+
+print("--------------------------------------------")
+
+for each_key in the_alignment["intermediate_alignments"]:
+    print("\n")
+    print(each_key, ": ", the_alignment["intermediate_alignments"][each_key])
+    print("\n")
+
+print("--------------------------------------------")
+
+for each_key in the_alignment:
+    print("\n")
+    print(each_key, ": ", the_alignment[each_key])
+    print("\n")
+
+
 ################################################################################
 ################################################################################

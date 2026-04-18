@@ -969,6 +969,8 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),                 
     cdef dict encoded_node_labels = dict()
     cdef dict encoded_edge_labels = dict()
     node_obj = None
+    node_obj_1 = None
+    node_obj_2 = None
     nx_bigger = None
     nx_smaller = None
     undirected_copy = None
@@ -1345,7 +1347,9 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),                 
     # unpack and encode ambiguous neighbors in G
     if(len(ambiguous_neighbors_G) > 0):
         # get input ambiguous neighbors G as list of pairs
-        ambiguous_neighbors_G_items = list(ambiguous_neighbors_G.items())
+        for node_obj_1 in ambiguous_neighbors_G.keys():
+            for node_obj_2 in ambiguous_neighbors_G[node_obj_1]:
+                ambiguous_neighbors_G_items.append((node_obj_1, node_obj_2))
         # encode pairs into integers
         encoded_ambiguous_neighbors_G = encode_match(input_match = ambiguous_neighbors_G_items, node_name_encoding = encoded_node_names, correctness = correctness)
         # save pairs in unordered map in params
@@ -1360,7 +1364,9 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),                 
     # unpack and encode ambiguous neighbors in H
     if(len(ambiguous_neighbors_H) > 0):
         # get input ambiguous neighbors H as list of pairs
-        ambiguous_neighbors_H_items = list(ambiguous_neighbors_H.items())
+        for node_obj_1 in ambiguous_neighbors_H.keys():
+            for node_obj_2 in ambiguous_neighbors_H[node_obj_1]:
+                ambiguous_neighbors_H_items.append((node_obj_1, node_obj_2))
         # encode pairs into integers
         encoded_ambiguous_neighbors_H = encode_match(input_match = ambiguous_neighbors_H_items, node_name_encoding = encoded_node_names, correctness = correctness)
         # save pairs in unordered map in params
@@ -3159,8 +3165,9 @@ cdef cpp_bool syntactic_feasibility_undirected(int node1,
             return(False)
 
     if(params.caller == 1):
-        if(neighbors_ring_G > neighbors_ring_H):
-            return(False)
+        if((params.ambiguous_neighbors_G.empty()) and (params.ambiguous_neighbors_H.empty())):
+            if(neighbors_ring_G > neighbors_ring_H):
+                return(False)
 
     # look ahead 2: consistency of extern neighbors (neither in match nor adjacent to match)
     # extern neighbors are not preserved in non-induced case, because non-edges are not necessarily preserved
@@ -3171,8 +3178,9 @@ cdef cpp_bool syntactic_feasibility_undirected(int node1,
                 return(False)
 
         if(params.caller == 1):
-            if(neighbors_extern_G > neighbors_extern_H):
-                return(False)
+            if((params.ambiguous_neighbors_G.empty()) and (params.ambiguous_neighbors_H.empty())):
+                if(neighbors_extern_G > neighbors_extern_H):
+                    return(False)
 
     # end of function
     return(True)
@@ -3871,11 +3879,13 @@ cdef cpp_bool syntactic_feasibility_directed(int node1,
 
     if(params.caller == 1):
 
-        if(neighbors_in_ring_G > neighbors_in_ring_H):
-            return(False)
+        if((params.ambiguous_neighbors_G.empty()) and (params.ambiguous_neighbors_H.empty())):
 
-        if(neighbors_out_ring_G > neighbors_out_ring_H):
-            return(False)
+            if(neighbors_in_ring_G > neighbors_in_ring_H):
+                return(False)
+
+            if(neighbors_out_ring_G > neighbors_out_ring_H):
+                return(False)
 
     # look ahead 2: consistency of extern neighbors (neither in match nor adjacent to match)
     # extern neighbors are not preserved in non-induced case, because non-edges are not necessarily preserved
@@ -3886,8 +3896,9 @@ cdef cpp_bool syntactic_feasibility_directed(int node1,
                 return(False)
 
         if(params.caller == 1):
-            if(neighbors_extern_G > neighbors_extern_H):
-                return(False)
+            if((params.ambiguous_neighbors_G.empty()) and (params.ambiguous_neighbors_H.empty())):
+                if(neighbors_extern_G > neighbors_extern_H):
+                    return(False)
 
     # end of function
     return(True)
