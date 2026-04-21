@@ -694,8 +694,131 @@ print(final_time - initial_time)
 print("\n")
 
 
+# example: progressive anchored alignment --------------------------------------
+
+
 print("############################################")
-print("> Anchored Progressive Graph Alignment Test")
+print("\n")
+print("> Anchored Progressive Graph Alignment Test with random topology")
+
+
+G = nx.Graph()
+G.add_node(1, color = "A")
+G.add_node(2, color = "A")
+G.add_node(3, color = "A")
+G.add_node(4, color = "A")
+G.add_node(5, color = "B")
+G.add_node(6, color = "B")
+G.add_node(7, color = "R")
+G.add_node(8, color = "C")
+G.add_edge(1, 2, flavor = "X")
+G.add_edge(2, 3, flavor = "X")
+G.add_edge(3, 4, flavor = "X")
+G.add_edge(4, 1, flavor = "X")
+G.add_edge(1, 5, flavor = "X")
+G.add_edge(5, 6, flavor = "X")
+G.add_edge(6, 7, flavor = "X")
+G.add_edge(7, 8, flavor = "X")
+
+
+H = nx.Graph()
+H.add_node("a", color = "A")
+H.add_node("b", color = "A")
+H.add_node("c", color = "A")
+H.add_node("d", color = "A")
+H.add_node("e", color = "B")
+H.add_node("f", color = "B")
+H.add_node("g", color = "S")
+H.add_node("h", color = "C")
+H.add_edge("a", "b", flavor = "X")
+H.add_edge("b", "c", flavor = "X")
+H.add_edge("c", "d", flavor = "X")
+H.add_edge("d", "a", flavor = "X")
+H.add_edge("a", "e", flavor = "X")
+H.add_edge("e", "f", flavor = "X")
+H.add_edge("f", "g", flavor = "X")
+H.add_edge("g", "h", flavor = "X")
+
+
+F = nx.Graph()
+F.add_node("x1", color = "A")
+F.add_node("x2", color = "A")
+F.add_node("x3", color = "A")
+F.add_node("x4", color = "A")
+F.add_node("x5", color = "B")
+F.add_node("x6", color = "B")
+F.add_node("x7", color = "R")
+F.add_node("x8", color = "C")
+F.add_edge("x1", "x2", flavor = "X")
+F.add_edge("x2", "x3", flavor = "X")
+F.add_edge("x3", "x4", flavor = "X")
+F.add_edge("x4", "x1", flavor = "X")
+F.add_edge("x3", "x5", flavor = "X")
+F.add_edge("x5", "x6", flavor = "X")
+F.add_edge("x6", "x7", flavor = "X")
+F.add_edge("x7", "x8", flavor = "X")
+
+
+K = nx.Graph()
+K.add_node("y1", color = "A")
+K.add_node("y2", color = "A")
+K.add_node("y3", color = "A")
+K.add_node("y4", color = "A")
+K.add_node("y5", color = "B")
+K.add_node("y6", color = "B")
+K.add_node("y7", color = "S")
+K.add_node("y8", color = "C")
+K.add_edge("y1", "y2", flavor = "X")
+K.add_edge("y2", "y3", flavor = "X")
+K.add_edge("y3", "y4", flavor = "X")
+K.add_edge("y4", "y1", flavor = "X")
+K.add_edge("y3", "y5", flavor = "X")
+K.add_edge("y5", "y6", flavor = "X")
+K.add_edge("y6", "y7", flavor = "X")
+K.add_edge("y7", "y8", flavor = "X")
+
+
+my_graphs = [G, H, F, K]
+
+
+my_anchors = [(1, "a", "x1", "y1"),
+              (2, "b", "x2", "y2"),
+              (3, "c", "x3", "y3"),
+              (4, "d", "x4", "y4")]
+
+
+the_alignment = gm.anchored_progressive_graph_alignment(input_graphs = my_graphs,
+                                                        anchor_classes = my_anchors,
+                                                        node_labels = True,
+                                                        edge_labels = True,
+                                                        reachability = True,
+                                                        ambiguous_edges = True,
+                                                        test_correctness = True,
+                                                        verbose = True,
+                                                        topology = "random")
+
+
+print("--------------------------------------------")
+
+
+for each_key in the_alignment["intermediate_alignments"]:
+    print("\n")
+    print(each_key, ": ", the_alignment["intermediate_alignments"][each_key])
+    print("\n")
+
+
+print("--------------------------------------------")
+
+
+for each_key in the_alignment:
+    print("\n")
+    print(each_key, ": ", the_alignment[each_key])
+    print("\n")
+
+
+print("############################################")
+print("\n")
+print("> Anchored Progressive Graph Alignment Test with kernel-induced topology")
 
 
 A1 = nx.Graph()
@@ -707,6 +830,7 @@ A1.add_edge("x1", "x2", flavor = "X")
 A1.add_edge("x2", "x3", flavor = "X")
 A1.add_edge("x3", "x4", flavor = "X")
 
+
 A2 = nx.Graph()
 A2.add_node("y1", color = "B")
 A2.add_node("y2", color = "K")
@@ -715,6 +839,7 @@ A2.add_node("y4", color = "K")
 A2.add_edge("y1", "y3", flavor = "X")
 A2.add_edge("y3", "y2", flavor = "X")
 A2.add_edge("y2", "y4", flavor = "X")
+
 
 A3 = nx.Graph()
 A3.add_node("z1", color = "B")
@@ -726,9 +851,12 @@ A3.add_edge("z2", "z3", flavor = "X")
 A3.add_edge("z3", "z1", flavor = "X")
 A3.add_edge("z1", "z4", flavor = "X")
 
+
 my_graphs = [A1, A2, A3]
 
+
 my_anchors = [("x1", "y1", "z1")]
+
 
 the_alignment = gm.anchored_progressive_graph_alignment(input_graphs = my_graphs,
                                                         anchor_classes = my_anchors,
@@ -737,16 +865,21 @@ the_alignment = gm.anchored_progressive_graph_alignment(input_graphs = my_graphs
                                                         reachability = True,
                                                         ambiguous_edges = True,
                                                         test_correctness = True,
-                                                        verbose = True)
+                                                        verbose = True,
+                                                        topology = "kernels")
+
 
 print("--------------------------------------------")
+
 
 for each_key in the_alignment["intermediate_alignments"]:
     print("\n")
     print(each_key, ": ", the_alignment["intermediate_alignments"][each_key])
     print("\n")
 
+
 print("--------------------------------------------")
+
 
 for each_key in the_alignment:
     print("\n")

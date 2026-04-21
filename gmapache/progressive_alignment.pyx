@@ -92,7 +92,8 @@ def anchored_progressive_graph_alignment(input_graphs = [],           # input li
                                          reachability = True,         # all nodes should be reachable from at least one anchor node
                                          ambiguous_edges = True,      # consider ambiguous edges when building alignments
                                          test_correctness = True,     # test correctness of the input
-                                         verbose = True):             # set to False to omit printing messages of progress
+                                         verbose = True,              # set to False to omit printing messages of progress
+                                         topology = "kernels"):       # select the tree topology to be usedbetween: kernels, comb or random
 
     # description
     """> description: receives a list of networkx graphs or digraphs of
@@ -132,6 +133,11 @@ def anchored_progressive_graph_alignment(input_graphs = [],           # input li
     * ambiguous_edges - boolean for considering ambiguous edges when building the alignments
     * test_correctness - boolean for testing correctness of the input
     * verbose - controls printing messages about intermediate outputs
+    * topology - string argument for selecting the tree topology to be used between: "kernels"
+    for the one evaluated with the graph kernels (default), "comb" for obtaining the alignment
+    with dendrogram equivalent to (...(((0, 1), 2), 3) ..., N-1) following the indices of the
+    input list of graphs, and "random" for a randomly generated binary tree. When "comb" or
+    "random" are selected the outputs similarity_matrix and distance_graph are set to None.
 
     > output:
     * alignment_dictionary - python dictionary with the following nine string keys:
@@ -172,6 +178,7 @@ def anchored_progressive_graph_alignment(input_graphs = [],           # input li
     cdef int k = 0
     cdef int N = 0
     cdef int order = 0
+    cdef int counter = 0
     cdef int total_anchor_classes = 0
 
     # local variables (python)
@@ -209,9 +216,25 @@ def anchored_progressive_graph_alignment(input_graphs = [],           # input li
     current_alignment = None
     trimmed_guide_tree = None
 
+    # message
+    if(verbose):
+        print("\n")
+        print("> progressive graph alignment")
+        if(test_correctness):
+            print("* testing input correctness")
+        else:
+            print("* correctness-test for input was disabled")
+
     # test input correctness
     if(test_correctness):
-        input_correctness = progressive_alignment_input_correctness(input_graphs, anchor_classes, node_labels, edge_labels, reachability, ambiguous_edges, verbose)
+        input_correctness = progressive_alignment_input_correctness(input_graphs,
+                                                                    anchor_classes,
+                                                                    node_labels,
+                                                                    edge_labels,
+                                                                    reachability,
+                                                                    ambiguous_edges,
+                                                                    verbose,
+                                                                    topology)
         if(not input_correctness):
             return(alignment_dictionary)
     else:
@@ -222,12 +245,37 @@ def anchored_progressive_graph_alignment(input_graphs = [],           # input li
     N = len(input_graphs)
     total_anchor_classes = len(anchor_classes)
 
-    # create clustering graph
-    similarity_matrix, distance_graph = progressive_alignment_evaluate_graph_kernels(input_graphs, N, node_labels, edge_labels, verbose)
+    # message
+    if(verbose):
+        print(f"* starting alignment of {N} input graphs")
+
+    # message
+    if(verbose):
+        if(topology == "kernels"):
+            print("* evaluating graph kernels")
+        else:
+            print("* graph-kernel evaluation was disabled")
+
+    # evaluate graph kernels and create clustering graph
+    if(topology == "kernels"):
+        similarity_matrix, distance_graph = progressive_alignment_evaluate_graph_kernels(input_graphs, N, node_labels, edge_labels, verbose)
+    else:
+        similarity_matrix = None
+        distance_graph = None
+
+    # message
+    if(verbose):
+        if(topology == "kernels"):
+            print("\n")
+        print(f"* obtaining guide tree - topology: {topology}")
 
     # create guide tree
-    guide_tree_graph = progressive_alignment_get_guide_tree(distance_graph, N)
+    guide_tree_graph = progressive_alignment_get_guide_tree(topology, distance_graph, N)
     trimmed_guide_tree = deepcopy(guide_tree_graph)
+
+    # message
+    if(verbose):
+        print("* preparing leaves for alignment")
 
     # prepare input graphs as (intermediate alignment) leaves of the guide tree following the input order
     for i in range(N):
@@ -259,6 +307,10 @@ def anchored_progressive_graph_alignment(input_graphs = [],           # input li
         # save input graph as intermediate graph
         intermediate_alignments[i] = (deepcopy(input_graphs[i]), deepcopy(sub_alignment_columns), deepcopy(anchor_map), deepcopy(ambiguous_neighbors), deepcopy(aligned_leaves))
 
+    # message
+    if(verbose):
+        print("* doing pairwise alignments")
+
     # progressive graph alignment based on guide-tree pruning
     while(trimmed_guide_tree.order() > 1):
 
@@ -277,6 +329,12 @@ def anchored_progressive_graph_alignment(input_graphs = [],           # input li
 
         # pairwise-alignment of leaves in each cherry
         for each_cherry in cherries:
+
+            # message
+            if(verbose):
+                counter = counter + 1
+                print(f"- alignment number {counter} out of {N-1} - (sub)dendrogram:")
+                print(f"  {each_cherry[0]}")
 
             # reinitialize variables
             anchor = []
@@ -353,14 +411,26 @@ def anchored_progressive_graph_alignment(input_graphs = [],           # input li
             trimmed_guide_tree.remove_node(each_cherry[1])
             trimmed_guide_tree.remove_node(each_cherry[2])
 
+    # message
+    if(verbose):
+        print("* finished pairwise alignments")
+
     # unpack values for simplified look-ups after alignment
     dendrogram = deepcopy(list(trimmed_guide_tree.nodes())[0])
     alignment_graph = deepcopy(intermediate_alignments[dendrogram][0])
     alignment_columns = deepcopy(intermediate_alignments[dendrogram][1])
     anchor_classes_map = deepcopy(intermediate_alignments[dendrogram][2])
 
+    # message
+    if(verbose):
+        print("* obtaining consensus graphs")
+
     # obtain consensus graphs
     consensus_graphs = progressive_alignment_consensus_graphs(alignment_graph, alignment_columns, N)
+
+    # message
+    if(verbose):
+        print("* storing results")
 
     # save output
     alignment_dictionary["dendrogram"] = dendrogram
@@ -372,6 +442,11 @@ def anchored_progressive_graph_alignment(input_graphs = [],           # input li
     alignment_dictionary["alignment_columns"] = alignment_columns
     alignment_dictionary["anchor_classes_map"] = anchor_classes_map
     alignment_dictionary["intermediate_alignments"] = intermediate_alignments
+
+    # message
+    if(verbose):
+        print("> done")
+        print("\n")
 
     # end of function
     return(alignment_dictionary)
@@ -387,7 +462,7 @@ def anchored_progressive_graph_alignment(input_graphs = [],           # input li
 
 
 # function: --------------------------------------------------------------------
-def progressive_alignment_input_correctness(input_graphs, anchor_classes, node_labels, edge_labels, reachability, ambiguous_edges, verbose):
+def progressive_alignment_input_correctness(input_graphs, anchor_classes, node_labels, edge_labels, reachability, ambiguous_edges, verbose, topology):
 
     # local variables (cython)
     cdef int i = 0
@@ -464,6 +539,10 @@ def progressive_alignment_input_correctness(input_graphs, anchor_classes, node_l
     # check consistency of boolean argument verbose
     if(type(verbose) not in [type(test_bool)]):
         raise(ValueError("gmapache: argument verbose must be boolean."))
+
+    # check consistency of string argument topology
+    if(not topology in ["kernels", "comb", "random"]):
+        raise(ValueError("gmapache: argument topology must be one of the following strings: kernels, comb or random."))
 
     # check consistency of the anchor classes as isomorphisms between induced subgraphs of the input graphs
     good_isos = progressive_alignment_test_anchor_classes(input_graphs, anchor_classes, node_labels, edge_labels)
@@ -780,7 +859,7 @@ def kronecker_delta_two_edges(label1, label2, weight1, weight2):
 
 
 # function: --------------------------------------------------------------------
-def progressive_alignment_get_guide_tree(distance_graph, N):
+def progressive_alignment_get_guide_tree(topology, distance_graph, N):
 
     # local variables (cython)
     cdef int k = 0
@@ -794,6 +873,7 @@ def progressive_alignment_get_guide_tree(distance_graph, N):
     cdef list other_nodes = []
     cdef list dendro_edges = []
     cdef tuple dendro_node = tuple()
+    cdef tuple new_dendro_node = tuple()
     guide_tree = None
     dendro_graph = None
 
@@ -801,60 +881,116 @@ def progressive_alignment_get_guide_tree(distance_graph, N):
     guide_tree = nx.Graph()
     guide_tree.add_nodes_from(list(range(N)))
 
-    # initialize dendro graph to be modified
-    dendro_graph = deepcopy(distance_graph)
+    # create guide tree based on comb topology
+    if(topology == "comb"):
 
-    # iterative construction of dendrogram
-    while(dendro_graph.order() > 1):
+        # create basis dendro node
+        dendro_node = (0, 1)
 
-        # get size of dendrograph
-        ds = dendro_graph.size()
-
-        # get list of all edges
-        dendro_edges = deepcopy(list(dendro_graph.edges(data = True)))
-
-        # get arbitrary distance
-        mk = 0
-        minimum_distance = dendro_edges[0][2]["distance"]
-
-        # traverse edges getting one with minimum distance
-        for k in range(ds):
-
-            # check if minimizing
-            if(dendro_edges[k][2]["distance"] < minimum_distance):
-
-                # update distance
-                minimum_distance = dendro_edges[k][2]["distance"]
-
-                # save index of current minimum
-                mk = k
-
-        # build dendro node
-        if((type(dendro_edges[mk][0]) in [type(test_int)]) and (type(dendro_edges[mk][1]) in [type(test_int)])):
-            if(dendro_edges[mk][0] < dendro_edges[mk][1]):
-                dendro_node = (dendro_edges[mk][0], dendro_edges[mk][1])
-            else:
-                dendro_node = (dendro_edges[mk][1], dendro_edges[mk][0])
-        else:
-            dendro_node = (dendro_edges[mk][0], dendro_edges[mk][1])
-
-        # get all the other nodes
-        other_nodes = deepcopy(list(dendro_graph.nodes()))
-        other_nodes.remove(dendro_node[0])
-        other_nodes.remove(dendro_node[1])
-
-        # contract dendro graph
-        dendro_graph.add_node(dendro_node)
-        for k in range(len(other_nodes)):
-            new_distance = (dendro_graph[other_nodes[k]][dendro_node[0]]["distance"] + dendro_graph[other_nodes[k]][dendro_node[1]]["distance"])/2
-            dendro_graph.add_edge(dendro_node, other_nodes[k], distance = new_distance)
-        dendro_graph.remove_node(dendro_node[0])
-        dendro_graph.remove_node(dendro_node[1])
-
-        # add dendro_node to guide tree graph
+        # add basis cases
         guide_tree.add_node(dendro_node)
-        guide_tree.add_edge(dendro_node[0], dendro_node)
-        guide_tree.add_edge(dendro_node[1], dendro_node)
+        guide_tree.add_edge(0, dendro_node)
+        guide_tree.add_edge(1, dendro_node)
+
+        # build the comb tree iteratively
+        for k in range(2, N):
+
+            # make new dendro node
+            new_dendro_node = (dendro_node, k)
+
+            # add new dedron node and new edges
+            guide_tree.add_node(new_dendro_node)
+            guide_tree.add_edge(k, new_dendro_node)
+            guide_tree.add_edge(dendro_node, new_dendro_node)
+
+            # update dendro node
+            dendro_node = deepcopy(new_dendro_node)
+
+    # create guide tree based on graph kernels
+    if(topology == "kernels"):
+
+        # initialize dendro graph to be modified
+        dendro_graph = deepcopy(distance_graph)
+
+        # iterative construction of dendrogram
+        while(dendro_graph.order() > 1):
+
+            # get size of dendrograph
+            ds = dendro_graph.size()
+
+            # get list of all edges
+            dendro_edges = deepcopy(list(dendro_graph.edges(data = True)))
+
+            # get arbitrary distance
+            mk = 0
+            minimum_distance = dendro_edges[0][2]["distance"]
+
+            # traverse edges getting one with minimum distance
+            for k in range(ds):
+
+                # check if minimizing
+                if(dendro_edges[k][2]["distance"] < minimum_distance):
+
+                    # update distance
+                    minimum_distance = dendro_edges[k][2]["distance"]
+
+                    # save index of current minimum
+                    mk = k
+
+            # build dendro node
+            if((type(dendro_edges[mk][0]) in [type(test_int)]) and (type(dendro_edges[mk][1]) in [type(test_int)])):
+                if(dendro_edges[mk][0] < dendro_edges[mk][1]):
+                    dendro_node = (dendro_edges[mk][0], dendro_edges[mk][1])
+                else:
+                    dendro_node = (dendro_edges[mk][1], dendro_edges[mk][0])
+            else:
+                dendro_node = (dendro_edges[mk][0], dendro_edges[mk][1])
+
+            # get all the other nodes
+            other_nodes = deepcopy(list(dendro_graph.nodes()))
+            other_nodes.remove(dendro_node[0])
+            other_nodes.remove(dendro_node[1])
+
+            # contract dendro graph
+            dendro_graph.add_node(dendro_node)
+            for k in range(len(other_nodes)):
+                new_distance = (dendro_graph[other_nodes[k]][dendro_node[0]]["distance"] + dendro_graph[other_nodes[k]][dendro_node[1]]["distance"])/2
+                dendro_graph.add_edge(dendro_node, other_nodes[k], distance = new_distance)
+            dendro_graph.remove_node(dendro_node[0])
+            dendro_graph.remove_node(dendro_node[1])
+
+            # add dendro_node to guide tree graph
+            guide_tree.add_node(dendro_node)
+            guide_tree.add_edge(dendro_node[0], dendro_node)
+            guide_tree.add_edge(dendro_node[1], dendro_node)
+
+    # create guide tree based on random topology
+    if(topology == "random"):
+
+        # create dedrograph as empty graph
+        dendro_graph = nx.Graph()
+        dendro_graph.add_nodes_from(list(range(N)))
+
+        # iterative construction of dendrogram
+        while(dendro_graph.order() > 1):
+
+            # build dendro node as random selection of vertices to merge
+            dendro_node = tuple(random.sample(list(dendro_graph.nodes(data = False)), k = 2))
+
+            # give integer order to dendro nodeif necessary
+            if((type(dendro_node[0]) in [type(test_int)]) and (type(dendro_node[1]) in [type(test_int)])):
+                if(dendro_node[0] > dendro_node[1]):
+                    dendro_node = (dendro_node[1], dendro_node[0])
+
+            # add dedro node and remove corresponding leaves
+            dendro_graph.add_node(dendro_node)
+            dendro_graph.remove_node(dendro_node[0])
+            dendro_graph.remove_node(dendro_node[1])
+
+            # add dendro_node to guide tree graph
+            guide_tree.add_node(dendro_node)
+            guide_tree.add_edge(dendro_node[0], dendro_node)
+            guide_tree.add_edge(dendro_node[1], dendro_node)
 
     # end of function
     return(guide_tree)
