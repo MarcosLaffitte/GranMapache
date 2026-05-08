@@ -1351,7 +1351,7 @@ def progressive_alignment_consensus_graphs(alignment_graph, alignment_columns, N
         bad_nodes = []
 
         # get vertices failing to have not_gap_count at least p
-        for k in range(N):
+        for k in range(order):
             if(not_gap_count[alignment_nodes[k]] < p):
                 bad_nodes.append(alignment_nodes[k])
 
