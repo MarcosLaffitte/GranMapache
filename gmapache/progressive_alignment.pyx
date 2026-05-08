@@ -375,7 +375,8 @@ def anchored_progressive_graph_alignment(input_graphs = [],           # input li
                                                                                   node_labels = node_labels, edge_labels = edge_labels,
                                                                                   all_extensions = False, reachability = reachability,
                                                                                   ambiguous_neighbors_G = ambiguous_neighbors_G1,
-                                                                                  ambiguous_neighbors_H = ambiguous_neighbors_G2)
+                                                                                  ambiguous_neighbors_H = ambiguous_neighbors_G2,
+                                                                                  verbose = verbose)
 
             # unpack MCS
             anchored_MCS = results_MCSs[0]

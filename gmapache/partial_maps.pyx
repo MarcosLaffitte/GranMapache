@@ -61,6 +61,7 @@
 # already in python ------------------------------------------------------------
 import itertools
 from copy import deepcopy
+from math import modf, sqrt
 from sys import getrecursionlimit, setrecursionlimit
 
 
@@ -247,6 +248,8 @@ cdef struct partial_maps_search_params:
     cpp_bool induced_subgraph
     # reachability for anchored-MCS search
     cpp_bool reachability
+    # verbose mode
+    cpp_bool verbose
     # order of domain and codomain graphs
     int int_order_domain
     int int_order_codomain
@@ -839,7 +842,8 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),                 
                                              reachability = True,               # all nodes should be reachable from at least one anchor node
                                              ambiguous_neighbors_G = dict(),    # ambiguous neighbors or "wildcard" virtual-edges in nx_G
                                              ambiguous_neighbors_H = dict(),    # ambiguous neighbors or "wildcard" virtual-edges in nx_H
-                                             correctness = True):               # evaluate the correctness of the input
+                                             correctness = True,                # evaluate the correctness of the input
+                                             verbose = False):                  # print progress bar and messages
 
     # description
     """
@@ -885,6 +889,7 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),                 
     implied by the ambiguous edges, i.e., pairs of nodes that are not actual edges, but override
     non-adjacency of H, allowing the matching of vertices with not-equivalent "real" neighborhoods.
     These "virtual" edges have no edge-label and only have a roll inside the syntactic feasability.
+    * verbose - control printing of messages of progress and progress bar
 
     > output:
     * extensions - non-empty list of maximum common induced subgraphs extending the anchor, each
@@ -1015,6 +1020,7 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),                 
     params.edge_labels_backup = edge_labels
     params.all_extensions = all_extensions
     params.reachability = reachability
+    params.verbose = verbose
     params.induced_subgraph = True
     params.test_unbalanced_degree_cover = False
     params.test_unbalanced_in_degree_cover = False
@@ -1480,7 +1486,23 @@ cdef void partial_maps_iterative_trimming(cpp_unordered_map[int, int] & all_remo
 
     # finish if extensions were found; next trimmings produce only smaller graphs
     if(not encoded_extensions.empty()):
+
+        # print progress
+        if(params.verbose):
+            print_progress(case_percentage = round(100, 2),
+                           case_num = total_removable-1,
+                           tot_cases = total_removable-1,
+                           u_turn = False)
+
+        # end function if conditions are met
         return
+
+    # print progress
+    if(params.verbose):
+        print_progress(case_percentage = round(0*100/(total_removable-1), 2),
+                       case_num = 0,
+                       tot_cases = total_removable-1,
+                       u_turn = True)
 
     # test removing non-empty sets only if there are at least 2 removable nodes
     if(total_removable >= 2):
@@ -1511,11 +1533,36 @@ cdef void partial_maps_iterative_trimming(cpp_unordered_map[int, int] & all_remo
             # finish if one extension was found and no more are required
             if(not encoded_extensions.empty()):
                 if(not params.all_extensions):
+
+                    # print progress
+                    if(params.verbose):
+                        print_progress(case_percentage = round(100, 2),
+                                       case_num = total_removable-1,
+                                       tot_cases = total_removable-1,
+                                       u_turn = False)
+
+                    # end function if conditions are met
                     return
 
         # finish if extensions were found; next trimmings produce smaller graphs
         if(not encoded_extensions.empty()):
+
+            # print progress
+            if(params.verbose):
+                print_progress(case_percentage = round(100, 2),
+                               case_num = total_removable-1,
+                               tot_cases = total_removable-1,
+                               u_turn = False)
+
+            # end function if conditions are met
             return
+
+        # print progress
+        if(params.verbose):
+            print_progress(case_percentage = round(1*100/(total_removable-1), 2),
+                           case_num = 1,
+                           tot_cases = total_removable-1,
+                           u_turn = True)
 
         # test removal of sets with more than one element, and up to cardinality
         # N-1 for N removable nodes, since removing the N nodes can only produce
@@ -1547,11 +1594,43 @@ cdef void partial_maps_iterative_trimming(cpp_unordered_map[int, int] & all_remo
                 # finish if one extension was found and no more are required
                 if(not encoded_extensions.empty()):
                     if(not params.all_extensions):
+
+                        # print progress
+                        if(params.verbose):
+                            print_progress(case_percentage = round(100, 2),
+                                           case_num = total_removable-1,
+                                           tot_cases = total_removable-1,
+                                           u_turn = False)
+
+                        # end function if conditions are met
                         return
 
             # finish if extensions were found; next trimmings produce smaller graphs
             if(not encoded_extensions.empty()):
+
+                # print progress
+                if(params.verbose):
+                    print_progress(case_percentage = round(100, 2),
+                                   case_num = total_removable-1,
+                                   tot_cases = total_removable-1,
+                                   u_turn = False)
+
+                # end function if conditions are met
                 return
+
+            # print progress
+            if(params.verbose):
+                print_progress(case_percentage = round(k*100/(total_removable-1), 2),
+                               case_num = k,
+                               tot_cases = total_removable-1,
+                               u_turn = True)
+
+    # print progress
+    if(params.verbose):
+        print_progress(case_percentage = round(100, 2),
+                       case_num = total_removable-1,
+                       tot_cases = total_removable-1,
+                       u_turn = False)
 
     # end of function
 
@@ -4144,6 +4223,53 @@ cdef cpp_bool semantic_feasibility_directed(cpp_bool node_labels,
 
     # end of function
     return(True)
+
+
+
+
+
+# functions - verbose mode #####################################################
+
+
+
+
+
+# function: print custom progress bar ------------------------------------------
+def print_progress(case_percentage = 0, case_num = 0, tot_cases = 0, progress_in = "", report_case = True, u_turn = True):
+
+    # local variables
+    tail = "".join(10*[" "])
+    base = "-"
+    done = "="
+    bar = ""
+    pile = []
+    finished = ""
+    percentage_int = 0
+
+    # generate bar
+    percentage_int = int(modf(case_percentage/10)[1])
+    for i in range(1, 11):
+        if(i <= percentage_int):
+            pile.append(done)
+        else:
+            pile.append(base)
+    finished = "".join(pile)
+    if(report_case):
+        if(progress_in == ""):
+            bar = "- progress:  0%  [" + finished + "]  100%" + " ;  done   k = " + str(case_num) + " / " + str(tot_cases)
+        else:
+            bar = "- progress " + progress_in + ":  0%  [" + finished + "]  100%" + " ;  done   k = " + str(case_num) + " / " + str(tot_cases)
+    else:
+        if(progress_in == ""):
+            bar = "- progress:  0%  [" + finished + "]  100%"
+        else:
+            bar = "- progress " + progress_in + ":  0%  [" + finished + "]  100%"
+
+    # message
+    if(u_turn):
+        print(bar + tail, end = "\r")
+    else:
+        print(bar + tail)
 
 
 
