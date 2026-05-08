@@ -59,6 +59,7 @@
 
 
 # already in python ------------------------------------------------------------
+import itertools
 from copy import deepcopy
 from sys import getrecursionlimit, setrecursionlimit
 
@@ -1428,19 +1429,19 @@ cdef void partial_maps_iterative_trimming(cpp_unordered_map[int, int] & all_remo
                                           partial_maps_undirected_graph & undirected_bigger,
                                           partial_maps_undirected_graph & undirected_smaller) noexcept:
 
-    # local variables
+    # local variables (cython)
     cdef int i = 0
     cdef int k = 0
-    cdef int new_index = 0
-    cdef int last_added = 0
     cdef int total_removable = 0
-    cdef cpp_vector[int] each_subset
     cdef cpp_vector[int] test_subset
-    cdef cpp_vector[cpp_vector[int]] old_subsets
-    cdef cpp_vector[cpp_vector[int]] new_subsets
+
+    # local variables (python)
+    cdef list removable_list = []
+    cdef tuple each_subset = tuple()
 
     # prepare data for iteration
     total_removable = <int>(all_removable_nodes.size())
+    removable_list = list(range(total_removable))
 
     # test "removal" of empty set (only for graphs with different order)
     if(params.directed_graphs):
@@ -1512,9 +1513,6 @@ cdef void partial_maps_iterative_trimming(cpp_unordered_map[int, int] & all_remo
                 if(not params.all_extensions):
                     return
 
-            # save singleton
-            old_subsets.push_back(test_subset)
-
         # finish if extensions were found; next trimmings produce smaller graphs
         if(not encoded_extensions.empty()):
             return
@@ -1524,52 +1522,194 @@ cdef void partial_maps_iterative_trimming(cpp_unordered_map[int, int] & all_remo
         # the trivial extension, i.e., return the input anchor itself
         for k in range(2, total_removable):
 
-            # clear new subsets holder
-            new_subsets.clear()
+            # get iterator of k-th subsets of the N nodes
+            for each_subset in itertools.combinations(removable_list, k):
 
-            # generate new subsets with one more element
-            for each_subset in old_subsets:
-                last_added = each_subset.back()
-                if(last_added < total_removable):
-                    for new_index in range(last_added + 1, total_removable):
+                # turn subset to cython vector
+                test_subset = list(each_subset)
 
-                        # create subset
-                        test_subset = each_subset
-                        test_subset.push_back(new_index)
+                # trimm smaller graph and test induced subgraph isomorphism
+                if(params.directed_graphs):
+                    trimm_and_test_subgraph_isomorphism_directed(test_subset,
+                                                                 all_removable_nodes,
+                                                                 encoded_extensions,
+                                                                 params,
+                                                                 directed_bigger,
+                                                                 directed_smaller)
+                else:
+                    trimm_and_test_subgraph_isomorphism_undirected(test_subset,
+                                                                   all_removable_nodes,
+                                                                   encoded_extensions,
+                                                                   params,
+                                                                   undirected_bigger,
+                                                                   undirected_smaller)
 
-                        # trimm smaller graph and test induced subgraph isomorphism
-                        if(params.directed_graphs):
-                            trimm_and_test_subgraph_isomorphism_directed(test_subset,
-                                                                         all_removable_nodes,
-                                                                         encoded_extensions,
-                                                                         params,
-                                                                         directed_bigger,
-                                                                         directed_smaller)
-                        else:
-                            trimm_and_test_subgraph_isomorphism_undirected(test_subset,
-                                                                           all_removable_nodes,
-                                                                           encoded_extensions,
-                                                                           params,
-                                                                           undirected_bigger,
-                                                                           undirected_smaller)
-
-                        # finish if one extension was found and no more are required
-                        if(not encoded_extensions.empty()):
-                            if(not params.all_extensions):
-                                return
-
-                        # save subset
-                        new_subsets.push_back(test_subset)
-
-            # update subsets holders
-            old_subsets.clear()
-            old_subsets = new_subsets
+                # finish if one extension was found and no more are required
+                if(not encoded_extensions.empty()):
+                    if(not params.all_extensions):
+                        return
 
             # finish if extensions were found; next trimmings produce smaller graphs
             if(not encoded_extensions.empty()):
                 return
 
     # end of function
+
+
+
+
+
+# # function: iterative trimming for VF2-MCS-like search -------------------------
+# cdef void partial_maps_iterative_trimming(cpp_unordered_map[int, int] & all_removable_nodes,
+#                                           cpp_vector[cpp_set[cpp_pair[int, int]]] & encoded_extensions,
+#                                           partial_maps_search_params & params,
+#                                           partial_maps_directed_graph & directed_bigger,
+#                                           partial_maps_directed_graph & directed_smaller,
+#                                           partial_maps_undirected_graph & undirected_bigger,
+#                                           partial_maps_undirected_graph & undirected_smaller) noexcept:
+
+#     # local variables
+#     cdef int i = 0
+#     cdef int k = 0
+#     cdef int new_index = 0
+#     cdef int last_added = 0
+#     cdef int total_removable = 0
+#     cdef cpp_vector[int] each_subset
+#     cdef cpp_vector[int] test_subset
+#     cdef cpp_vector[cpp_vector[int]] old_subsets
+#     cdef cpp_vector[cpp_vector[int]] new_subsets
+
+#     # prepare data for iteration
+#     total_removable = <int>(all_removable_nodes.size())
+
+#     # test "removal" of empty set (only for graphs with different order)
+#     if(params.directed_graphs):
+
+#         # run test only if different sizes and if degree cover already holds
+#         if(directed_smaller.nodes.size() < directed_bigger.nodes.size()):
+#             if((not params.test_unbalanced_in_degree_cover) and (not params.test_unbalanced_out_degree_cover)):
+
+#                 # prepare empty test subset
+#                 test_subset.clear()
+
+#                 # test smaller graph as induced subgraph of bigger
+#                 trimm_and_test_subgraph_isomorphism_directed(test_subset,
+#                                                              all_removable_nodes,
+#                                                              encoded_extensions,
+#                                                              params,
+#                                                              directed_bigger,
+#                                                              directed_smaller)
+
+#     else:
+
+#         # run test only if different sizes and if degree cover already holds
+#         if(undirected_smaller.nodes.size() < undirected_bigger.nodes.size()):
+#             if(not params.test_unbalanced_degree_cover):
+
+#                 # prepare empty test subset
+#                 test_subset.clear()
+
+#                 # test smaller graph as induced subgraph of bigger
+#                 trimm_and_test_subgraph_isomorphism_undirected(test_subset,
+#                                                                all_removable_nodes,
+#                                                                encoded_extensions,
+#                                                                params,
+#                                                                undirected_bigger,
+#                                                                undirected_smaller)
+
+#     # finish if extensions were found; next trimmings produce only smaller graphs
+#     if(not encoded_extensions.empty()):
+#         return
+
+#     # test removing non-empty sets only if there are at least 2 removable nodes
+#     if(total_removable >= 2):
+
+#         # case 1: test removal of singleton sets
+#         for i in range(total_removable):
+
+#             # create singleton
+#             test_subset.clear()
+#             test_subset.push_back(i)
+
+#             # trimm smaller graph and test induced subgraph isomorphism
+#             if(params.directed_graphs):
+#                 trimm_and_test_subgraph_isomorphism_directed(test_subset,
+#                                                              all_removable_nodes,
+#                                                              encoded_extensions,
+#                                                              params,
+#                                                              directed_bigger,
+#                                                              directed_smaller)
+#             else:
+#                 trimm_and_test_subgraph_isomorphism_undirected(test_subset,
+#                                                                all_removable_nodes,
+#                                                                encoded_extensions,
+#                                                                params,
+#                                                                undirected_bigger,
+#                                                                undirected_smaller)
+
+#             # finish if one extension was found and no more are required
+#             if(not encoded_extensions.empty()):
+#                 if(not params.all_extensions):
+#                     return
+
+#             # save singleton
+#             old_subsets.push_back(test_subset)
+
+#         # finish if extensions were found; next trimmings produce smaller graphs
+#         if(not encoded_extensions.empty()):
+#             return
+
+#         # test removal of sets with more than one element, and up to cardinality
+#         # N-1 for N removable nodes, since removing the N nodes can only produce
+#         # the trivial extension, i.e., return the input anchor itself
+#         for k in range(2, total_removable):
+
+#             # clear new subsets holder
+#             new_subsets.clear()
+
+#             # generate new subsets with one more element
+#             for each_subset in old_subsets:
+#                 last_added = each_subset.back()
+#                 if(last_added < total_removable):
+#                     for new_index in range(last_added + 1, total_removable):
+
+#                         # create subset
+#                         test_subset = each_subset
+#                         test_subset.push_back(new_index)
+
+#                         # trimm smaller graph and test induced subgraph isomorphism
+#                         if(params.directed_graphs):
+#                             trimm_and_test_subgraph_isomorphism_directed(test_subset,
+#                                                                          all_removable_nodes,
+#                                                                          encoded_extensions,
+#                                                                          params,
+#                                                                          directed_bigger,
+#                                                                          directed_smaller)
+#                         else:
+#                             trimm_and_test_subgraph_isomorphism_undirected(test_subset,
+#                                                                            all_removable_nodes,
+#                                                                            encoded_extensions,
+#                                                                            params,
+#                                                                            undirected_bigger,
+#                                                                            undirected_smaller)
+
+#                         # finish if one extension was found and no more are required
+#                         if(not encoded_extensions.empty()):
+#                             if(not params.all_extensions):
+#                                 return
+
+#                         # save subset
+#                         new_subsets.push_back(test_subset)
+
+#             # update subsets holders
+#             old_subsets.clear()
+#             old_subsets = new_subsets
+
+#             # finish if extensions were found; next trimmings produce smaller graphs
+#             if(not encoded_extensions.empty()):
+#                 return
+
+#     # end of function
 
 
 
