@@ -1005,11 +1005,11 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),                 
     # NOTE: search_stable_extension evaluates consistency of degree sequences
     if(order_G == order_H):
         extensions, found_proper_extensions = search_stable_extension(nx_G = nx_G,
-                                                                                nx_H = nx_H,
-                                                                                input_anchor = input_anchor,
-                                                                                node_labels = node_labels,
-                                                                                edge_labels = edge_labels,
-                                                                                all_extensions = all_extensions)
+                                                                      nx_H = nx_H,
+                                                                      input_anchor = input_anchor,
+                                                                      node_labels = node_labels,
+                                                                      edge_labels = edge_labels,
+                                                                      all_extensions = all_extensions)
         # only if extensions were found then return, otherwise we continue with the normal search
         if(found_proper_extensions):
             return(extensions, found_proper_extensions)
