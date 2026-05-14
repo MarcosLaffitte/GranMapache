@@ -826,6 +826,269 @@ def search_stable_extension(nx_G = nx.Graph(),           # can also be a network
 
 
 
+# functions - greedy maximum common connected anchored subgraphs - wrapper #####
+
+
+
+
+
+# function: callable wrapper for maximum common induced anchored subgraphs -----
+def search_greedy_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),                 # can also be a networkx DiGraph
+                                                    nx_H = nx.Graph(),                 # can also be a networkx DiGraph
+                                                    input_anchor = [],                 # anchor partial map, should be a non-empty list
+                                                    node_labels = False,               # consider node labels when evaluating extension
+                                                    edge_labels = False,               # consider edge labels when evaluating extension
+                                                    all_extensions = False,            # test all MCS extensions of an anchor within the greedy search
+                                                    ambiguous_neighbors_G = dict(),    # ambiguous neighbors or "wildcard" virtual-edges in nx_G
+                                                    ambiguous_neighbors_H = dict(),    # ambiguous neighbors or "wildcard" virtual-edges in nx_H
+                                                    correctness = True,                # evaluate the correctness of the input
+                                                    verbose = False):                  # print progress bar and messages
+
+    # description
+    """
+    > description: greedy approach to the anchored MCS search for input connected undirected graphs G
+    and H. Receives an input anchor and orders the vertices of G and H based on their distance to the
+    anchor. Then searches for an MCS extending the anchor between the graphs induced from G and H by
+    the vertices in the anchor plus the vertices at a fixed distance from it. This anchor is updated
+    iteratively and used in consecutive MCS searches for the subsequent induced subgraphs. In each
+    step only one anchored is used from the ones that are found. This reduces the search to concentric
+    neighborhoods of the anchor, and finishes only when the anchor cannot be updated.
+
+    > input:
+    * nx_G - first networkx (di)graph being matched.
+    * nx_H - second networkx (di)graph being matched.
+    * input_anchor - inyective map as a non-empty list of 2-tuples (x, y) of nodes x from G
+    and y from H. An exception is raised if the anchor is empty.
+    * node_labels - boolean indicating if all labels of nodes (outside the anchor) should be
+    considered for the search or if all of them should be ignored (default).
+    * edge_labels - boolean indicating if all labels of edges (with at least one end outside the
+    anchor) should be considered for the search or if all of them should be ignored (default).
+    * all_extensions - boolean indicating if the function should stop as soon as one maximum
+    induced subgraph is found (if any) -default behavior- or if it should search for all such
+    possible common subgraphs extending the anchor. Here maximum refers to number of nodes.
+    * ambiguous_neighbors_G - dictionary mapping each node to its ambiguous neighborhoods in G
+    implied by the ambiguous edges, i.e., pairs of nodes that are not actual edges, but override
+    non-adjacency of G, allowing the matching of vertices with not-equivalent "real" neighborhoods.
+    These "virtual" edges have no edge-label and only have a roll inside the syntactic feasability.
+    * ambiguous_neighbors_H - dictionary mapping each node to its ambiguous neighborhoods in H
+    implied by the ambiguous edges, i.e., pairs of nodes that are not actual edges, but override
+    non-adjacency of H, allowing the matching of vertices with not-equivalent "real" neighborhoods.
+    These "virtual" edges have no edge-label and only have a roll inside the syntactic feasability.
+    * verbose - control printing of messages of progress and progress bar
+
+    > output:
+    * extensions - non-empty list of maximum common induced subgraphs extending the anchor, each
+    as a list of 2-tuples (x, y) of nodes x from G and y from H representing the injective function
+    preserving adjacency and also labels outside the anchor, if required. If no proper extension
+    was found then the anchor itself is returned inside this list.
+    * found_proper_extensions - boolean value indicating if any proper maximum extensions of the
+    anchor were found, i.e., containing the matches from the anchor but strictly bigger than it.
+
+    > calls:
+    * gmapache.partial_maps.partial_maps_input_correctness
+    * gmapache.partial_maps.search_maximum_common_anchored_subgraphs
+    """
+
+    # output holders (python)
+    found_proper_extensions = False
+
+    # local variables (cython)
+    cdef int d = 0
+    cdef int order_G = 0
+    cdef int order_H = 0
+    cdef int distance = 0
+    cdef int caller_value = 0
+    cdef int max_distance_G = 0
+    cdef int max_distance_H = 0
+    cdef int distance_upper_bound = 0
+    cdef cpp_bool connected_G = False
+    cdef cpp_bool connected_H = False
+    cdef cpp_bool input_correctness = True
+
+    # local variables (python)
+    was_extended = False
+    cdef list anchor_G = []
+    cdef list anchor_H = []
+    cdef list temp_list = []
+    cdef list bad_nodes_G = []
+    cdef list bad_nodes_H = []
+    cdef list results_MCSs = []
+    cdef list extended_anchor = []
+    cdef list current_nodes_G = []
+    cdef list current_nodes_H = []
+    cdef dict distances_G = dict()
+    cdef dict distances_H = dict()
+    cdef dict ambiguous_neighbors_G_reduced = dict()
+    cdef dict ambiguous_neighbors_H_reduced = dict()
+    u = None
+    v = None
+    induced_G = None
+    induced_H = None
+
+    # set caller parameter flag
+    # caller = 0 -> gm.partial_maps.search_stable_extension
+    # caller = 1 -> gm.partial_maps.search_maximum_common_anchored_subgraphs
+    # substitutes params.caller in this function
+    caller_value = 1
+
+    # initialize other necessary parameters
+    reachability = True
+
+    # test input correctness (by default unless otherwise specified)
+    if(correctness):
+        input_correctness = partial_maps_input_correctness(nx_G, nx_H, input_anchor,
+                                                           node_labels, edge_labels,
+                                                           all_extensions, reachability,
+                                                           ambiguous_neighbors_G,
+                                                           ambiguous_neighbors_H,
+                                                           caller_value)
+    if(not input_correctness):
+        return([input_anchor], False)
+
+    # test if the input graphs are connected
+    if(nx.is_directed(nx_G)):
+        raise(ValueError("gmapache: the greedy MCAS search is implemented only for connected undirected graphs right now."))
+    else:
+        connected_G = nx.is_connected(nx_G)
+        connected_H = nx.is_connected(nx_H)
+    if((not connected_G) or (not connected_H)):
+        raise(ValueError("gmapache: the greedy MCAS search can only be applied to connected graphs, the given graphs are disconnected."))
+
+    # get order of graphs for local processing
+    order_G = nx_G.order()
+    order_H = nx_H.order()
+
+    # get anchor sides
+    anchor_G = [g for (g, h) in input_anchor]
+    anchor_H = [h for (g, h) in input_anchor]
+
+    # get remaining vertices
+    non_anchor_G = [v for v in nx_G.nodes() if(not v in anchor_G)]
+    non_anchor_H = [v for v in nx_H.nodes() if(not v in anchor_H)]
+
+    # get distance dictionaries for G
+    for u in non_anchor_G:
+        # evaluate the minimum distance to the anchor
+        distance = min([nx.shortest_path_length(nx_G, source = u, target = v) for v in anchor_G])
+        # store correspondingly
+        if(distance in distances_G):
+            distances_G[distance].append(u)
+        else:
+            distances_G[distance] = [u]
+
+    # get distance dictionaries for H
+    for u in non_anchor_H:
+        # evaluate the minimum distance to the anchor
+        distance = min([nx.shortest_path_length(nx_H, source = u, target = v) for v in anchor_H])
+        # store correspondingly
+        if(distance in distances_H):
+            distances_H[distance].append(u)
+        else:
+            distances_H[distance] = [u]
+
+    # get distance bound
+    max_distance_G = max(list(distances_G.keys()))
+    max_distance_H = max(list(distances_H.keys()))
+    distance_upper_bound = min([max_distance_G, max_distance_H])
+
+    # prime current nodes and extended anchor with the anchor sides and the input anchor
+    current_nodes_G = deepcopy(anchor_G)
+    current_nodes_H = deepcopy(anchor_H)
+    extended_anchor = deepcopy(input_anchor)
+
+    # greedy search for MCAS
+    # NOTE: there are vertices for all values from 1 to the upper bound of the distance
+    for d in range(1, distance_upper_bound+1):
+
+        # update current nodes
+        # NOTE: these cannot be repeated
+        current_nodes_G = current_nodes_G + distances_G[d]
+        current_nodes_H = current_nodes_H + distances_H[d]
+
+        # get bad nodes
+        bad_nodes_G = [v for v in nx_G.nodes() if(not v in current_nodes_G)]
+        bad_nodes_H = [v for v in nx_H.nodes() if(not v in current_nodes_H)]
+
+        # reduce ambiguous neighbors of G if necessary
+        if(len(ambiguous_neighbors_G) > 0):
+
+            # clean containers
+            ambiguous_neighbors_G_reduced = dict()
+
+            # iterate creating subdictionaries of ambiguous neighbors
+            for g in current_nodes_G:
+                if(g in ambiguous_neighbors_G):
+                    temp_list = [h for h in ambiguous_neighbors_G[g] if(h in current_nodes_H)]
+                    if(len(temp_list) > 0):
+                        ambiguous_neighbors_G_reduced[g] = deepcopy(temp_list)
+
+        # reduce ambiguous neighbors of H if necessary
+        if(len(ambiguous_neighbors_H) > 0):
+
+            # clean containers
+            ambiguous_neighbors_H_reduced = dict()
+
+            # iterate creating subdictionaries of ambiguous neighbors
+            for h in current_nodes_H:
+                if(h in ambiguous_neighbors_H):
+                    temp_list = [g for g in ambiguous_neighbors_H[h] if(g in current_nodes_G)]
+                    if(len(temp_list) > 0):
+                        ambiguous_neighbors_H_reduced[h] = deepcopy(temp_list)
+
+        # copy input graphs
+        induced_G = deepcopy(nx_G)
+        induced_H = deepcopy(nx_H)
+
+        # induce graphs
+        induced_G.remove_nodes_from(bad_nodes_G)
+        induced_H.remove_nodes_from(bad_nodes_H)
+
+        # run MCS search over extended graphs
+        results_MCSs, was_extended = search_maximum_common_anchored_subgraphs(nx_G = induced_G, nx_H = induced_H,
+                                                                              input_anchor = extended_anchor,
+                                                                              node_labels = node_labels, edge_labels = edge_labels,
+                                                                              all_extensions = all_extensions, reachability = True,
+                                                                              ambiguous_neighbors_G = ambiguous_neighbors_G_reduced,
+                                                                              ambiguous_neighbors_H = ambiguous_neighbors_H_reduced,
+                                                                              correctness = False,
+                                                                              verbose = False)
+
+        # print progress
+        if(verbose):
+            print_progress(case_percentage = round(d*100/distance_upper_bound, 2),
+                           case_num = d,
+                           tot_cases = distance_upper_bound,
+                           u_turn = True)
+
+        # test extension
+        if(was_extended):
+
+            # update greedy anchor with the obtained extension
+            extended_anchor = deepcopy(results_MCSs[0])
+
+        else:
+
+            # print progress
+            if(verbose):
+                print_progress(case_percentage = round(100, 2),
+                               case_num = distance_upper_bound,
+                               tot_cases = distance_upper_bound,
+                               u_turn = False)
+
+            # finish if no extension was found
+            break
+
+    # test if anchor was properly extended
+    if(len(extended_anchor) > len(input_anchor)):
+        found_proper_extensions = True
+
+    # end of function
+    return([extended_anchor], found_proper_extensions)
+
+
+
+
+
 # functions - search maximum common anchored subgraphs - wrapper ###############
 
 
@@ -877,7 +1140,7 @@ def search_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),                 
     * all_extensions - boolean indicating if the function should stop as soon as one maximum
     induced subgraph is found (if any) -default behavior- or if it should search for all such
     possible common subgraphs extending the anchor. Here maximum refers to number of nodes.
-    * reachability - boolean varibale that controls whether the nodes in the candidate subgraph
+    * reachability - boolean variable that controls whether the nodes in the candidate subgraph
     should contain at least one path between each node and at least one anchor node (default).
     If the anchor is connected and reachability is set to True, then the search will return a
     maximum-common-induced-connected-subgraph properly containing the anchor, if any.

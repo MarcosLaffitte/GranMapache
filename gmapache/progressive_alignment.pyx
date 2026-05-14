@@ -65,7 +65,7 @@ import cython
 
 
 # custom dependencies ----------------------------------------------------------
-from .partial_maps import search_maximum_common_anchored_subgraphs
+from .partial_maps import search_maximum_common_anchored_subgraphs, search_greedy_maximum_common_anchored_subgraphs
 from .integerization import encode_graphs, decode_graphs, encode_match, decode_match
 
 
@@ -92,8 +92,9 @@ def anchored_progressive_graph_alignment(input_graphs = [],           # input li
                                          reachability = True,         # all nodes should be reachable from at least one anchor node
                                          ambiguous_edges = True,      # consider ambiguous edges when building alignments
                                          test_correctness = True,     # test correctness of the input
+                                         topology = "kernels",        # select the tree topology to be usedbetween: kernels, comb or random
                                          verbose = True,              # set to False to omit printing messages of progress
-                                         topology = "kernels"):       # select the tree topology to be usedbetween: kernels, comb or random
+                                         greedy = False):             # use the greedy search for the MCA subgraphs
 
     # description
     """> description: receives a list of networkx graphs or digraphs of
@@ -138,6 +139,9 @@ def anchored_progressive_graph_alignment(input_graphs = [],           # input li
     with dendrogram equivalent to (...(((0, 1), 2), 3) ..., N-1) following the indices of the
     input list of graphs, and "random" for a randomly generated binary tree. When "comb" or
     "random" are selected the outputs similarity_matrix and distance_graph are set to None.
+    * greedy - if set to False then the exact approach for MCS is used, if True then the greedy
+    MCS is used instead. If set to True it silently overrides reachability, since the greedy
+    approach is reachable by definition.
 
     > output:
     * alignment_dictionary - python dictionary with the following nine string keys:
@@ -224,6 +228,8 @@ def anchored_progressive_graph_alignment(input_graphs = [],           # input li
             print("* testing input correctness")
         else:
             print("* correctness-test for input was disabled")
+        print(f"* greedy approach was set to {greedy}")
+        print(f"* use of ambiguous neighbors was set to {ambiguous_edges}")
 
     # test input correctness
     if(test_correctness):
@@ -234,7 +240,8 @@ def anchored_progressive_graph_alignment(input_graphs = [],           # input li
                                                                     reachability,
                                                                     ambiguous_edges,
                                                                     verbose,
-                                                                    topology)
+                                                                    topology,
+                                                                    greedy)
         if(not input_correctness):
             return(alignment_dictionary)
     else:
@@ -371,12 +378,26 @@ def anchored_progressive_graph_alignment(input_graphs = [],           # input li
                 anchor.append((n1, n2))
 
             # run MCS routine
-            results_MCSs, results_bool = search_maximum_common_anchored_subgraphs(nx_G = G1, nx_H = G2, input_anchor = anchor,
-                                                                                  node_labels = node_labels, edge_labels = edge_labels,
-                                                                                  all_extensions = False, reachability = reachability,
-                                                                                  ambiguous_neighbors_G = ambiguous_neighbors_G1,
-                                                                                  ambiguous_neighbors_H = ambiguous_neighbors_G2,
-                                                                                  verbose = verbose)
+            if(greedy):
+
+                # use the greedy approach
+                # NOTE: this is reachable by construction
+                results_MCSs, results_bool = search_greedy_maximum_common_anchored_subgraphs(nx_G = G1, nx_H = G2, input_anchor = anchor,
+                                                                                             node_labels = node_labels, edge_labels = edge_labels,
+                                                                                             all_extensions = False,
+                                                                                             ambiguous_neighbors_G = ambiguous_neighbors_G1,
+                                                                                             ambiguous_neighbors_H = ambiguous_neighbors_G2,
+                                                                                             verbose = verbose)
+
+            else:
+
+                # use the exact-solution trimming approach
+                results_MCSs, results_bool = search_maximum_common_anchored_subgraphs(nx_G = G1, nx_H = G2, input_anchor = anchor,
+                                                                                      node_labels = node_labels, edge_labels = edge_labels,
+                                                                                      all_extensions = False, reachability = reachability,
+                                                                                      ambiguous_neighbors_G = ambiguous_neighbors_G1,
+                                                                                      ambiguous_neighbors_H = ambiguous_neighbors_G2,
+                                                                                      verbose = verbose)
 
             # unpack MCS
             anchored_MCS = results_MCSs[0]
@@ -463,7 +484,7 @@ def anchored_progressive_graph_alignment(input_graphs = [],           # input li
 
 
 # function: --------------------------------------------------------------------
-def progressive_alignment_input_correctness(input_graphs, anchor_classes, node_labels, edge_labels, reachability, ambiguous_edges, verbose, topology):
+def progressive_alignment_input_correctness(input_graphs, anchor_classes, node_labels, edge_labels, reachability, ambiguous_edges, verbose, topology, greedy):
 
     # local variables (cython)
     cdef int i = 0
@@ -544,6 +565,10 @@ def progressive_alignment_input_correctness(input_graphs, anchor_classes, node_l
     # check consistency of string argument topology
     if(not topology in ["kernels", "comb", "random"]):
         raise(ValueError("gmapache: argument topology must be one of the following strings: kernels, comb or random."))
+
+    # check consistency of boolean argument verbose
+    if(type(greedy) not in [type(test_bool)]):
+        raise(ValueError("gmapache: argument greedy must be boolean."))
 
     # check consistency of the anchor classes as isomorphisms between induced subgraphs of the input graphs
     good_isos = progressive_alignment_test_anchor_classes(input_graphs, anchor_classes, node_labels, edge_labels)
