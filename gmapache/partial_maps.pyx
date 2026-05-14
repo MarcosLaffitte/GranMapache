@@ -1068,15 +1068,15 @@ def search_greedy_maximum_common_anchored_subgraphs(nx_G = nx.Graph(),          
 
         else:
 
-            # print progress
-            if(verbose):
-                print_progress(case_percentage = round(100, 2),
-                               case_num = distance_upper_bound,
-                               tot_cases = distance_upper_bound,
-                               u_turn = False)
-
             # finish if no extension was found
             break
+
+    # print progress
+    if(verbose):
+        print_progress(case_percentage = round(100, 2),
+                       case_num = distance_upper_bound,
+                       tot_cases = distance_upper_bound,
+                       u_turn = False)
 
     # test if anchor was properly extended
     if(len(extended_anchor) > len(input_anchor)):
@@ -4519,9 +4519,9 @@ def print_progress(case_percentage = 0, case_num = 0, tot_cases = 0, progress_in
     finished = "".join(pile)
     if(report_case):
         if(progress_in == ""):
-            bar = "- progress:  0%  [" + finished + "]  100%" + " ;  done   k = " + str(case_num) + " / " + str(tot_cases)
+            bar = "- progress:  0%  [" + finished + "]  100%" + " |  done - case: " + str(case_num) + " / " + str(tot_cases)
         else:
-            bar = "- progress " + progress_in + ":  0%  [" + finished + "]  100%" + " ;  done   k = " + str(case_num) + " / " + str(tot_cases)
+            bar = "- progress " + progress_in + ":  0%  [" + finished + "]  100%" + " |  done - case: " + str(case_num) + " / " + str(tot_cases)
     else:
         if(progress_in == ""):
             bar = "- progress:  0%  [" + finished + "]  100%"
