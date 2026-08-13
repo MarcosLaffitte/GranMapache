@@ -38,10 +38,11 @@ This repository contains useful tools callable as functions from Python scripts 
 
 ## Cite as
 
-This repository was developed as part of the contribution:
+This repository was developed as part of the contributions:
 
 **[1]** Marcos E. González Laffitte, Tieu-Long Phan, and Peter F. Stadler. “Extension of Partial Atom-To-Atom Maps: Uniqueness and Algorithms”. In: Algorithms for Molecular Biology vol. 21, 10 (June 2026). (https://doi.org/10.1186/s13015-026-00300-5) [June, 2026].
 <br/>
+
 **[2]** Marcos E. González Laffitte, Tieu-Long Phan, and Peter F. Stadler. “Extension of Partial Atom-To-Atom Maps: Uniqueness and Algorithms”. In: 25th International Conference on Algorithms for Bioinformatics (WABI 2025). Ed. by Broňa Brejová and Rob Patro. Vol. vol. 344, 12. Leibniz International Proceedings in Informatics (LIPIcs). https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.WABI.2025.12) [August, 2025].
 <br/>
 
@@ -49,12 +50,6 @@ This repository was developed as part of the contribution:
 There you can find detailed information on the algorithms implemented here. This work was developed for research purposes. Please cite as above if you find this work or these programs useful for your own research.
 </div>
 <br/>
-
-<div align="center">
-<strong>Some figure from <a href="link">[1]</a></strong><br/>
-</div>
-
-
 
 ## Instructions
 
